@@ -610,14 +610,14 @@ PolyLogyx - Hosts
 
 <script>
  var table=$('#status_log_table');
- {#var node_id={{ node.id }};#}
+ var node_id={{ node.id }};
                var elem_table=table.DataTable({
         "processing": true,
         "serverSide": true,
         "ordering": false,
         "searching": false,
          "ajax": {
-                    "url": '/manage/ajax/node/5/status',
+                    "url": '/manage/ajax/node/'+node_id+'/status',
                     "type": "GET"
                 },
         "columns": [
