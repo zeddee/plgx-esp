@@ -1,0 +1,1077 @@
+{% extends "layout.html" %}
+{% block page_title %}
+PolyLogyx - Dashboard
+{% endblock %}
+
+{% block content %}
+
+<style type="text/css">
+  .body-fluid {
+    height: 100px !important;
+  }
+  .align-top-alerts{
+    margin-top: -1rem;
+  }
+  .down-font {
+    font-size: medium;
+    /* color: #7a798a; */
+    color: #424246;
+    font-weight: 500;
+  }
+  .btn.btn-clean {
+    padding: .65rem 0rem;
+    border: 0;
+    background: transparent;
+    color: #184ba1 !important;
+  }
+  .btn.btn-clean:hover {
+    color: #184ba1;
+    background: transparent;
+  }
+  .btn:focus, .btn.focus {
+    box-shadow: none !important;
+  }
+  .btn.btn-clean i {
+    color: #667096;
+  }
+  .nav-tabs.nav-tabs-line.nav.nav-tabs .nav-link, .nav-tabs.nav-tabs-line a.nav-link {
+    background: transparent;
+    color: #424246;
+  }
+  .kt-widget26__desc {
+    color: #454357 !important;
+  }
+  .alerts-color-otx:hover .kt-widget26__desc {
+    color: #78c351 !important;
+  }
+  .alerts-color-ibm:hover .kt-widget26__desc {
+    color: #91d9f6 !important;
+  }
+  .alerts-color-rule:hover .kt-widget26__desc {
+    color: #e87373 !important;
+  }
+  .alerts-color-virus:hover .kt-widget26__desc {
+    color: #3c5ff6 !important;
+  }
+
+  .table-inner-delete{
+    visibility:hidden;
+  }
+  .kt-portlet__body-alerts:hover .table-inner-delete{
+      visibility:visible;
+  }
+  .kt-portlet__body-alerts:hover .text-overlap {
+    width: 140px;
+  }
+  .kt-portlet__body-alerts:hover .text-overlap-text {
+    height: 50px;
+    width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .kt-portlet__body-alerts:hover .text-overlap-img {
+    height: 30px;
+    width: 30px;
+    margin-top: -10px;
+    margin-left: -50px;
+  }
+  .kt-portlet__body-alerts:hover .severity-dash {
+    position: absolute;
+    top: 0px;
+    float: right;
+    right: -5px;
+    z-index: 50;
+    padding: 0px;
+    -webkit-transform: translate(-10px, 0);
+    -moz-transform: translate(-10px, 0);
+    -ms-transform: translate(-10px, 0);
+    -o-transform: translate(-10px, 0);
+    transform: translate(-10px, 0);
+    background: rgba(255, 255, 255, 0.4);
+  }
+  .kt-portlet__body-alerts:hover .severity-dash {
+    display: block;
+    margin: 5px;
+    background: rgba(255, 255, 255, 0.4);
+    width: 50%;
+    height: 74%;
+    text-align: left;
+    padding: 10px;
+    -webkit-box-shadow: 0 0 50px 0 rgba(82,63,105,0.15);
+    box-shadow: 0 0 50px 0 rgba(82,63,105,0.15);
+    -webkit-border-radius: 4px 0 0 4px;
+    -moz-border-radius: 40px 0 0 4px;
+    border-radius: 4px 0 0 4px;
+    /* -webkit-transition: all 1s;
+    -moz-transition: all 1s;
+    -ms-transition: all 1s;
+    -o-transition: all 1s;
+    transition: all 1s; */
+    animation-duration: 1s;
+    animation-name: slideout;
+  }
+  @keyframes slideout {
+      from {
+          margin-right: 0;
+          /* width: 10%; */
+      }
+
+      to {
+          margin-right: 5px;
+          /* width: 100%; */
+      }
+  }
+</style>
+
+<script src="/static/js/utils.js"></script>
+
+
+<!-- begin:: Content -->
+<div class="kt-content kt-grid__item kt-grid__item--fluid">
+  <div class="kt-portlet kt-portlet--mobile kt-portlet--responsive-mobile" style="margin-bottom: 0px;">
+    <div class="kt-portlet__head kt-portlet__head--lg">
+      <div class="kt-portlet__head-label">
+        <!-- <span class="kt-portlet__head-icon">
+                <i class="kt-font-brand flaticon2-line-chart"></i>
+              </span> -->
+        <h3 class="kt-portlet__head-title">
+          Endpoint Security Platform Dashboard
+        </h3>
+      </div>
+      <div class="kt-portlet__head-toolbar">
+        <div class="kt-portlet__head-wrapper">
+          <div class="kt-portlet__head-actions">
+            <div class="" style="">
+              <button type="button" class="btn btn-outline-secondary btn-icon-sm" data-toggle="modal" data-target="#osquery_modal" aria-haspopup="true" aria-expanded="false" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download PolyLogyx Installer">
+                <i class="la la-cloud-download"></i>
+                <span>Client Provisioning Tool</span>
+              </button>
+              <!-- begin:: modal/download_cpt -->
+              <div class="modal fade" id="osquery_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" style="">
+                <div class="modal-dialog modal-lg" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h3 class="kt-portlet__head-title">
+                        Download CPT Installer
+                      </h3>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <!--begin:: Widgets/Tasks -->
+                      <div class="">
+                        <h6>Choose one of the packages below:</h6>
+                      </div>
+                      <ul class="nav nav-tabs nav-tabs-line nav-tabs-bold nav-tabs-line-3x nav-tabs-line-success" role="tablist">
+                        <li class="nav-item" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Windows">
+                          <a class="nav-link active" data-toggle="tab" href="#windows" role="tab"><i class="fab fa-windows"></i> Windows</a>
+                        </li>
+                        <li class="nav-item" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Linux">
+                          <a class="nav-link" data-toggle="tab" href="#linux" role="tab"><i class="fab fa-linux"></i> Linux</a>
+                        </li>
+                        <li class="nav-item" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Darwin">
+                          <a class="nav-link" data-toggle="tab" href="#macos" role="tab"><i class="fab fa-apple"></i> Darwin</a>
+                        </li>
+                        <li class="nav-item" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Manual">
+                          <a class="nav-link" data-toggle="tab" href="#manually" role="tab"><i class="fa fa-user-cog"></i> Manual</a>
+                        </li>
+                      </ul>
+                      <div class="tab-content">
+                        <!--begin:: Download/Windows  -->
+                        <div class="tab-pane active" id="windows" role="tabpanel">
+                          <br>
+                          <div class="">
+                            <span class="down-font" style="font-size: medium;">Windows CPT Installer</span>
+                            <button href="/manage/downloads/plgx_win_extn.ext.exe" type="button" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" id="btn_download_exe" onclick="downloadFile(this)" value="plgx_cpt.exe" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title=" Download Windows CPT Installer">
+                              <i class="fa fa-2x fa-cloud-download-alt"></i>
+                            </button>
+                          </div>
+                          <div class="kt-separator kt-separator--dashed"></div>
+                          <div class="">
+                            <span class="down-font" style="font-size: medium;">Certificate</span>
+                            <button href="/manage/downloads/plgx_win_extn.ext.exe" type="button" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="certificate.crt" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download Certificate for Windows">
+                              <i class="fa fa-2x fa-cloud-download-alt"></i>
+                            </button>
+                          </div>
+                          <div class="kt-separator kt-separator--dashed"></div>
+                          <div class="">
+                            <h3>Windows Installation:</h3>
+                          </div>
+                          <pre style="word-wrap: break-word; white-space: pre-wrap; margin-bottom: -1rem;" class=""  data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Open Command Prompt -> write to this command ">
+                             <p style="background-color:#cccccc40;"> c:\user\downloads\&gt;plgx_cpt.exe -p -i &lt; SERVER_IP(x.x.x.x) &gt; -k &lt; Full path to the certificate file &gt;</p>
+                           </pre>
+                          <h6><span style="color:#cc1313cc">Note:</span> Download CPT installer and Certificate both for installation. Use the respective command from terminal for installation.</h6>
+                        </div>
+                        <!--end:: Download/Windows  -->
+                        <!--begin:: Download/Linux  -->
+                        <div class="tab-pane" id="linux" role="tabpanel">
+                          <br>
+                          <div class="">
+                            <span class="down-font" style="font-size: medium;">Linux CPT Installer</span>
+                            <button href="/manage/downloads/plgx_win_extn.ext.exe" type="button" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="linux_cpt.sh" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download Linux CPT Installer">
+                              <i class="fa fa-2x fa-cloud-download-alt"></i>
+                            </button>
+                          </div>
+                          <div class="kt-separator kt-separator--dashed" style=""></div>
+                          <div class="">
+                            <h3>Linux Based Installation:</h3>
+                          </div>
+                          <pre style="word-wrap: break-word; white-space: pre-wrap; margin-bottom: -1rem;" class="" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Open terminal -> write to this command">
+                             <p style="background-color:#cccccc40;"> sudo bash linux_cpt.sh -ip=&lt; SERVER_IP(x.x.x.x) &gt; -port=9000</p>
+                           </pre>
+                          <h6><span style="color:#cc1313cc">Note:</span> Download CPT installer for installation. Use the respective command from terminal for installation using sudo. If CPT fails to install on linux, please process with manual installation.</h6>
+                          <!-- <div class="kt-separator kt-separator--dashed" style="height: 20px;"></div> -->
+                          <!-- <div class="">
+                            <h3>Linux Based Installation:</h3>
+                            <div class="">
+                              <p>Install osquery agent manually using below files:</p>
+                            </div>
+                            <br>
+                            <div class="row">
+                              <div class="col-md-3">
+                                <span class="down-font">osquery bundle
+                                  <button href="/manage/downloads/osquery-3.3.0_1.linux_x86_64.tar.gz" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="osquery-3.3.0_1.linux_x86_64.tar.gz" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download osquery">
+                                    <i class="fa fa-cloud-download-alt"></i>
+                                  </button>
+                                </span>
+                              </div>
+                              <div class="col-md-3" style="border-left: #cdd1d4 1px solid;">
+                                <span class="down-font">osquery flags
+                                  <button href="/manage/downloads/osquery_linux.flags" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="osquery_linux.flags" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download osquery flags">
+                                    <i class="fa fa-cloud-download-alt"></i>
+                                  </button>
+                                </span>
+                              </div>
+                              <div class="col-md-3" style="border-left: #cdd1d4 1px solid;">
+                                <span class="down-font">certificate
+                                  <button href="/manage/downloads/certificate.crt" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="certificate.crt" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download Certificate">
+                                    <i class="fa fa-cloud-download-alt"></i>
+                                  </button>
+                                </span>
+                              </div>
+                              <div class="col-md-3" style="border-left: #cdd1d4 1px solid;">
+                                <span class="down-font">secret file
+                                  <button href="/manage/downloads/secret.txt" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="secret.txt" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download Secret File">
+                                    <i class="fa fa-cloud-download-alt"></i>
+                                  </button>
+                                </span>
+                                <button href="/manage/downloads/plgx_win_extn.ext.exe" type="button" class="btn btn-outline-success pull-right downloadCode" onclick="downloadFile(this)" value="linux_cpt.sh" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download Linux CPT Installer">
+                                  <i class="fa fa-download"></i>Download
+                                </button>
+                              </div>
+                            </div>
+                          </div> -->
+                        </div>
+                        <!--end:: Download/Linux  -->
+                        <!--begin:: Download/Darwin  -->
+                        <div class="tab-pane" id="macos" role="tabpanel">
+                          <br>
+                          <div class="">
+                            <span class="down-font" style="font-size: medium;">osquery bundle</span>
+                            <button href="/manage/downloads/osquery-4.0.2.pkg" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="osquery-4.0.2.pkg" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download osquery">
+                              <i class="fa fa-2x fa-cloud-download-alt"></i>
+                            </button>
+                          </div>
+                          <div class="kt-separator kt-separator--dashed"></div>
+                          <div class="">
+                            <span class="down-font" style="font-size: medium;">osquery flags</span>
+                            <button href="/manage/downloads/osquery_linux.flags" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="osquery_linux.flags" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download osquery flags">
+                              <i class="fa fa-2x fa-cloud-download-alt"></i>
+                            </button>
+                          </div>
+                          <div class="kt-separator kt-separator--dashed"></div>
+                          <div class="">
+                            <span class="down-font" style="font-size: medium;">certificate</span>
+                            <button href="/manage/downloads/certificate.crt" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="certificate.crt" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download Certificate">
+                              <i class="fa fa-2x fa-cloud-download-alt"></i>
+                            </button>
+                          </div>
+                          <div class="kt-separator kt-separator--dashed"></div>
+                          <div class="">
+                            <span class="down-font" style="font-size: medium;">secret file</span>
+                            <button href="/manage/downloads/secret.txt" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="secret.txt" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download Secret File">
+                              <i class="fa fa-2x fa-cloud-download-alt"></i>
+                            </button>
+                          </div>
+                          <div class="kt-separator kt-separator--dashed"></div>
+                          <div class="">
+                            <h6>Extract osquery bundle and run osquery using:</h6>
+                          </div>
+                          <pre style="word-wrap: break-word; white-space: pre-wrap; margin-bottom: -1rem;" class=""  data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Open terminal -> write to this command ">
+                            <p style="background-color:#cccccc40;"> osqueryd —flagfile osquery.flags</p>
+                          </pre>
+                        </div>
+                        <!--end:: Download/Darwin  -->
+                        <!--begin:: Download/Manual  -->
+                        <div class="tab-pane" id="manually" role="tabpanel">
+                          <br>
+                          <div class="">
+                            <span class="down-font" style="font-size: medium;">osquery bundle</span>
+                            <button href="/manage/downloads/osquery-4.0.2_1.linux_x86_64.tar.gz" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="osquery-4.0.2_1.linux_x86_64.tar.gz" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download osquery">
+                              <i class="fa fa-2x fa-cloud-download-alt"></i>
+                            </button>
+                          </div>
+                          <div class="kt-separator kt-separator--dashed"></div>
+                          <div class="">
+                            <span class="down-font" style="font-size: medium;">osquery flags</span>
+                            <button href="/manage/downloads/osquery_linux.flags" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="osquery_linux.flags" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download osquery flags">
+                              <i class="fa fa-2x fa-cloud-download-alt"></i>
+                            </button>
+                          </div>
+                          <div class="kt-separator kt-separator--dashed"></div>
+                          <div class="">
+                            <span class="down-font" style="font-size: medium;">certificate</span>
+                            <button href="/manage/downloads/certificate.crt" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="certificate.crt" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download Certificate">
+                              <i class="fa fa-2x fa-cloud-download-alt"></i>
+                            </button>
+                          </div>
+                          <div class="kt-separator kt-separator--dashed"></div>
+                          <div class="">
+                            <span class="down-font" style="font-size: medium;">secret file</span>
+                            <button href="/manage/downloads/secret.txt" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" onclick="downloadFile(this)" value="secret.txt" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Download Secret File">
+                              <i class="fa fa-2x fa-cloud-download-alt"></i>
+                            </button>
+                          </div>
+                          <div class="kt-separator kt-separator--dashed"></div>
+                          <div class="">
+                            <h6>Extract osquery bundle and run osquery using:</h6>
+                          </div>
+                          <pre style="word-wrap: break-word; white-space: pre-wrap; margin-bottom: -1rem;" class=""  data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Open terminal -> write to this command ">
+                            <p style="background-color:#cccccc40;"> osqueryd —flagfile osquery.flags</p>
+                          </pre>
+                        </div>
+                        <!--end:: Download/Manual -->
+                      </div>
+                      <!--end:: Widgets/Tasks -->
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+                      <!-- <button type="button" class="btn btn-success">Finish</button> -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kt-portlet__body" style="background:#acb2bb2b;">
+      <!--Begin::Alerts/Section-1-->
+      <div class="row"></div>
+      <div class="row">
+        <div class="col-xl-3 col-md-3 col-lg-3 col-6 col-sm-6">
+          <!--begin:: AlienVault OTX Alerts -->
+          <a href="{{ url_for('manage.alerts') }}#div_alienvault">
+          <div class="kt-portlet kt-portlet--border-bottom-success" style="border-bottom: 3px solid rgb(110, 190, 68);">
+            <div class="kt-portlet__body kt-portlet__body-alerts kt-portlet__body--fluid body-fluid alerts-color-otx" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="AlienVault OTX Alerts">
+
+              <div class="">
+                <div class="">
+                  <div class="kt-widget26 text-overlap">
+                    <div class="row">
+                      <div class="col-md-6 col-xl-8 col-lg-8 col-sm-6 col-6">
+                        <div class="kt-widget26__content align-top-alerts ">
+                          <span class="kt-widget26__number" id="otx_counter" style="color: #78c351;">0</span>
+                          <span class="kt-widget26__desc text-overlap-text" style="">AlienVault OTX Alerts</span>
+                        </div>
+                      </div>
+                      <div class="col-md-6 col-xl-4 col-lg-4 col-sm-6 col-6">
+                        <img class="text-overlap-img" src="/static/assets/media/AlienVaultOTX.png" height="60px" width="60px" style="opacity: 0.5" />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="table-inner-delete severity-dash" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Severity">
+                    <!--begin:: AlienVault OTX Severity -->
+                    <div class="kt-widget15__items severity-inner severity-dash-left" style=" height:80px;">
+                      <div class="row">
+                        <div class="col">
+                          <div class="kt-widget15__item">
+                            <span class="kt-widget15__text" style="color: red;">
+                              Critical
+                            </span>
+                            <span id="alienvault_critical" class="kt-widget15__stats pull-right" style="color: red;">
+                              0
+                            </span>
+                          </div>
+                          <div class="kt-widget15__item">
+                            <span class="kt-widget15__text" style="color: orange;">
+                              Warning
+                            </span>
+                            <span id="alienvault_warning" class="kt-widget15__stats pull-right" style="color: orange;">
+                              0
+                            </span>
+                          </div>
+                          <div class="kt-widget15__item">
+                            <span class="kt-widget15__text" style="color: forestgreen;">
+                              Low
+                            </span>
+                            <span id="alienvault_low" class="kt-widget15__stats pull-right" style="color: forestgreen;">
+                              0
+                            </span>
+                          </div>
+                          <div class="kt-widget15__item">
+                            <span class="kt-widget15__text" style="color: navy;">
+                              Info
+                            </span>
+                            <span id="alienvault_info" class="kt-widget15__stats pull-right" style="color: navy;">
+                              0
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!--end:: AlienVault OTX Severity -->
+                  </div>
+                </div>
+              </div>
+
+
+            </div>
+          </div>
+          </a>
+          <!--end:: AlienVault OTX Alerts -->
+        </div>
+        <div class="col-xl-3 col-md-3 col-lg-3 col-6 col-sm-6">
+          <!--begin:: IBMxForce Alerts -->
+          <a href="{{ url_for('manage.alerts') }}#div_ibmxforce">
+          <div class="kt-portlet kt-portlet--border-bottom-danger" style="border-bottom: 3px solid rgb(145, 217, 247);">
+            <div class="kt-portlet__body kt-portlet__body-alerts kt-portlet__body--fluid body-fluid alerts-color-ibm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="IBM X-Force Alerts">
+
+              <div class="kt-widget26 text-overlap">
+                <div class="row">
+                  <div class="col-md-6 col-xl-8 col-lg-8 col-sm-6 col-6">
+                    <div class="kt-widget26__content align-top-alerts">
+                      <span class="kt-widget26__number" id="ibm_counter" style="color: #91d9f6;">0</span>
+                      <span class="kt-widget26__desc text-overlap-text" style="">IBM X-Force Alerts</span>
+                    </div>
+                  </div>
+                  <div class="col-md-6 col-xl-4 col-lg-4 col-sm-6 col-6">
+                    <img class="text-overlap-img" src="/static/assets/media/IBMxForce.png" height="60px" width="60px" style="opacity: 0.5;" />
+                  </div>
+                </div>
+                <div class="table-inner-delete severity-dash" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Severity">
+                  <!--begin:: IBMxForce Severity -->
+                  <div class="kt-widget15__items severity-inner severity-dash-left" style=" height:80px;">
+                    <div class="row">
+                      <div class="col">
+                        <div class="kt-widget15__item">
+                          <span class="kt-widget15__text" style="color: red;">
+                            Critical
+                          </span>
+                          <span id="ibmxforce_critical" class="kt-widget15__stats pull-right" style="color: red;">
+                            0
+                          </span>
+                        </div>
+                        <div class="kt-widget15__item">
+                          <span class="kt-widget15__text" style="color: orange;">
+                            Warning
+                          </span>
+                          <span id="ibmxforce_warning" class="kt-widget15__stats pull-right" style="color: orange;">
+                            0
+                          </span>
+                        </div>
+                        <div class="kt-widget15__item">
+                          <span class="kt-widget15__text" style="color: forestgreen;">
+                            Low
+                          </span>
+                          <span id="ibmxforce_low" class="kt-widget15__stats pull-right" style="color: forestgreen;">
+                            0
+                          </span>
+                        </div>
+                        <div class="kt-widget15__item">
+                          <span class="kt-widget15__text" style="color: navy;">
+                            Info
+                          </span>
+                          <span id="ibmxforce_info" class="kt-widget15__stats pull-right" style="color: navy;">
+                            0
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!--end:: IBMxForce Severity -->
+                </div>
+              </div>
+
+            </div>
+          </div>
+          </a>
+          <!--end:: IBMxForce Alerts -->
+        </div>
+        <div class="col-xl-3 col-md-3 col-lg-3 col-6 col-sm-6">
+          <!--begin:: Rule Alerts -->
+          <a href="{{ url_for('manage.alerts') }}#div_rule">
+          <div class="kt-portlet kt-portlet--border-bottom-brand" style="border-bottom: 3px solid rgba(229, 87, 86, 0.81);">
+            <div class="kt-portlet__body kt-portlet__body-alerts kt-portlet__body--fluid body-fluid alerts-color-rule" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Rule Alerts">
+
+              <div class="kt-widget26 text-overlap">
+                <div class="row">
+                  <div class="col-md-6 col-xl-8 col-lg-8 col-sm-6 col-6">
+                    <div class="kt-widget26__content align-top-alerts">
+                      <span class="kt-widget26__number" id="rule_counter" style="color: #e87373;">0</span>
+                      <span class="kt-widget26__desc text-overlap-text" style="">Rule Alerts</span>
+                    </div>
+                  </div>
+                  <div class="col-md-6 col-xl-4 col-lg-4 col-sm-6 col-6">
+                    <img class="text-overlap-img" src="/static/assets/media/rule_alerts.png" height="75px" width="75px" style="opacity: 0.5; margin-top: -10px;" />
+                    <!-- <i class="text-overlap-img fas fa-4x fa-exclamation-triangle" style="color: #e23f3ca6;"></i> -->
+                  </div>
+                </div>
+
+                <div class="table-inner-delete severity-dash" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Severity">
+                  <!--begin:: Rule Severity -->
+                    <div class="kt-widget15__items severity-inner severity-dash-left" style=" height:80px;">
+                      <div class="row">
+                        <div class="col">
+                          <div class="kt-widget15__item">
+                            <span class="kt-widget15__text" style="color: red;">
+                              Critical
+                            </span>
+                            <span id="rule_critical" class="kt-widget15__stats pull-right" style="color: red;">
+                              0
+                            </span>
+                          </div>
+                          <div class="kt-widget15__item">
+                            <span class="kt-widget15__text" style="color: orange;">
+                              Warning
+                            </span>
+                            <span id="rule_warning" class="kt-widget15__stats pull-right" style="color: orange;">
+                              0
+                            </span>
+                          </div>
+                          <div class="kt-widget15__item">
+                            <span class="kt-widget15__text" style="color: forestgreen;">
+                              Low
+                            </span>
+                            <span id="rule_low" class="kt-widget15__stats pull-right" style="color: forestgreen;">
+                              0
+                            </span>
+                          </div>
+                          <div class="kt-widget15__item">
+                            <span class="kt-widget15__text" style="color: navy;">
+                              Info
+                            </span>
+                            <span id="rule_info" class="kt-widget15__stats pull-right" style="color: navy;">
+                              0
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  <!--end:: Rule Severity -->
+                </div>
+              </div>
+
+            </div>
+          </div>
+          </a>
+          <!--end:: Rule Alerts -->
+        </div>
+        <div class="col-xl-3 col-md-3 col-lg-3 col-6 col-sm-6">
+          <!--begin:: VirusTotal Alerts -->
+          <a href="{{ url_for('manage.alerts') }}#div_virustotal">
+          <div class="kt-portlet kt-portlet--border-bottom-warning" style="border-bottom: 3px solid rgb(60, 95, 246);">
+            <div class="kt-portlet__body kt-portlet__body-alerts kt-portlet__body--fluid body-fluid alerts-color-virus" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="VirusTotal Alerts">
+
+              <div class="kt-widget26 text-overlap">
+                <div class="row">
+                  <div class="col-md-6 col-xl-8 col-lg-8 col-sm-6 col-6">
+                    <div class="kt-widget26__content align-top-alerts">
+                      <span class="kt-widget26__number" id="vt_counter" style="color: #3c5ff6;">0</span>
+                      <span class="kt-widget26__desc text-overlap-text" style="">VirusTotal Alerts</span>
+                    </div>
+                  </div>
+                  <div class="col-md-6 col-xl-4 col-lg-4 col-sm-6 col-6">
+                    <img class="text-overlap-img" src="/static/assets/media/VirusTotal.png" height="60px" width="60px" style="opacity: 0.5" />
+                  </div>
+                </div>
+                <div class="table-inner-delete severity-dash" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Severity">
+                  <!--begin:: VirusTotal Severity -->
+                  <div class="kt-widget15__items severity-inner severity-dash-left" style=" height:80px;">
+                    <div class="row">
+                      <div class="col">
+                        <div class="kt-widget15__item">
+                          <span class="kt-widget15__text" style="color: red;">
+                            Critical
+                          </span>
+                          <span id="rvirustotal_critical" class="kt-widget15__stats pull-right" style="color: red;">
+                            0
+                          </span>
+                        </div>
+                        <div class="kt-widget15__item">
+                          <span class="kt-widget15__text" style="color: orange;">
+                            Warning
+                          </span>
+                          <span id="virustotal_warning" class="kt-widget15__stats pull-right" style="color: orange;">
+                            0
+                          </span>
+                        </div>
+                        <div class="kt-widget15__item">
+                          <span class="kt-widget15__text" style="color: forestgreen;">
+                            Low
+                          </span>
+                          <span id="virustotal_low" class="kt-widget15__stats pull-right" style="color: forestgreen;">
+                            0
+                          </span>
+                        </div>
+                        <div class="kt-widget15__item">
+                          <span class="kt-widget15__text" style="color: navy;">
+                            Info
+                          </span>
+                          <span id="virustotal_info" class="kt-widget15__stats pull-right" style="color: navy;">
+                            0
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!--end:: VirusTotal Severity -->
+                </div>
+              </div>
+
+            </div>
+          </div>
+          </a>
+          <!--end:: VirusTotal Alerts -->
+        </div>
+
+      </div>
+      <!--End::Alerts/Section-1-->
+
+      <!--Begin::Pie Charts/Section-2-->
+      <div class="row">
+        <div class="col-xl-4 col-md-4 col-lg-4 col-12 col-sm-12">
+
+          <!--begin::Portlet-->
+          <div class="kt-portlet">
+            <div class="kt-portlet__head">
+              <div class="kt-portlet__head-label">
+                <span class="kt-portlet__head-icon kt-hidden">
+                  <i class="la la-gear"></i>
+                </span>
+                <h3 class="kt-portlet__head-title">
+                  Platform Distribution
+                </h3>
+              </div>
+            </div>
+            <div class="kt-portlet__body">
+              <div id="" style=""></div>
+              <canvas id="pie-chart-platform-count"></canvas>
+            </div>
+          </div>
+
+          <!--end::Portlet-->
+        </div>
+        <div class="col-xl-4 col-md-4 col-lg-4 col-12 col-sm-12">
+
+          <!--begin::Portlet-->
+          <div class="kt-portlet">
+            <div class="kt-portlet__head">
+              <div class="kt-portlet__head-label">
+                <span class="kt-portlet__head-icon kt-hidden">
+                  <i class="la la-gear"></i>
+                </span>
+                <h3 class="kt-portlet__head-title">
+                  Query Results
+                </h3>
+              </div>
+            </div>
+            <div class="kt-portlet__body">
+              <div id="" style=""></div>
+              <canvas id="pie-chart-query-count"></canvas>
+            </div>
+          </div>
+
+          <!--end::Portlet-->
+        </div>
+        <div class="col-xl-4 col-md-4 col-lg-4 col-12 col-sm-12">
+
+          <!--begin::Portlet-->
+          <div class="kt-portlet">
+            <div class="kt-portlet__head">
+              <div class="kt-portlet__head-label">
+                <span class="kt-portlet__head-icon kt-hidden">
+                  <i class="la la-gear"></i>
+                </span>
+                <h3 class="kt-portlet__head-title">
+                  Host Status
+                </h3>
+              </div>
+            </div>
+            <div class="kt-portlet__body">
+              <div id="" style=""></div>
+              <canvas id="pie-chart-online-offline"></canvas>
+            </div>
+          </div>
+
+          <!--end::Portlet-->
+        </div>
+      </div>
+      <!--End::Pie Charts/Section-2-->
+      <!--Begin::Bar Charts/Section-3-->
+      <div class="row">
+        <div class="col-xl-4 col-md-4 col-lg-4 col-12 col-sm-12">
+          <!--begin::Portlet-->
+          <div class="kt-portlet">
+            <div class="kt-portlet__head">
+              <div class="kt-portlet__head-label">
+                <span class="kt-portlet__head-icon kt-hidden">
+                  <i class="la la-gear"></i>
+                </span>
+                <h3 class="kt-portlet__head-title">
+                  Top 5 Alerted Hosts
+                </h3>
+              </div>
+            </div>
+            <div class="kt-portlet__body">
+              <canvas id="bar-chart-node"></canvas>
+            </div>
+          </div>
+          <!--end::Portlet-->
+        </div>
+        <div class="col-xl-4 col-md-4 col-lg-4 col-12 col-sm-12">
+          <!--begin::Portlet-->
+          <div class="kt-portlet">
+            <div class="kt-portlet__head">
+              <div class="kt-portlet__head-label">
+                <span class="kt-portlet__head-icon kt-hidden">
+                  <i class="la la-gear"></i>
+                </span>
+                <h3 class="kt-portlet__head-title">
+                  Top 5 Alerted Categories
+                </h3>
+              </div>
+            </div>
+            <div class="kt-portlet__body">
+              <canvas id="bar-chart-query"></canvas>
+            </div>
+          </div>
+
+          <!--end::Portlet-->
+        </div>
+        <div class="col-xl-4 col-md-4 col-lg-4 col-12 col-sm-12">
+          <!--begin::Portlet-->
+          <div class="kt-portlet">
+            <div class="kt-portlet__head">
+              <div class="kt-portlet__head-label">
+                <span class="kt-portlet__head-icon kt-hidden">
+                  <i class="la la-gear"></i>
+                </span>
+                <h3 class="kt-portlet__head-title">
+                  Top 5 Alerted Rules
+                </h3>
+              </div>
+            </div>
+            <div class="kt-portlet__body">
+              <canvas id="bar-chart-alert"></canvas>
+            </div>
+          </div>
+          <!--end::Portlet-->
+        </div>
+      </div>
+      <!--End::Bar Charts/Section-3-->
+      <!--Begin::Section-3-->
+      <div id="graph" class="row">
+      </div>
+      <!--End::Section-3-->
+    </div>
+  </div>
+</div>
+<!-- end:: Content -->
+
+<script>
+  function downloadFile(elem) {
+
+    window.open(
+      '/manage/downloads/' + elem.value,
+      '_blank' // <- This is what makes it open in a new window.
+    );
+  }
+
+  function showAPIKey() {
+    document.getElementById('api-key').style.display = 'block';
+    document.getElementById('btn_view_api_key').style.display = 'none';
+
+
+  }
+</script>
+<script src="/static/assets/js/chartjs.min.js"></script>
+
+<script type="text/javascript">
+  var chartData = '{{ chart_data }}';
+
+  chartData = chartData.replace(/\&#34;/g, '"');
+
+  chartData = JSON.parse(chartData);
+  var alertExists = chartData['alertExists'];
+  var alert_count=chartData['alert_count'];
+  var sources=['rule','ibmxforce','virustotal','alienvault'];
+    for (i = 0; i < sources.length; i++) {
+      var source=sources[i];
+      var source_count=alert_count[source];
+      if (source_count!=undefined){
+        for(let severity in source_count){
+          $('#'+source+'_'+severity.toLowerCase()).html(source_count[severity])
+        }
+      }
+
+    }
+  $("#rule_counter").html(chartData['rule']);
+  $("#vt_counter").html(chartData['virustotal']);
+  $("#otx_counter").html(chartData['alienvault']);
+  $("#ibm_counter").html(chartData['ibmxforce']);
+
+  var rules = chartData['rules'];
+  var queries = chartData['queries'];
+  var nodes = chartData['nodes'];
+  var nodes_online_offline = chartData['online_offline'];
+  var query_count = chartData['query_count'];
+  var platform_count = chartData['platform_count'];
+
+  var chrome_ie_extensions = 'dummy';
+
+  createPieGraph('pie-chart-platform-count', 'Platform Distribution', platform_count['name_array'], platform_count['count_array'], [], chrome_ie_extensions, true);
+  createPieGraph('pie-chart-online-offline', 'Online Offline', nodes_online_offline['name_array'], nodes_online_offline['count_array'], [], chrome_ie_extensions, true);
+  createPieGraph('pie-chart-query-count', 'Top Queries', query_count['name_array'], query_count['count_array'], [], chrome_ie_extensions, true);
+  if (alertExists) {
+    document.getElementById('graph').style.display = 'block';
+
+    var nodeNames = [];
+    var alertCountByNode = [];
+    for (i = 0; i < nodes.length; i++) {
+      nodeNames[i] = nodes[i][1];
+      alertCountByNode[i] = nodes[i][2];
+    }
+
+    var alertNames = [];
+    var alertCountByAlertName = [];
+    for (i = 0; i < rules.length; i++) {
+      alertNames[i] = rules[i][1];
+      alertCountByAlertName[i] = rules[i][2];
+    }
+
+    var queryNames = [];
+    var alertCountByQueryName = [];
+    for (i = 0; i < queries.length; i++) {
+      queryNames[i] = queries[i][0];
+      alertCountByQueryName[i] = queries[i][1];
+    }
+
+    new Chart(document.getElementById("bar-chart-node"), {
+      type: 'bar',
+
+      data: {
+        labels: nodeNames,
+        datasets: [{
+          label: "Alerts",
+          // backgroundColor: ["#3e95cd", "#8e5ea2", "#3cba9f", "#e8c3b9","#c45850"],
+          backgroundColor: [" #ffc300 ", " #E6F69D ", " #AADEA7 ", " #64C2A6 ", " #2D87BB "],
+          data: alertCountByNode
+        }]
+      },
+      options: {
+        scales: {
+          yAxes: [{
+              categoryPercentage: 0.2,
+              ticks: {
+                beginAtZero: true,
+                callback: function(value, index, values) {
+                  if (Math.floor(value) === value) {
+                    return value;
+                  }
+                }
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'Alert Count'
+              }
+            }
+
+          ],
+          xAxes: [{
+            // Change here
+            barPercentage: 1.0,
+            display: false,
+
+            categoryPercentage: 0.2,
+            afterSetDimensions: function(axes) {
+
+            },
+            scaleLabel: {
+              display: true,
+              labelString: 'Nodes'
+            }
+
+          }]
+        },
+        legend: {
+          display: false
+        },
+        title: {
+          display: false,
+          text: 'Node alerts'
+        }
+      }
+    });
+
+    new Chart(document.getElementById("bar-chart-query"), {
+      type: 'bar',
+
+      data: {
+        labels: queryNames,
+        datasets: [{
+          label: "Queries",
+          backgroundColor: [" #ffc300 ", " #E6F69D ", " #AADEA7 ", " #64C2A6 ", " #2D87BB "],
+
+          data: alertCountByQueryName
+        }]
+      },
+      options: {
+        scales: {
+          yAxes: [{
+            categoryPercentage: 0.2,
+            ticks: {
+              beginAtZero: true,
+              callback: function(value, index, values) {
+                if (Math.floor(value) === value) {
+                  return value;
+                }
+              }
+
+            },
+            scaleLabel: {
+              display: true,
+              labelString: 'Alert Count'
+            }
+          }],
+          xAxes: [{
+            // Change here
+            barPercentage: 1.0,
+            categoryPercentage: 0.2,
+            display: false,
+            afterSetDimensions: function(axes) {
+
+            },
+            scaleLabel: {
+              display: true,
+              labelString: 'Query'
+            }
+
+          }]
+        },
+        legend: {
+          display: false
+        },
+        title: {
+          display: false,
+          text: 'Query alerts'
+        }
+      }
+    });
+
+    new Chart(document.getElementById("bar-chart-alert"), {
+      type: 'bar',
+
+      data: {
+        labels: alertNames,
+        datasets: [{
+          label: "Rules",
+          backgroundColor: [" #ffc300 ", " #E6F69D ", " #AADEA7 ", " #64C2A6 ", " #2D87BB "],
+
+          data: alertCountByAlertName
+        }]
+      },
+      options: {
+        scales: {
+          yAxes: [{
+            categoryPercentage: 0.2,
+            ticks: {
+              beginAtZero: true,
+              callback: function(value, index, values) {
+                if (Math.floor(value) === value) {
+                  return value;
+                }
+              }
+
+            },
+            scaleLabel: {
+              display: true,
+              labelString: 'Alert Count'
+            }
+          }],
+          xAxes: [{
+            // Change here
+            barPercentage: 1.0,
+            display: false,
+
+            categoryPercentage: 0.2,
+            afterSetDimensions: function(axes) {
+
+            },
+            scaleLabel: {
+              display: true,
+              labelString: 'Rule'
+            }
+
+          }]
+        },
+        legend: {
+          display: false
+        },
+        title: {
+          display: false,
+          text: 'Rule alerts'
+        }
+      }
+    });
+  }
+
+  function createPieGraph(graph_id, graph_name, name_array, count_array, column_array, query_name, is_recon) {
+    var chart = new Chart(document.getElementById(graph_id), {
+      type: 'pie',
+      data: {
+        labels: name_array,
+        datasets: [{
+          // backgroundColor: [ " 1.green color  ", " 2.red color  ", " 3.yellow color ", " 4.blue color ", " 5.grey color "],
+          // backgroundColor: [" #ffc300 ", " #E6F69D ", " #AADEA7 ", " #64C2A6 ", " #2D87BB "],
+          // backgroundColor: [ " #5b942d  ", " #ed4336 ", " #40aff8 ", " #f6b343 ", " #091d3a "],
+          // backgroundColor: [ " #518c24  ", " #EF5350  ", " #F3D060 ", " #00539B", " #25282A "],
+          backgroundColor: [ " #518c24  ", " #dd4814  ", " #ff9900 ", " #007cc0", " #072C61 "],
+
+
+          data: count_array
+        }]
+      },
+      options: {
+
+        legend: {
+          display: true,
+          position: 'right',
+          labels: {
+            fontColor: "#2B0B3F",
+          }
+        },
+        onClick: function(evt, item) {
+
+        },
+
+
+        title: {
+          display: false,
+          text: graph_name
+        }
+      }
+
+    });
+
+  }
+
+  $(document).ready(function() {
+    $('#right-panel').css('background-color', '#fafafa')
+  });
+</script>
+
+
+
+{% endblock %}

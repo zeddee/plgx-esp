@@ -1,0 +1,190 @@
+{% extends "layout.html" %}
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script>
+
+<link href="/static/css/jsoneditor/jsoneditor.min.css" rel="stylesheet" type="text/css">
+<script src="/static/js/jsoneditor/jsoneditor-minimalist.min.js"></script>
+<script src="/static/js/filereader.js"></script>
+
+<style type="text/css">
+  #jsoneditor {
+    height: 500px;
+  }
+</style>
+<!-- begin:: Content -->
+<div class="kt-content  kt-grid__item kt-grid__item--fluid" id="kt_content">
+  <div class="row">
+    <div class="col-lg-12">
+
+      <!--begin::Portlet-->
+      <div class="kt-portlet kt-portlet--last kt-portlet--responsive-mobile" id="kt_page_portlet">
+        <div class="kt-portlet__head kt-portlet__head--lg">
+          <div class="kt-portlet__head-label">
+            <h3 class="kt-portlet__head-title">
+              {% if node_config is defined and node_config != '' %}
+              <i class="kt-font-brand fas fa-pen-square"></i>
+              <strong>Update</strong> Config
+              {% else %}
+              <i class="kt-font-brand fas fa-plus-square"></i>
+              <strong>Add</strong> Config
+              {% endif %}
+            </h3>
+          </div>
+          <div class="kt-portlet__head-toolbar">
+            <div class="kt-portlet__head-wrapper">
+              <a href="javascript:void(0);" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+                <i class="fas fa-chevron-left"></i>
+                Back
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="kt-portlet__body">
+          <form class="kt-form form-horizontal" id="kt_form" onsubmit="return saveConfigJson(this)" method="POST">
+            <div class="row">
+              <div class="col-xl-1"></div>
+              <div class="col-xl-10">
+                <div class="kt-section kt-section--first">
+                  <div class="kt-section__body">
+                    {{ form.csrf_token() }}
+                    <div class="form-group row">
+                      <label class="col-3 col-form-label">Name </label>
+                      <div class="col-9">
+                        {{ form.name(class_="form-control" ,placeholder="Config name") }}
+                      </div>
+                    </div>
+                    <div class="form-group row">
+
+
+                      {{ form.platform.label(class_="col-3 col-form-label") }}
+                      <div class="col-9">
+                      {{ form.platform(class_="form-control kt-selectpicker") }}
+                      </div>
+                    </div>
+                  </div>
+                  <p>The <b>win_include_paths</b> and <b>win_exclude_paths</b> require full path to the file or
+                    folder and should be \\ terminated for folder paths. Specifying a folder will also include/exclude
+                    its sub-folders. Between exclusions and inclusions, the exclusions are matched first and given the
+                    preference. If there are no entries in the inclusion list, no events are captured and entries in
+                    exclusion lists don't carry any meaning.
+                  </p>
+                  <div class="form-group" style="display:none">
+
+                    {{ form.config(id='config1') }}
+                  </div>
+                  <div id="jsoneditor"></div>
+                </div>
+                <!-- <div class="kt-separator kt-separator--border-dashed kt-separator--space-lg"></div> -->
+
+                <div class="kt-portlet__foot">
+                  <div class="kt-form__actions kt-form__actions--center">
+                    <!-- <a href="{{ url_for('manage.configs') }}" class="btn btn-outline-success btn-icon-sm">
+                      <i class="la la-long-arrow-left"></i>
+                      Back
+                    </a> -->
+                    <!-- <input class="btn btn-success" type="submit" value="{% if node_config is defined and node_config != '' %}Update{% else %}Add{% endif %} Config"> -->
+                    {% if node_config is defined and node_config != '' %}
+                    <button type="submit" class="btn btn-success"><i class="fa fa-sync-alt"></i>Update</button>
+                    {% else %}
+                    <button type="submit" class="btn btn-success"><i class="fa fa-plus"></i>Add</button>
+                    {% endif %}
+                    <button type="reset" class="btn btn-secondary">Clear</button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-1"></div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!--end::Portlet-->
+    </div>
+  </div>
+</div>
+<!-- end:: Content -->
+
+
+<script>
+  var container = document.getElementById('jsoneditor');
+  var options = {
+    modes: ['text', 'code', 'tree', 'form', 'view'],
+    mode: 'code',
+    ace: ace
+  };
+
+  var json;
+  var node_config = '{{node_config}}';
+  if (node_config == '' || node_config == 'None' || node_config == null) {
+    json = {
+
+
+      "win_include_paths": {
+        "user_folders": [
+          "C:\\Users\\*\\Downloads\\"
+        ]
+      },
+
+      "win_exclude_paths": {
+        "prog_files": [
+          "C:\\Program Files (x86)\\Windows Kits\\"
+        ]
+      }
+    };
+
+  } else {
+
+    try{
+        json = '{{node_config.config}}';
+
+
+    } catch (error) {
+      json = {};
+      console.error(error);
+
+    }
+    if (json != '') {
+      json = json.replace(/\&#34;/g, '"');
+      json = json.replace(/\&#39;/g, "'");
+
+      json = JSON.parse(json);
+    }
+
+  }
+
+
+  var editor = new JSONEditor(container, options, json);
+
+  function saveConfigJson(form) {
+    if (document.getElementById('name').value == '') {
+      alert('Config name cannot be empty');
+      return false;
+    }
+    try {
+      var json = editor.get();
+      var blob = new Blob([editor.getText()], {
+        type: 'application/json;charset=utf-8'
+      });
+
+      var reader = new FileReader();
+
+      reader.onload = function() {
+          console.log(reader.result);
+        document.getElementById('config1').value = reader.result;
+      }
+      reader.readAsText(blob);
+
+      setTimeout(function() {
+        form.submit();
+      }, 1000);
+    } catch (err) {
+      alert('JSON is invalid');
+    }
+
+
+
+    return false;
+
+  }
+</script>
+
+{% endblock %}

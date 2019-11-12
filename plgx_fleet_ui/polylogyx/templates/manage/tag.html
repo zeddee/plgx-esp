@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+{% block page_title %}
+PolyLogyx - Tag
+{% endblock %}
+
+{% block content %}
+<!-- begin:: Content -->
+<div class="kt-content  kt-grid__item kt-grid__item--fluid" id="kt_content">
+
+  <div class="kt-portlet kt-portlet--mobile kt-portlet--responsive-mobile">
+    <div class="kt-portlet__head">
+      <div class="kt-portlet__head-label">
+        <span class="kt-portlet__head-icon">
+          <i class="kt-font-brand fa fa-tag"></i>
+        </span>
+        <h3 class="kt-portlet__head-title">
+          Tagged
+        </h3>
+      </div>
+      <div class="kt-portlet__head-toolbar">
+        <div class="kt-portlet__head-wrapper">
+          <a href="javascript:void(0);" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+            <i class="fas fa-chevron-left"></i>
+            Back
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="">
+
+      <!--begin: Tag -->
+      {% if tag is defined %}
+      <div class="kt-portlet__body">
+      <h2>Nodes Tagged <strong>{{ tag.value }}</strong></h2>
+
+      {% set nodes = tag.nodes %}
+      {% if nodes %}
+      {% include "tables/tagged_nodes.html" %}
+      {% else %}
+      <p>No nodes.</p>
+      {% endif %}
+      </div>
+      <div class="kt-portlet__body">
+      <h2>Packs Tagged <strong>{{ tag.value }}</strong></h2>
+
+      {% set packs = tag.packs %}
+      {% if packs %}
+      {% include "tables/packs.html" %}
+      {% else %}
+      <p>No packs.</p>
+      {% endif %}
+      </div>
+      <div class="kt-portlet__body">
+      <h2>Queries Tagged <strong>{{ tag.value }}</strong></h2>
+
+      {% set queries = tag.queries %}
+      {% if queries %}
+      {% include "tables/queries.html" %}
+      {% else %}
+      <p>No queries.</p>
+      {% endif %}
+      </div>
+      <div class="kt-portlet__body">
+      <h2>File Paths Tagged <strong>{{ tag.value }}</strong></h2>
+
+      {% set file_paths = tag.file_paths %}
+      {% if file_paths %}
+      {% for file_path in file_paths %}
+      <h2>
+          <a href="{{ url_for('manage.file_path', file_path_id=file_path.id) }}">{{ file_path.category }}</a>
+      </h2>
+
+      <ul>
+          {% for path in file_path.get_paths() %}
+          <li>{{ path }}</li>
+          {% endfor %}
+      </ul>
+      {% endfor %}
+      {% else %}
+      <p>No files monitored.</p>
+      {% endif %}
+
+      {% else %}
+
+      <div class="">
+          {% include "forms/tag.html" %}
+
+      </div>
+      {% endif %}
+      </div>
+      <!--end: Tag -->
+    </div>
+  </div>
+</div>
+
+<!-- end:: Content -->
+
+{% endblock %}

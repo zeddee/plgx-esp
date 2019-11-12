@@ -1,0 +1,148 @@
+{% if data.name =='win_epp_table' %}
+<style>
+    a{
+
+    }
+
+
+</style>
+<p>The status of the Anti-Virus solution on your computer. If the product_state is
+    not 'On' and 'product_signatures' are not 'Up-to-date' (wherever applicable)
+    your computer might be at risk.</p>
+{% elif data.name =='win_services' %}
+<p>A Windows service, or a daemon on Unix, is a computer program that operates in
+    the background and are often loaded automatically on startup. They can run even
+    without a user session. Below table provides a list of services running on your
+    computer. Malwares can install themselves as service on a system to gain
+    persistence. Clicking on the links in the < hash column name >, you can get a
+    reputation check of the services installed on your system.</p>
+{% elif data.name =='services' %}
+<p>A Windows service, or a daemon on Unix, is a computer program that operates in
+    the background and are often loaded automatically on startup. They can run even
+    without a user session. Below table provides a list of services running on your
+    computer. Malwares can install themselves as service on a system to gain
+    persistence. Clicking on the links in the < hash column name >, you can get a
+    reputation check of the services installed on your system.</p>
+{% elif data.name =='startup_items' %}
+<p>The following applications are automatically started with the launch of your
+    system. Having too many entries in the start_up items can increase the boot time
+    of your system. Malwares can install themselves as a start_up item on a system
+    to gain persistence. Clicking on the links in the < hash column name >, you can
+    get a reputation check of the start_up items installed on your system.</p>
+{% elif data.name =='win_startup_items' %}
+<p>The following applications are automatically started with the launch of your
+    system. Having too many entries in the start_up items can increase the boot time
+    of your system. Malwares can install themselves as a start_up item on a system
+    to gain persistence. Clicking on the links in the < hash column name >, you can
+    get a reputation check of the start_up items installed on your system.</p>
+{% elif data.name =='win_programs' %}
+{% elif data.name =='appcompat_shims' %}
+<p>
+    Appcompat shims are created on Microsoft to be able to support compatibility of
+    an application on various versions of the operating system without having to
+    re-build the entire application. For more on shims
+    <a style="color:#3abeff;"
+       href="https://blogs.technet.microsoft.com/askperf/2011/06/17/demystifying-shims-or-using-the-app-compat-toolkit-to-make-your-old-stuff-work-with-your-new-stuff/">(https://blogs.technet.microsoft.com/askperf/2011/06/17/demystifying-shims-or-using-the-app-compat-toolkit-to-make-your-old-stuff-work-with-your-new-stuff/)</a>
+
+</p>
+<p>Malwares leverage shim data bases (SDBs) as a persistence mechanism.</p>
+<p>The following table lists the SDBs on your system. Clicking on the links in the <
+    hash column name >, you can get a reputation check of the shims installed on
+    your system.</p>
+{% elif data.name =='scheduled_tasks' %}
+<p>scheduled_tasks (or cron jobs) are the program run by a Task Scheduler component
+    of the operating system to run specified jobs at regular intervals. Malware <a style="color:#3abeff;"
+                                                                                   href="https://www.csoonline.com/article/2621116/malware/malware-loves-windows-task-scheduler.html"
+                                                                                   target="_blank">(https://www.csoonline.com/article/2621116/malware/malware-loves-windows-task-scheduler.html)</a>
+    have abused this feature of operating systems.</p>
+<p>The following table provides the various scheduled tasks configured on your
+    system. </p>
+{% elif data.name =='mxtensions' %}
+<p>Malwares, specially adwares or spywares, have been disguising themselves as
+    browser extensions, especially if the extension was not installed from the
+    trusted stores. For more information:
+    <a style="color:#3abeff;" href="https://www.enisa.europa.eu/publications/info-notes/malware-in-browser-extensions">https://www.enisa.europa.eu/publications/info-notes/malware-in-browser-extensions</a>
+</p>
+<p>
+    The following table lists the various Chrome extensions on your system. The same
+    list can also be obtained by typing "chrome://extensions/" in your Chrome's
+    address bar. If you see anything suspicious, uninstall the extension.
+</p>
+{% elif data.name =='ie_extensions' %}
+<p>Malwares, specially adwares or spywares, have been disguising themselves as
+    browser extensions, especially if the extension was not installed from the
+    trusted stores. For more information:
+    <a style="color:#3abeff;" href="https://www.enisa.europa.eu/publications/info-notes/malware-in-browser-extensions">https://www.enisa.europa.eu/publications/info-notes/malware-in-browser-extensions</a>
+</p>
+<p>The following table lists the various IE extensions on your system. If you see
+    anything suspicious, uninstall the extension.</p>
+{% elif data.name =='time' %}
+<p>The following table provides your system time stamp in Unix
+    (https://en.wikipedia.org/wiki/Unix_time) and UTC
+    (https://en.wikipedia.org/wiki/Coordinated_Universal_Time) formats. The
+    timestamp represent the time at which the agent starts (usually every reboot
+    time after the installation)</p>
+{% elif data.name =='certificates' %}
+<p>Digital certificates <a style="color:#3abeff;" href="https://en.wikipedia.org/wiki/Public_key_certificate">(https://en.wikipedia.org/wiki/Public_key_certificate)</a>
+    are
+    used to establish the identity, and trust, of the software programs. The
+    following table lists the various digital certificates installed on your system,
+    their providers, reputation, expiry date and the signer details.</p>
+{% elif data.name =='etc_hosts' %}
+<p>hosts file is used by an operating system to resolve a computer (or an internet
+    domain) to an address. This link
+    (https://blog.malwarebytes.com/cybercrime/2016/09/hosts-file-hijacks/) describes
+    on how malware can make use of hosts file. The following table lists the entries
+    in the hosts file of your computer</p>
+{% elif data.name =='patches' %}
+<p>Operating system vendors regularly release software updates and patches for their
+    operating system. An unpatched system adds to the risk and vulnerability of the
+    computer. For the latest cumulative list of updates released by Microsoft click
+    here
+    <a style="color:#3abeff;"
+       href="https://support.microsoft.com/en-us/help/894199/software-update-services-and-windows-server-update-services-2018">(https://support.microsoft.com/en-us/help/894199/software-update-services-and-windows-server-update-services-2018).</a>
+    The following table lists the updates installed on your computer</p>
+{% elif data.name =='kva_speculative_info' %}
+<p>
+    The following table provides the presence (or absence) of mitigation's for the
+    Spectre and Meltdown vulnerabilities. To know more about fix of these
+    vulnerabilities on Windows operating systems click here
+    <a style="color:#3abeff;"
+       href="https://support.microsoft.com/en-us/help/4073119/protect-against-speculative-execution-side-channel-vulnerabilities-in">(https://support.microsoft.com/en-us/help/4073119/protect-against-speculative-execution-side-channel-vulnerabilities-in)</a>
+</p>
+<p>Mitigations for Spectre - Kernel VA Shadowing</p>
+<p>Kernel VA Shadowing Enabled (kva_shadow_enabled: 1 => Yes and 0 => No )
+<ol>
+    <li>With User pages marked global (kva_shadow_user_global: 1 => Yes and 0 =>
+        No )
+    </li>
+    <br/>
+    <li>With PCID flushing optimization (kva_shdow_pcid: 1 => Yes and 0 => No
+        )
+    </li>
+</ol></p>
+
+<p>Mitigations of Meltdown - Branch Target Injection </p>
+<p>Branch Prediction Mitigation Enabled (bp_mitigations: 1 => Yes and 0 => No)
+    <br/>
+<ol>
+    <li> Disabled due to system policy (bp_system_pol_disabled: 1 => Yes and 0 =>
+        No )
+    </li>
+
+    <li> Disabled due to lack of Microcode update (bp_microcode_disabled: 1 => Yes
+        and 0 => No )
+    </li>
+</ol>
+CPU Microcode Supports SPEC_CTRL MSR (cpu_spec_ctrl_supported: 1 => Yes and 0 =>
+No )
+
+<ol>
+    <li>IBRS support enabled (ibrs_support_enabled: 1 => Yes and 0 => No )</li>
+    <li>STIPD support enabled (stibp_support_enabled: 1 => Yes and 0 => No )
+        CPU Microcode Supports PRED_CMD (cpu_pred_cmd_supported: 1 => Yes and 0 => No
+        )
+    </li>
+</ol>
+</p>
+{% endif %}

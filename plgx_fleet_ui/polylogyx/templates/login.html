@@ -1,0 +1,83 @@
+<!doctype html>
+
+<html class="no-js" lang="">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>PolyLogyx - Login</title>
+  <meta name="description" content="PolyLogyx osquery Platform">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="shortcut icon" href="/static/assets/media/poly-img/favicon2x.png" />
+  <link rel="stylesheet" href="/static/css/login.css">
+  <!-- <link rel="stylesheet" href="/static/assets/app/custom/login/login-v3.default.css"> -->
+
+</head>
+
+<body class="">
+  <!-- begin:: Alerts -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="row">
+    <div class="col-md-12">
+      {% for category, message in messages %}
+      <div class="alert alert-dissmissible alert-{{ category }}">
+        <a class="close" title="Close" href="" data-dismiss="alert">&times;</a>
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% endwith %}
+  <!-- End:: Alerts -->
+
+  <!-- begin:: Page -->
+  <div class="kt-grid kt-grid--ver kt-grid--root">
+    <div class="kt-grid kt-grid--hor kt-grid--root  kt-login kt-login--v3 kt-login--signin" id="kt_login">
+      <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--hor" style="background-image: url(static/assets/media//bg/bg-3.jpg);">
+        <div class="kt-grid__item kt-grid__item--fluid kt-login__wrapper">
+          <!--Begin::content-->
+          <div class="kt-portlet__body">
+            <div class="">
+              <div class="kt-login__container" style="">
+                <div class="kt-login__logo">
+                  <a href="#">
+                    <img src="/static/assets/media/poly-img/poly-6.png" width="250px">
+                  </a>
+                </div>
+                <!--Begin::Login-->
+                <div class="kt-login__signin">
+                  <div class="kt-login__head">
+                    <h3 class="kt-login__title">Sign In To Admin</h3>
+                  </div>
+                  <form class="kt-form" action="" id="loginform" method="POST">
+                    {{ form.csrf_token() }}
+                    <div class="input-group">
+                      <input class="form-control" type="text" placeholder="Username" name="username" autocomplete="off">
+                    </div>
+                    <div class="input-group">
+                      <!-- <input class="form-control" type="password" placeholder="Password" name="password"> -->
+                      {{ form.password(placeholder="Password", class_="form-control", required=True) }}
+                    </div>
+                    <div class="kt-login__actions">
+                      <button type="submit" id="" class="btn btn-brand btn-elevate btn-success">Sign In</button>
+                    </div>
+                  </form>
+                </div>
+                <!--End::Login-->
+              </div>
+            </div>
+          </div>
+          <!-- end:: content -->
+        </div>
+      </div>
+    </div>
+  </div>
+{#  <script type="text/javascript" src="/static/public/js/common.js"></script>#}
+
+  <!-- end:: Page -->
+</body>
+
+</html>

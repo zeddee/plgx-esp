@@ -1,0 +1,57 @@
+
+
+  {% include "forms/distributed_row.html" %}
+
+
+  <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+    <div class="panel panel-default">
+      <div class="panel-heading active" role="tab" id="headingOne">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            Running Queries
+          </a>
+        </h4>
+        {% for query in queries %}
+        <div class="progress">
+
+          <div class="progress">
+            <div class="progress-bar progress-bar-success progress-bar-striped {% if query.completed_percent != 100 %}active{%endif %}" role="progressbar" aria-valuenow="{{ query.completed_percent }}" aria-valuemin="0" aria-valuemax="100"
+              style="width:{{ query.completed_percent }}%">
+              {{ query.completed_percent }}% Complete
+              ({{ query.completed }}/{{ query.total }})
+            </div>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+      <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+        <div class="panel-body" id="panel_body">
+          <table class="table table-hover table-checkable display dt-body-left">
+            <th>Query</th>
+            <th>Status</th>
+            <th>Completion Time</th>
+            {% for query in queries %}
+            <tr>
+              <td id="query_name">
+                {{ query.sql }}
+              </td>
+              <td style="width: 70%">
+
+              </td>
+              <td id="completion_time">{{ query.completion_time }}</td>
+            </tr>
+            {% endfor %}
+          </table>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="node_results">
+    {% if nodes %}
+    {% include "tables/nodes.html" %}
+    {% endif %}
+  </div>

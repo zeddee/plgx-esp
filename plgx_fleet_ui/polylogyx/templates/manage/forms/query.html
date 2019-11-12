@@ -1,0 +1,134 @@
+<!--begin::Portlet-->
+<div class="kt-portlet kt-portlet--last kt-portlet--responsive-mobile" id="kt_page_portlet">
+  <div class="kt-portlet__head kt-portlet__head--lg">
+    <div class="kt-portlet__head-label">
+      <h3 class="kt-portlet__head-title">
+        {% if query is defined %}
+        <i class="kt-font-brand fas fa-pen-square"></i>
+        Update Query -
+        {% else %}
+        <i class="kt-font-brand fas fa-plus-square"></i>
+        Add Query
+        {% endif %}
+      </h3>
+      &nbsp;
+      {% if query is defined %}
+      <h4 class="kt-portlet__head-title"> {{ query.name }}</h4>
+      {% endif %}
+    </div>
+    <div class="kt-portlet__head-toolbar">
+      <div class="kt-portlet__head-wrapper">
+        <a href="javascript:void(0);" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+          <i class="fas fa-chevron-left"></i>
+          Back
+        </a>
+      </div>
+    </div>
+  </div>
+    <div class="kt-portlet__body">
+        <form class="kt-form" id="kt_form" method="post">
+            <div class="row">
+                <div class="col-xl-2"></div>
+                <div class="col-xl-8">
+                    <div class="kt-section kt-section--first">
+                        <div class="kt-section__body">
+                            {{ form.csrf_token() }}
+                            <div class="form-group row">
+                               {{ form.name.label(class_="col-2 col-form-label") }}
+                                <div class="col-10">
+                                  {{ form.name(class_="form-control") }}
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                   {{ form.sql.label(class_="col-2 col-form-label") }}
+                                <div class="col-10">
+                                  {{ form.sql(class_="form-control") }}
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                       {{ form.interval.label(class_="col-2 col-form-label") }}
+                                <div class="col-10">
+                                  {{ form.interval(class_="form-control", type="number", min="1") }}
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                {{ form.platform.label(class_="col-2 col-form-label") }}
+                                <div class="col-10">
+                                  {{ form.platform(class_="form-control kt-selectpicker") }}
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                     {{ form.version.label(class_="col-2 col-form-label") }}
+                                <div class="col-10">
+                                  {{ form.version(class_="form-control") }}
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                {{ form.description.label(class_="col-2 col-form-label") }}
+                                <div class="col-10">
+                                  {{ form.description(class_="form-control") }}
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-2 col-form-label">Value</label>
+                                <div class="col-10">
+                                    <textarea class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                    {{ form.packs.label(class_="col-2 col-form-label") }}
+                                <div class="col-10">
+                                  {{ form.packs(class_="form-control kt-selectpicker") }}
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                {{ form.tags.label(class_="col-2 col-form-label") }}
+
+                                <div class="col-10">
+                                    {{ form.tags(placeholder="One tag per line", class_="form-control") }}
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-2 col-form-label"></label>
+                                <div class="col-10">
+                                    <div class="kt-checkbox-inline">
+
+                                        <span class="col-md-3">Query Options</span>
+                                        <div class="checkbox col-sm-5">
+                                            <label>
+                                            {{ form.snapshot() }} {{ form.snapshot.label.text }}
+                                           </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- <div class="kt-separator kt-separator--border-dashed kt-separator--space-lg"></div> -->
+
+                    <div class="kt-portlet__foot">
+                      <div class="kt-form__actions kt-form__actions--center">
+                        <!-- <a href="{{ url_for('manage.queries') }}" class="btn btn-outline-success btn-sm">
+                          <i class="la la-long-arrow-left"></i>
+                          Back
+                        </a> -->
+                        <!-- <input class="btn btn-success" type="submit" value="{% if query is defined %}Update{% else %}Add{% endif %}"> -->
+                        {% if query is defined %}
+                        <button type="submit" class="btn btn-success"><i class="fa fa-sync-alt"></i>Update</button>
+                        {% else %}
+                        <button type="submit" class="btn btn-success"><i class="fa fa-plus"></i>Add</button>
+                        {% endif %}
+                        <button type="reset" class="btn btn-secondary">Clear</button>
+                      </div>
+                    </div>
+                </div>
+                <div class="col-xl-2"></div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+<!--end::Portlet-->

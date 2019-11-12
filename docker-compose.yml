@@ -1,0 +1,96 @@
+version: '3'
+services:
+  vasp:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    ports:
+      - "6000:6000"
+      - "5555:5555"
+    depends_on:
+      - rabbit1
+      - postgres
+    env_file:
+      - .env
+    environment:
+      - POLYLOGYX_ENV=prod
+    volumes:
+         - carves:/src/plgx_fleet/carves
+    restart: always
+    external_links:
+      - rabbit1:rabbit1
+      - postgres:postgres
+  vasp_ui:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile_ui
+    ports:
+      - "5000:5000"
+    depends_on:
+      - vasp
+    env_file:
+      - .env
+    environment:
+      - POLYLOGYX_ENV=prod
+    restart: always
+    external_links:
+      - rabbit1:rabbit1
+      - postgres:postgres
+    volumes:
+         - carves:/src/plgx_fleet_ui/carves
+         - yara:/src/plgx_fleet_ui/yara
+  rabbit1:
+    image: rabbitmq:3.6.5-management
+    ports:
+      - "15672:15672"
+      - "5673:5673"
+      - "5672:5672"
+    volumes:
+      #- rabbitmq:/var/lib/rabbitmq:rw
+      - ./definitions.json:/opt/definitions.json:ro
+      - ./rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro
+    restart: always
+  nginx:
+    image: "nginx:1.15.7-alpine"
+    env_file:
+      - .env
+    depends_on:
+      - vasp
+      - vasp_ui
+    external_links:
+      - vasp:vasp
+      - vasp_ui:vasp_ui
+    volumes:
+         - ./nginx:/etc/nginx:ro
+         - ./resources:/resources
+         - yara:/resources/yara         
+    command: >
+          sh -c "cp /etc/nginx/certificate.crt /resources/
+          && echo $${ENROLL_SECRET}>/resources/secret.txt
+          && nginx-debug -g 'daemon off;'"
+    restart: always
+    ports:
+     - "443:443"
+     - "9000:9000"
+  postgres:
+    image: "postgres:11.1"
+    env_file:
+      - .env
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB_NAME}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: always
+  rsyslogf:
+    build:
+      context: ./rSysLogF
+      dockerfile: Dockerfile
+    ports:
+      - "514:514"
+    restart: always
+volumes:
+  postgres-data:
+  carves:
+  yara:
