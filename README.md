@@ -27,7 +27,9 @@ PolyLogyx ESP leverages osquery's TLS configuration, logger, and distributed rea
 Osquery is cross platform agent that supports 64 bit variants of Windows (7 and above), MacOS and all the popular Linux distributions (Ubuntu, Centos, RedHat etc). PolyLogyx ESP's agent is built upon Osquery and therefore the supported endpoints are the ones as supported by Osquery.
 
 ## PolyLogyx ESP API SDK
-PolyLogyx ESP can be programatically interacted with using the extensive  [REST API](https://github.com/polylogyx/platform-docs/tree/master/13_Rest_API) interface. This allows for multiple use case like Incident Response, Threat Hunting, Compromise Assessment, Compliance checks etc to be easily served with the platform. This also provides an easy for integration with SOAR platforms (href demo vide of PolyLogyx Phantom video)## Integration with Big Data/Analytic systems
+PolyLogyx ESP can be programatically interacted with using the extensive  [REST API](https://github.com/polylogyx/platform-docs/tree/master/13_Rest_API) interface. This allows for multiple use case like Incident Response, Threat Hunting, Compromise Assessment, Compliance checks etc to be easily served with the platform. This also provides an easy for integration with [SOAR platforms](https://youtu.be/XbpleymXpSg) 
+
+## Integration with Big Data/Analytic systems
 PolyLogyx ESP is packaged with an rSysLog container. This container can be configured to stream the query results and other logs from the endpoint population to the back-end systems like Splunk, ELK, GreyLog etc for cross-product correlation, alert enrichments and other SIEM related use cases.
 
 ## PolyLogyx ESP - Community Edition License
