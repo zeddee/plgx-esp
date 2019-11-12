@@ -1,9 +1,14 @@
 # PolyLogyx Endpoint Security Platform (ESP) - Community Edition
-PolyLogyx ESP levarages the <href>Osquery tool, with <href>PolyLogx Extension to provide endpoint visibility and monitoring at scale. To get the details of the architecture of the full platofrm, please read the [platform docs](https://github.com/polylogyx/platform-docs). This repository provides the community release of the platform which focuses on the Osquery based agent management to provide visbility into endpoint activities, query configuration management, a live query interface and alerting capabilities based on security critical events.
+PolyLogyx ESP levarages the [Osquery](https://osquery.io/) tool, with [PolyLogx Extension](https://github.com/polylogyx/osq-ext-bin) to provide endpoint visibility and monitoring at scale. To get the details of the architecture of the full platofrm, please read the [platform docs](https://github.com/polylogyx/platform-docs). This repository provides the community release of the platform which focuses on the Osquery based agent management to provide visbility into endpoint activities, query configuration management, a live query interface and alerting capabilities based on security critical events.
+
+## Prerequisites
+- git
+- 5000 and 9000 ports should be available and accessible through firewall
 
 ## Build and deploy
 The platform is packaged as a Docker image and following instructions will help set the server up.
-- Clone this repository on a system that has [docker-compose 1.21.1]](https://docs.docker.com/compose/install/#install-compose) (or above) and docker engine 18.03.1-CE (or above) available. (Recommended to use an Ubuntu <> system)
+Execute the below command from a root privileged terminal/Administrative command prompt
+- Clone this repository on a system that has [docker-compose 1.21.1](https://docs.docker.com/compose/install/#install-compose) (or above) and docker engine 18.03.1-CE (or above) available. (Recommended to use an Ubuntu <> system)
 - Generate certificate using sh ./certificate-generate.sh <IP_ADDRESS>
 - docker-compose -p 'plgx_docker' up -d
 
