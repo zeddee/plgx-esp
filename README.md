@@ -6,15 +6,104 @@ PolyLogyx ESP levarages the [Osquery](https://osquery.io/) tool, with [PolyLogx 
 - 5000 and 9000 ports should be available and accessible through firewall
 
 ## Build and deploy
-The platform is packaged as a Docker image and following instructions will help set the server up.
-Execute the below command from a root privileged terminal/Administrative command prompt
-- Clone this repository on a system that has [docker-compose 1.21.1](https://docs.docker.com/compose/install/#install-compose) (or above) and docker engine 18.03.1-CE (or above) available. (Recommended to use an Ubuntu <> system)
-- Generate certificate using sh ./certificate-generate.sh <IP_ADDRESS>
-- docker-compose -p 'plgx_docker' up -d
+
+After you install Docker and Docker Compose, you can install the PolyLogyx
+server.
+
+1.  Clone this repository.
+
+    ```~/Downloads$ git clone https://github.com/polylogyx/plgx-esp.git```
+     ```<snip>
+    Cloning into 'plgx-esp'...
+   
+2.  Switch to the folder where the repository is cloned.
+
+    ```~/Downloads\$ cd plgx_esp/```
+3.  Enter the certificate-generate.sh script to generate certificates for
+    osquery.  
+    ```~/Downloads/plgx_esp$ sh ./certificate-generate.sh <IP address>```
+    ```x.x.x.x
+    Generating a 2048 bit RSA private key
+    .........................................................................................+++
+    .........................+++
+    writing new private key to 'nginx/private.key'
+    ``` 
+            
+    In the syntax, \<IP address\> is the IP address of the system on which on to host the PolyLogyx server. This will generate 
+    the certificate for osquery (used for provisioning clients) and place the certificate in the nginx folder.
+
+4.  Modify and save the docker-compose.yml file.
+
+    1.  Edit the following configuration parameters in the file. In the syntax, replace the values in angle brackets with required values.
+    ```
+    ENROLL_SECRET=<secret value>
+    POLYLOGYX_USER=<user login name> 
+    POLYLOGYX_PASSWORD=<login password> 
+    RSYSLOG_FORWARDING=true
+    VT_API_KEY=<VirusTotal Api Key> 
+    IBMxForceKey=<IBMxForce Key> 
+    IBMxForcePass=<IBMxForce Pass>
+    PURGE_DATA_DURATION=<number of days>  
+    THREAT_INTEL_LOOKUP_FREQUENCY=<number of minutes>
+     ```   
+| Parameter | Description                                                                                                                                                                                  |
+|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ENROLL_SECRET | Specifies the enrollment shared secret that is used for authentication.                                                                                                                              |
+| POLYLOGYX_USER       | Refers to the user login name for the PolyLogyx server.                                                                                                         |
+| POLYLOGYX_PASSWORD       | Indicates to the password for the PolyLogyx server user.                                                                                                              |
+| RSYSLOG_FORWARDING       | Set to true to enable forwarding of osquery and PolyLogyx logs to the syslog receiver by using rsyslog. |                                                                         |  
+| VT_API_KEY       | Represents the VirusTotal API key.                                                                            | 
+| IBMxForceKey       | Represents the IBMxForce key.                                                                            | 
+| IBMxForcePass       | Specifies the IBMxForce pass.                                                                            | 
+| PURGE_DATA_DURATION       | Specifies the frequency (in number of days) for purging the data.                                                                            | 
+| THREAT_INTEL_LOOKUP_FREQUENCY       | Specifies the frequency (in minutes) for fetching threat intelligence data.                                                                            |   
+    2. Save the file.
+    
+
+
+6.  Run the following command to start Docker compose.
+
+    ```docker-compose -p 'plgx_esp' up -d```
+    
+    Typically, this takes approximately 10-15 minutes. The following lines appear on
+    the screen when Docker starts:
+    ````Starting plgx_esp_rabbit1_1  ... done
+        Starting plgx_esp_postgres_1 ... done
+        Starting plgx_esp_vasp_1     ... done
+        Attaching to plgx_esp_rabbit1_1, plgx_esp_postgres_1, plgx_esp_vasp_1
+        .
+        .
+        .
+        Server is up and running```
+        
+7.  Log on to server using following URL using the latest version of Chrome or
+    Firefox browser.
+    
+    ```https://<ip address>:5000/manage```
+
+    In the syntax, `<IP address>` is the IP address of the system on which the
+    PolyLogyx server is hosted. This is the IP address you specified in step 3.
+
+8.  Ignore the SSL warning, if any.
+
+9.  Log on to the server using the credentials provided above at step 5a.
+
+10.  Provision the clients. For more information, see [Provisioning the PolyLogyx
+    Client for Endpoints](../03_Provisioning_Polylogyx_Client/Readme.md).
+
+## Uninstalling the Server 
+------------------------
+
+To uninstall the PolyLogyx server, run the following command to clean-up
+existing Docker images and containers.
+
+```~/Downloads\$ sh ./docker-cleanup.sh```
+
+**Note:** This will clean **all** the images and containers.
 
 ## PolyLogyx ESP Components
-- [plgx_fleet](https://github.com/polylogyx/plgx-esp/src/master/plgx_fleet/README.md) - Manages requests coming from endpoint
-- [plgx_fleet_ui](https://github.com/polylogyx/plgx-esp/src/master/plgx_fleet_ui/README.md) - Mangement server for taking actions, modifying properties  of an endpoint.
+- plgx_esp - Manages requests coming from endpoint
+- plgx_fleet_ui - Mangement server for taking actions, modifying properties  of an endpoint.
 - RabbitMQ
 - nginx
 - rSysLogF
