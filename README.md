@@ -11,8 +11,10 @@ After you install Docker and Docker Compose, you can install the PolyLogyx
 server.
 
 1.  Clone this repository.
-    ```~/Downloads$ git clone https://github.com/polylogyx/plgx-esp.git
-    Cloning into 'plgx-esp'... 
+
+    ```~/Downloads$ git clone https://github.com/polylogyx/plgx-esp.git```
+     ```<snip>
+    Cloning into 'plgx-esp'...```
    
 2.  Switch to the folder where the repository is cloned.
 
