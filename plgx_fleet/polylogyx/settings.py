@@ -15,9 +15,6 @@ except Exception as e:
 
 credentials = pika.PlainCredentials("guest", "guest")
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(
-    host=RABBITMQ_HOST, credentials=credentials))
-
 
 class Config(object):
     EMAIL_RECIPIENTS = []
