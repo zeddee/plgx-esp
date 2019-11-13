@@ -82,7 +82,7 @@ server.
     ```https://<ip address>:5000/manage```
 
     In the syntax, `<IP address>` is the IP address of the system on which the
-    PolyLogyx server is hosted. This is the IP address you specified in step 4.
+    PolyLogyx server is hosted. This is the IP address you specified in step 3.
 
 8.  Ignore the SSL warning, if any.
 
