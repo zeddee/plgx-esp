@@ -5,7 +5,7 @@ if [ -e nginx/private.key ]
 then
     echo "Certificate already exists. Please remove the existing certificates and then try again"
 else
-        openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout nginx/private.key -out nginx/certificate.crt -subj '/CN='$a'/O=PolyLogyx LTD./C=US'
+        openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout nginx/private.key -out nginx/certificate.crt -subj '/CN='$a'/O=PolyLogyx LLC./C=US'
 fi
 
 sed  's/tls_hostname=.*/tls_hostname='"$a"':9000/g' resources/osquery.flags > resources/osquery.flags1

@@ -26,18 +26,18 @@ RUN cd /usr/bin \
   && ln -sf pip3.7 pip
 
 # Copy and install our requirements first, so they can be cached
-COPY ./plgx_fleet_ui/requirements/prod.txt /tmp/requirements.txt
+COPY ./plgx_esp_ui/requirements/prod.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
 
 # Add our application to the container
-COPY ./plgx_fleet_ui/. /src/plgx_fleet_ui/
-COPY ./nginx/private.key /src/plgx_fleet_ui/private.key
-COPY ./resources/. /src/plgx_fleet_ui/resources/ 
-COPY ./nginx/certificate.crt /src/plgx_fleet_ui/resources/certificate.crt
+COPY ./plgx_esp_ui/. /src/plgx_esp_ui/
+COPY ./nginx/private.key /src/plgx_esp_ui/private.key
+COPY ./resources/. /src/plgx_esp_ui/resources/ 
+COPY ./nginx/certificate.crt /src/plgx_esp_ui/resources/certificate.crt
 
-RUN chmod a+x /src/plgx_fleet_ui/docker-entrypoint.sh
+RUN chmod a+x /src/plgx_esp_ui/docker-entrypoint.sh
 
 
-ENTRYPOINT ["/src/plgx_fleet_ui/docker-entrypoint.sh"]
+ENTRYPOINT ["/src/plgx_esp_ui/docker-entrypoint.sh"]
 
 

@@ -15,7 +15,7 @@ services:
     environment:
       - POLYLOGYX_ENV=prod
     volumes:
-         - carves:/src/plgx_fleet/carves
+         - carves:/src/plgx_esp/carves
     restart: always
     external_links:
       - rabbit1:rabbit1
@@ -37,8 +37,8 @@ services:
       - rabbit1:rabbit1
       - postgres:postgres
     volumes:
-         - carves:/src/plgx_fleet_ui/carves
-         - yara:/src/plgx_fleet_ui/yara
+         - carves:/src/plgx_esp_ui/carves
+         - yara:/src/plgx_esp_ui/yara
   rabbit1:
     image: rabbitmq:3.6.5-management
     ports:
