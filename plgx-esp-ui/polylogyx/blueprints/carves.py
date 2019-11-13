@@ -10,7 +10,7 @@ from polylogyx.dao import nodes_dao as nodedao
 from polylogyx.wrappers import parent_wrappers as parentwrapper
 from polylogyx.wrappers import carve_wrappers as wrapper
 from polylogyx.constants import PolyLogyxServerDefaults
-
+from polylogyx.models import DistributedQueryTask,db,CarveSession
 ns = Namespace('carves', description='Carves related operations')
 
 
@@ -65,5 +65,42 @@ class DownloadCarves(Resource):
                 return data
             else:
                 message = 'This session id does not exist'
+
+        return marshal(respcls(message,status), parentwrapper.common_response_wrapper, skip_none=True)
+
+
+@require_api_key
+@ns.route('/query/<int:query_id>/<string:host_identifier>', endpoint='get_carves_by_query_id')
+@ns.doc(params={'query_id': 'query id','host_identifier': 'host identifier'})
+class CarveSessionByQueryId(Resource):
+    '''download carves through session id'''
+
+    def post(self, query_id,host_identifier):
+        status = 'failure'
+        message = 'Data missing'
+
+        if not query_id:
+            message = 'Please provide a query id'
+        else:
+            if host_identifier:
+                node = nodedao.get_node_by_host_identifier(host_identifier)
+                if not node:
+                    status = 'failure'
+                    message = 'Node with this identifier does not exist'
+                else:
+
+                    dqt=db.session.query(DistributedQueryTask).filter(DistributedQueryTask.distributed_query_id==query_id).filter(DistributedQueryTask.node_id==node.id).first()
+                    if dqt:
+                        carve_session=db.session.query(CarveSession).filter(CarveSession.request_id==dqt.guid).first()
+                        carve_session = marshal(carve_session, wrapper.carves_wrapper)
+
+                        if carve_session:
+                            status = "success"
+                            message="Successfully fetched the carve"
+                            return marshal(respcls(message, status, carve_session), parentwrapper.common_response_wrapper)
+                        else:
+                            message="carve not started"
+                    else:
+                        message="query id provided is invalid"
 
         return marshal(respcls(message,status), parentwrapper.common_response_wrapper, skip_none=True)
