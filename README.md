@@ -122,7 +122,7 @@ PolyLogyx ESP can be programatically interacted with using the extensive  [REST 
 PolyLogyx ESP is packaged with an rSysLog container. This container can be configured to stream the query results and other logs from the endpoint population to the back-end systems like Splunk, ELK, GreyLog etc for cross-product correlation, alert enrichments and other SIEM related use cases.
 
 ## PolyLogyx ESP - Community Edition License
-Please read the LICENSE file for details on the license.
+Please read the [LICENSE](LICENSE) file for details on the license.
 
 ## PolyLogyx ESP - Enterprise Edition
 PolyLogyx ESP comes with an enterprise flavor with advanced set of features and dedicated support. More about the enterprise edition of ESP can be learned [here](https://github.com/polylogyx/platform-docs)  or send an email to info@polylogyx.com
