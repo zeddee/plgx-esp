@@ -1,83 +1,338 @@
-if [[ $EUID -ne 0 ]]; then
-  echo "You must be a root user" 2>&1
-  exit 1
-fi
-for i in "$@"
-do
-case $i in
-    -ip=*|--extension=*)
-    ip="${i#*=}"
+#!/bin/sh
+#
+# IMPORTANT! If osquery is not installed, it will be installed.
+
+_PROJECT="POLYLOGYX"
+
+_SECRET_LINUX=/etc/osquery/secret.txt
+_FLAGS_LINUX=/etc/osquery/osquery.flags
+_CERT_LINUX=/etc/osquery/certificate.crt
+
+_SECRET_OSX=/private/var/osquery/secret.txt
+_FLAGS_OSX=/private/var/osquery/osquery.flags
+_CERT_OSX=/private/var/osquery/certificate.crt
+
+_PLIST_OSX=/Library/LaunchDaemons/com.facebook.osqueryd.plist
+_OSQUERY_PLIST=/private/var/osquery/com.facebook.osqueryd.plist
+
+_SECRET_FREEBSD=/usr/local/etc/secret.txt
+_FLAGS_FREEBSD=/usr/local/etc/osquery.flags
+_CERT_FREEBSD=/usr/local/etc/certificate.crt
+
+_OSQUERY_PKG="https://pkg.osquery.io/darwin/osquery-4.0.2.pkg"
+_OSQUERY_DEB="https://pkg.osquery.io/deb/osquery_4.0.2_1.linux.amd64.deb"
+_OSQUERY_RPM="https://pkg.osquery.io/rpm/osquery-4.0.2-1.linux.x86_64.rpm"
+
+_OSQUERY_SERVICE_LINUX="osqueryd"
+_OSQUERY_SERVICE_OSX="com.facebook.osqueryd"
+_OSQUERY_SERVICE_FREEBSD="osqueryd"
+
+_SECRET_FILE=""
+_FLAGS=""
+_CERT=""
+_SERVICE=""
+_ACTION=""
+_LINUX_FLAVOUR=""
+parseCLArgs(){
+  port="9000"
+  while [ $# -gt 0 ]
+  do
+    key="${1}"
+  case ${key} in
+    -i)
+    ip="${2}"
     shift # past argument=value
     ;;
-    -port=*|--searchpath=*)
-    port="${i#*=}"
+    -port)
+    port="${2}"
     shift # past argument=value
     ;;
+    -p)
+    _ACTION="install"
+    shift # past argument=value
+    ;;
+    -u)
+    if [ ${2}  = 'd' ]
+    then
+      _ACTION='uninstall'
+    fi 
+    shift # past argument=value
+    ;;
+    
+    -h|--help)
+    echo "Usage : ./linux_cpt.sh -p -ip <IP/FQDN> -port 9000"
+    shift # past argument
+    ;;
+    *)    
+    shift # past argument=value
+    ;;
+    
     *)
           # unknown option
     ;;
-esac
-done
+  esac
+  done
 
-port="${port:-9000}"
-if [ -z "$ip" ];
-then
-   echo "Please provide an ip"
-   echo "Usage : ./linux_cpt.sh -ip=<IP/FQDN> -port=9000"
-   exit
-fi
+  
+  if [ $_ACTION = 'install' ]; then
+    if  [ -z "$ip" ]; then
+      echo "Please provide an ip"
+      echo "Usage : ./linux_cpt.sh -p -i <IP/FQDN> -port 9000"
+      exit
+    else
+      _install
+    fi
+  elif [ $_ACTION = 'uninstall' ]; then
+    _uninstall
+  else
+    echo "Usage : ./linux_cpt.sh -p -i <IP/FQDN> -port 9000"
+  fi
+}
 
-systemctl stop osquery
-url="https://$ip:$port"
-url="$url"/downloads/
-echo "$url"
+whatOS() {
+  OS=$(echo `uname`|tr '[:upper:]' '[:lower:]')
+  log "OS=$OS"
+  if [ "$OS" = "linux" ]; then
+    distro=$(/usr/bin/rpm -q -f /usr/bin/rpm >/dev/null 2>&1)
+    if [ "$?" = "0" ]; then
+      log "RPM based system detected"
+      _LINUX_FLAVOUR="rpm"
+	else
+      _LINUX_FLAVOUR="debian"	
+      log "Debian based system detected"
+    fi
+  fi   
+}
+
+downloadDependents() {
+  url="https://$ip:$port"
+  url="$url"/downloads/
+  echo "$url"
+
+  echo "Downloading flags file, secret file, cert file for $OS os"
+  if [ "$OS" = "linux" ]; then
+    curl -o /etc/osquery/osquery.flags  "$url"linux/osquery.flags -k || wget -O /etc/osquery/osquery.flags "$url"linux/osquery.flags --no-check-certificate
+    curl -o /etc/osquery/secret.txt   "$url"secret.txt -k || wget -O /etc/osquery/secret.txt "$url"secret.txt --no-check-certificate
+    curl -o /etc/osquery/certificate.crt  "$url"certificate.crt -k || wget  -O /etc/osquery/certificate.crt "$url"certificate.crt --no-check-certificate 
+  fi
+  if [ "$OS" = "darwin" ]; then
+    curl -o /private/var/osquery/osquery.flags  "$url"darwin/osquery.flags -k || wget -O /private/var/osquery/osquery.flags "$url"darwin/osquery.flags --no-check-certificate
+    curl -o /private/var/osquery/secret.txt  "$url"secret.txt -k|| wget -O /private/var/osquery/secret.txt "$url"secret.txt --no-check-certificate
+    curl -o /private/var/osquery/certificate.crt  "$url"certificate.crt -k || wget  -O /private/var/osquery/certificate.crt "$url"certificate.crt --no-check-certificate
+  fi
+  if [ "$OS" = "freebsd" ]; then
+    curl -o /usr/local/etc/osquery.flags  "$url"freebsd/osquery.flags -k || wget -O /usr/local/etc/osquery.flags "$url"freebsd/osquery.flags --no-check-certificate
+    curl -o /usr/local/etc/secret.txt   "$url"secret.txt -k || wget -O /usr/local/etc/secret.txt "$url"secret.txt --no-check-certificate
+    curl -o /usr/local/etc/certificate.crt  "$url"certificate.crt -k || wget  -O /usr/local/etc/certificate.crt "$url"certificate.crt --no-check-certificate
+  fi
+}
 
 
+fail() {
+  echo "[!] $1"
+  exit 1
+}
 
-mkdir /tmp/osquery
+log() {
+  echo "[+] $1"
+}
 
-mkdir /opt/osquery
-cd /opt/osquery
+installOsquery() {
+  log "Installing osquery for $OS"
+  if [ "$OS" = "linux" ]; then
+    if [ $_LINUX_FLAVOUR = "rpm" ]; then
+      _RPM="$(echo $_OSQUERY_RPM | cut -d"/" -f5)"
+      sudo curl -# "$_OSQUERY_RPM" -o "/tmp/$_RPM"
+      sudo rpm -ivh "/tmp/$_RPM"
+    else
+      _DEB="$(echo $_OSQUERY_DEB | cut -d"/" -f5)"
+      sudo curl -# "$_OSQUERY_DEB" -o "/tmp/$_DEB"
+      sudo dpkg -i "/tmp/$_DEB"
+    fi
+  fi
+  if [ "$OS" = "darwin" ]; then
+    _PKG="$(echo $_OSQUERY_PKG | cut -d"/" -f5)"
+    sudo curl -# "$_OSQUERY_PKG" -o "/tmp/$_PKG"
+    sudo installer -pkg "/tmp/$_PKG" -target /
+  fi
+  if [ "$OS" = "freebsd" ]; then
+    sudo ASSUME_ALWAYS_YES=YES pkg install osquery
+  fi
+  log "Installed osquery for $OS"
+}
 
-echo 'Downloading osquery bundle..'
-wget -O ./osquery-4.0.2_1.linux_x86_64.tar.gz "$url"osquery-4.0.2_1.linux_x86_64.tar.gz --no-check-certificate || curl -o ./osquery-4.0.2_1.linux_x86_64.tar.gz  "$url"osquery-4.0.2_1.linux_x86_64.tar.gz -k
+verifyOsquery() {
+   installOsquery
+}
 
-echo 'Extracting osquery bundle..'
-tar zxvf ./osquery-4.0.2_1.linux_x86_64.tar.gz -C /tmp/osquery
+prepareDependents() {
+  if [ "$OS" = "linux" ]; then
+    _SECRET_FILE="$_SECRET_LINUX"
+    _FLAGS="$_FLAGS_LINUX"
+    _CERT="$_CERT_LINUX"
+    _SERVICE="$_OSQUERY_SERVICE_LINUX"
+  fi
+  if [ "$OS" = "darwin" ]; then
+    _SECRET_FILE="$_SECRET_OSX"
+    _FLAGS="$_FLAGS_OSX"
+    _CERT="$_CERT_OSX"
+    _SERVICE="$_OSQUERY_SERVICE_OSX"
+  fi
+  if [ "$OS" = "freebsd" ]; then
+    _SECRET_FILE="$_SECRET_FREEBSD"
+    _FLAGS="$_FLAGS_FREEBSD"
+    _CERT="$_CERT_FREEBSD"
+    _SERVICE="$_OSQUERY_SERVICE_FREEBSD"
+  fi
+  log "_SECRET_FILE=$_SECRET_FILE"
+  log "_FLAGS=$_FLAGS"
+  log "_CERT=$_CERT"
+  log "IMPORTANT! If osquery is not installed, it will be installed."
+}
 
-cp /tmp/osquery/usr/bin/osqueryd ./osqueryd
+stopOsquery() {
+  if [ "$OS" = "linux" ]; then
+    log "Stopping $_OSQUERY_SERVICE_LINUX"
+    if which systemctl >/dev/null; then
+      sudo systemctl stop "$_OSQUERY_SERVICE_LINUX"
+    elif which service >/dev/null; then
+      sudo service "$_OSQUERY_SERVICE_LINUX" stop
+    else
+      sudo /etc/init.d/"$_OSQUERY_SERVICE_LINUX" stop
+    fi
+  fi
+  if [ "$OS" = "darwin" ]; then
+    log "Stopping $_OSQUERY_SERVICE_OSX"
+    if launchctl list | grep -qcm1 "$_OSQUERY_SERVICE_OSX"; then
+      sudo launchctl unload "$_PLIST_OSX"
+    fi
+  fi
+  if [ "$OS" = "freebsd" ]; then
+    log "Stopping $_OSQUERY_SERVICE_FREEBSD"
+    if [ "$(service osqueryd onestatus)" = "osqueryd is running." ]; then
+      sudo service "$_OSQUERY_SERVICE_FREEBSD" onestop
+    fi
+  fi
+}
 
-echo 'Downloading flags file..'
-wget -O ./osquery.flags "$url"osquery_linux.flags --no-check-certificate || curl -o ./osquery.flags  "$url"osquery_linux.flags -k
+startOsquery() {
+  if [ "$OS" = "linux" ]; then
+    log "Starting $_OSQUERY_SERVICE_LINUX"
+    if which systemctl >/dev/null; then
+      sudo systemctl start "$_OSQUERY_SERVICE_LINUX"
+      sudo systemctl enable "$_OSQUERY_SERVICE_LINUX"
+    else
+      sudo /etc/init.d/"$_OSQUERY_SERVICE_LINUX" start
+      sudo update-rc.d "$_OSQUERY_SERVICE_LINUX" defaults
+    fi
+  fi
+  if [ "$OS" = "darwin" ]; then
+    log "Starting $_OSQUERY_SERVICE_OSX"
+    sudo cp "$_OSQUERY_PLIST" "$_PLIST_OSX"
+    sudo launchctl load "$_PLIST_OSX"
+  fi
+  if [ "$OS" = "freebsd" ]; then
+    log "Starting $_OSQUERY_SERVICE_FREEBSD"
+    echo 'osqueryd_enable="YES"' | sudo tee -a /etc/rc.conf
+    sudo service "$_OSQUERY_SERVICE_FREEBSD" start
+  fi
+}
 
-actual_cert_path='./certificate.crt'
-final_cert_path=$PWD'/certificate.crt'
 
-actual_secret_path='./secret.txt'
-final_secret_path=$PWD'/secret.txt'
+stopOsqueryAndRemoveService() {
+  if [ "$OS" = "linux" ]; then
+    log "Stopping $_OSQUERY_SERVICE_LINUX"
+    if which systemctl >/dev/null; then
+      sudo systemctl stop "$_OSQUERY_SERVICE_LINUX"
+      sudo systemctl disable "$_OSQUERY_SERVICE_LINUX"
+    elif which service >/dev/null; then
+      sudo service "$_OSQUERY_SERVICE_LINUX" stop
+      echo manual | sudo tee "/etc/init/$_OSQUERY_SERVICE_LINUX.override"
+    else
+      sudo /etc/init.d/"$_OSQUERY_SERVICE_LINUX" stop
+      sudo update-rc.d -f "$_OSQUERY_SERVICE_LINUX" remove
+    fi
+    if [ $_LINUX_FLAVOUR = "rpm" ]; then
+      log "RPM based system detected"
+	  sudo rpm -e osquery 
+    else
+      log "DEB based system detected"
+	  sudo apt-get autoremove osquery
+    fi
+  fi
+  if [ "$OS" = "darwin" ]; then
+    log "Stopping $_OSQUERY_SERVICE_OSX"
+    if launchctl list | grep -qcm1 "$_OSQUERY_SERVICE_OSX"; then
+      sudo launchctl unload "$_PLIST_OSX"
+      sudo rm -f "$_PLIST_OSX"
+    fi
+    sudo pkgutil --only-files --files com.facebook.osquery | tr '\n' '\0' | xargs -n 1 -0 sudo rm -if
+    sudo pkgutil --only-dirs --files com.facebook.osquery | tail -r | tr '\n' '\0' | xargs -n 1 -0 sudo rmdir
+	sudo pkgutil --forget com.facebook.osquery
+  fi
+  if [ "$OS" = "freebsd" ]; then
+    log "Stopping $_OSQUERY_SERVICE_FREEBSD"
+    if [ "$(service osqueryd onestatus)" = "osqueryd is running." ]; then
+      sudo service "$_OSQUERY_SERVICE_FREEBSD" onestop
+    fi
+    sudo pkg delete osquery
+    cat /etc/rc.conf | grep "osqueryd_enable" | sed 's/YES/NO/g' | sudo tee /etc/rc.conf
+  fi
+}
 
-actual_flags_path='osquery.flags'
-final_flags_path=$PWD'/osquery.flags'
+removeSecret() {
+  log "Removing osquery secret: $_SECRET_FILE"
+  sudo rm -f "$_SECRET_FILE"
+}
+
+removeFlags() {
+  log "Removing osquery flags: $_FLAGS"
+  sudo rm -f "$_FLAGS"
+}
+
+removeCert() {
+  log "Removing osquery certificate"
+  sudo rm -f "$_CERT"
+}
+removeDB() {
+  log "Removing osquery db"
+  sudo rm -f /tmp/osquery.pid
+  sudo rm -f /tmp/osquery.db
+
+}
+
+bye() {
+  result=$?
+  if [ "$result" != "0" ]; then
+    echo "[!] Fail to enroll $_PROJECT node"
+  fi
+  exit $result
+}
+
+_install() {
+  downloadDependents
+  prepareDependents
+  verifyOsquery
+  stopOsquery
+  startOsquery
+
+  log "Congratulations! The node has been enrolled in $_PROJECT"
+  log "REMINDER! $_SERVICE has been started and enabled."
+}
+
+_uninstall() {
+  stopOsqueryAndRemoveService
+  removeSecret
+  removeFlags
+  removeCert
+  
+  log "Congratulations! The node has been removed from $_PROJECT"
+  log "WARNING! $_SERVICE has been stopped and disabled."
+}
+trap "bye" EXIT
+whatOS
+set -e
+parseCLArgs "$@"
 
 
-actual_osqueryd_path='osqueryd'
-final_osqueryd_path=$PWD'/osqueryd'
-
-
-echo 'Downloading certificate file..'
-wget  -O ./certificate.crt "$url"certificate.crt --no-check-certificate || curl  -o ./certificate.crt  "$url"certificate.crt -k
-
-echo $PWD
-sed  -i "s|${actual_cert_path}|${final_cert_path}|" osquery.flags
-echo 'Downloading secret file..'
-wget -O ./secret.txt "$url"secret.txt --no-check-certificate || curl -o ./secret.txt   "$url"secret.txt -k
-sed -i "s|${actual_secret_path}|${final_secret_path}|" osquery.flags
-
-wget  -O /usr/bin/osquery.sh "$url"osquery.sh --no-check-certificate || curl  -o /usr/bin/osquery.sh  "$url"osquery.sh -k
-sed -i "s|${actual_flags_path}|${final_flags_path}|" /usr/bin/osquery.sh
-sed -i "s|${actual_osqueryd_path}|${final_osqueryd_path}|" /usr/bin/osquery.sh
-
-wget -O /lib/systemd/system/osquery.service  "$url"osquery.service --no-check-certificate || curl -o /lib/systemd/system/osquery.service   "$url"osquery.service -k
-systemctl enable osquery
-systemctl start osquery
-systemctl status osquery
+# EOF
