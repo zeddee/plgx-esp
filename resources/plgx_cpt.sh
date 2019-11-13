@@ -269,8 +269,10 @@ stopOsqueryAndRemoveService() {
       sudo launchctl unload "$_PLIST_OSX"
       sudo rm -f "$_PLIST_OSX"
     fi
-    sudo pkgutil --only-files --files com.facebook.osquery | tr '\n' '\0' | xargs -n 1 -0 sudo rm -if
-    sudo pkgutil --only-dirs --files com.facebook.osquery | tail -r | tr '\n' '\0' | xargs -n 1 -0 sudo rmdir
+    cd /
+    sudo pkgutil --only-files --files com.facebook.osquery | tr '\n' '\0' | xargs -n 1 -0 sudo rm -f
+	sudo rm -rf /private/var/osquery
+    #sudo pkgutil --only-dirs --files com.facebook.osquery | tr '\n' '\0' | xargs -o -n 1 -0 sudo rm -ir
 	sudo pkgutil --forget com.facebook.osquery
   fi
   if [ "$OS" = "freebsd" ]; then
@@ -307,7 +309,11 @@ removeDB() {
 bye() {
   result=$?
   if [ "$result" != "0" ]; then
-    echo "[!] Fail to enroll $_PROJECT node"
+    if [ "$_ACTION" = "install" ]; then
+      echo "[!] Fail to enroll $_PROJECT node"
+    else
+      echo "[!] Fail to remove $_PROJECT node"
+    fi
   fi
   exit $result
 }
@@ -339,3 +345,4 @@ parseCLArgs "$@"
 
 
 # EOF
+
