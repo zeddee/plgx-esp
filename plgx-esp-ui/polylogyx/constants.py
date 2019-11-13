@@ -15,7 +15,7 @@ class PolyLogyxServerDefaults:
     plgx_config_all_settings = "plgx_config_all_settings"
     default_type = "default"
     current_ip = 'https://localhost:9000'
-    BASE_URL = "/src/plgx_esp_ui"
+    BASE_URL = "/src/plgx-esp-ui"
     POLYLOGYX_OSQUERY_SCHEMA_JSON = {}
     RECON_INTERVAL = 30
 

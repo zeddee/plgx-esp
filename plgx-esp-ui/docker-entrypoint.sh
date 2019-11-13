@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "Starting docker entry point script..."
-cd /src/plgx_esp_ui
+cd /src/plgx-esp-ui
 echo "Creating enroll file..."
 exec `echo "$ENROLL_SECRET">resources/secret.txt`
 echo "Waiting for VASP to start..."
@@ -36,8 +36,8 @@ else
     exec `tmux send -t plgx_celery "python manage.py add_api_key --IBMxForceKey $IBMxForceKey --IBMxForcePass $IBMxForcePass --VT_API_KEY $VT_API_KEY" ENTER`	
   fi
 fi
-echo "Changing directory to plgx_esp_ui..."
-cd /src/plgx_esp_ui
+echo "Changing directory to plgx-esp-ui..."
+cd /src/plgx-esp-ui
 
 echo "Starting celery beat..."
 exec `tmux send -t plgx_celery_beat 'celery beat -A polylogyx.worker:celery --schedule=/tmp/celerybeat-schedule --loglevel=INFO --pidfile=/tmp/celerybeaet.pid' ENTER`

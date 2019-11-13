@@ -1,6 +1,6 @@
 version: '3'
 services:
-  vasp:
+  plgx-esp:
     build:
       context: ./
       dockerfile: ./Dockerfile
@@ -15,19 +15,19 @@ services:
     environment:
       - POLYLOGYX_ENV=prod
     volumes:
-         - carves:/src/plgx_esp/carves
+         - carves:/src/plgx-esp/carves
     restart: always
     external_links:
       - rabbit1:rabbit1
       - postgres:postgres
-  vasp_ui:
+  plgx-esp-ui:
     build:
       context: ./
       dockerfile: ./Dockerfile_ui
     ports:
       - "5000:5000"
     depends_on:
-      - vasp
+      - plgx-esp
     env_file:
       - .env
     environment:
@@ -37,8 +37,8 @@ services:
       - rabbit1:rabbit1
       - postgres:postgres
     volumes:
-         - carves:/src/plgx_esp_ui/carves
-         - yara:/src/plgx_esp_ui/yara
+         - carves:/src/plgx-esp-ui/carves
+         - yara:/src/plgx-esp-ui/yara
   rabbit1:
     image: rabbitmq:3.6.5-management
     ports:
@@ -55,11 +55,9 @@ services:
     env_file:
       - .env
     depends_on:
-      - vasp
-      - vasp_ui
+      - plgx-esp
     external_links:
-      - vasp:vasp
-      - vasp_ui:vasp_ui
+      - plgx-esp:plgx-esp
     volumes:
          - ./nginx:/etc/nginx:ro
          - ./resources:/resources

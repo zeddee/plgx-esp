@@ -39,7 +39,7 @@ elif [[ "$OSTYPE" == "freebsd"* ]]; then
  else
 		echo "Os is unknown.."
 fi
-cd /src/plgx_esp
+cd /src/plgx-esp
 [ -f resources/certificate.crt ] && echo "PolyLogyx fleet is configured for SSL" || echo "PolyLogyx Fleet is not configured for SSL, please run certificate-generate.sh or use OpenSSL to create key pair. Check deployment guide for more info..."
 
 echo "Creating enroll file..."
@@ -86,7 +86,7 @@ exec `tmux send -t plgx_celery 'python manage.py add_default_queries --filepath 
 
 
 echo "Adding default mitre rules..."
-for entry in /src/plgx_esp/default_data/mitre-attack/*
+for entry in /src/plgx-esp/default_data/mitre-attack/*
 do
   packname=$(basename "$entry" .json)
   echo $packname
@@ -94,14 +94,14 @@ do
 done
 
 echo "Adding default query packs..."
-for entry in /src/plgx_esp/default_data/packs/*
+for entry in /src/plgx-esp/default_data/packs/*
 do
   packname=$(basename "$entry" .conf)
   echo $packname
   exec `tmux send -t plgx_celery 'python manage.py addpack ' $packname ' --filepath '"$entry" ENTER`
 done
 
-cd /src/plgx_esp
+cd /src/plgx-esp
 echo "Starting celery beat..."
 exec `tmux send -t plgx_celery_beat 'celery beat -A polylogyx.worker:celery   --schedule=/tmp/celerybeat-schedule --loglevel=INFO --pidfile=/tmp/celerybeat.pid' ENTER`
 echo "Starting celery RabbitMQ..."
