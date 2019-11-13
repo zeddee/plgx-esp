@@ -200,7 +200,7 @@ class Config(object):
         }),
         'phishtank': ('polylogyx.plugins.intel.phishtank.PhishTankIntel', {
             'level': 'error',
-        }),'ioc': ('polylogyx.plugins.intel.ioc.IOCIntel', {
+        }),'ioc': ('polylogyx.plugins.intel.ioc.IOC', {
             'level': 'error',
         }),
 

@@ -3,12 +3,12 @@ import logging
 
 import sqlalchemy
 from flask import current_app
-from polylogyx.models import  ResultLogScan, PhishTank
+from polylogyx.models import  ResultLogScan, PhishTank,IOCIntel
 from polylogyx.database import db
 from .base import AbstractIntelPlugin
 
 
-class IOCIntel(AbstractIntelPlugin):
+class IOC(AbstractIntelPlugin):
     LEVEL_MAPPINGS = {
         'debug': logging.DEBUG,
         'info': logging.INFO,
@@ -63,14 +63,14 @@ class IOCIntel(AbstractIntelPlugin):
             from polylogyx.database import db
             from polylogyx.utils import check_and_save_intel_alert
 
-            result_log_scans = db.session.query(ResultLogScan).filter(
-                ResultLogScan.reputations[source + "_detected"].astext.cast(sqlalchemy.Boolean).is_(True)).all()
-            for result_log_scan in result_log_scans:
-                check_and_save_intel_alert(scan_type=result_log_scan.scan_type, scan_value=result_log_scan.scan_value,
-                                           data=result_log_scan.reputations[source],
+            matches = db.session.query(ResultLogScan, IOCIntel.severity).join(IOCIntel,
+                                                                                       IOCIntel.value == ResultLogScan.scan_value).all()
+            for match in matches:
+                scan_elem = match[0]
+                severity = match[1]
+                check_and_save_intel_alert(scan_type=scan_elem.scan_type, scan_value=scan_elem.scan_value, data={},
+                                           source=source, severity=severity)
 
-                                           source=source,
-                                           severity="LOW")
         except Exception as e:
             current_app.logger.error(e)
 
