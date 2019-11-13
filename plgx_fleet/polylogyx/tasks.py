@@ -146,7 +146,7 @@ def pull_and_match_with_rules():
 @celery.task()
 def build_carve_session_archive(session_id):
     from polylogyx.models import db
-    carve_session = CarveSession.objects.get(session_id=session_id)
+    carve_session = CarveSession.query.filter(CarveSession.session_id ==session_id).first_or_404()
     if carve_session.archive:
         current_app.logger.error("Archive already exists for session %s", session_id)
         return

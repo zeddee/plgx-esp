@@ -19,7 +19,7 @@ def tag_name_format(Tags):
     return data
 
 def get_body_data(request):
-    return json.loads(request.data.decode('utf-8'))
+    return json.loads(request.data)
 
 def dump_datetime(value):
     """Deserialize datetime object into string form for JSON processing."""
