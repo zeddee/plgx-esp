@@ -60,7 +60,7 @@ parseCLArgs(){
     ;;
     
     -h|--help)
-    echo "Usage : ./linux_cpt.sh -p -ip <IP/FQDN> -port 9000"
+    echo "Usage : ./plgx_cpt.sh -p -ip <IP/FQDN> -port 9000"
     shift # past argument
     ;;
     *)    
@@ -77,7 +77,7 @@ parseCLArgs(){
   if [ $_ACTION = 'install' ]; then
     if  [ -z "$ip" ]; then
       echo "Please provide an ip"
-      echo "Usage : ./linux_cpt.sh -p -i <IP/FQDN> -port 9000"
+      echo "Usage : ./plgx_cpt.sh -p -i <IP/FQDN> -port 9000"
       exit
     else
       _install
@@ -85,7 +85,7 @@ parseCLArgs(){
   elif [ $_ACTION = 'uninstall' ]; then
     _uninstall
   else
-    echo "Usage : ./linux_cpt.sh -p -i <IP/FQDN> -port 9000"
+    echo "Usage : ./plgx_cpt.sh -p -i <IP/FQDN> -port 9000"
   fi
 }
 

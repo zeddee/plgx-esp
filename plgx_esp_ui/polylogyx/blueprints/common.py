@@ -443,10 +443,10 @@ class CPTForPlatForm(Resource):
             return file_data
         if platform == "linux":
             file_data = send_file(
-                base_resource_folder+'linux_cpt.sh',
+                base_resource_folder+'plgx_cpt.sh',
                 mimetype='application/x-sh',
                 as_attachment=True,
-                attachment_filename='linux_cpt.sh'
+                attachment_filename='plgx_cpt.sh'
             )
             return file_data
         if platform == "mac":
