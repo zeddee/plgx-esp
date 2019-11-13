@@ -14,7 +14,7 @@ server.
 
     ```~/Downloads$ git clone https://github.com/polylogyx/plgx-esp.git```
      ```<snip>
-    Cloning into 'plgx-esp'...```
+    Cloning into 'plgx-esp'...
    
 2.  Switch to the folder where the repository is cloned.
 
