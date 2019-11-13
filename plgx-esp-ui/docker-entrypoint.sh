@@ -4,7 +4,7 @@ cd /src/plgx-esp-ui
 echo "Creating enroll file..."
 exec `echo "$ENROLL_SECRET">resources/secret.txt`
 echo "Waiting for VASP to start..."
-while ! nc -z "vasp" "6000"; do sleep 7; done
+while ! nc -z "plgx-esp" "6000"; do sleep 7; done
 
 echo "Crating tmux sessions..."
 
@@ -23,7 +23,7 @@ fi
 
 if [[ -z "$IBMxForceKey" ]] || [[ -z "$IBMxForcePass" ]]
 then
-  echo -e "Ibm credentials are not provided. Please specify the credentials in docker-compose.yml under vasp->environment->IBMxForceKey/IBMxForcePass and restart the docker"
+  echo -e "Ibm credentials are not provided."
   if [[ ! -z "$VT_API_KEY" ]]
   then
     exec `tmux send -t plgx_celery "python manage.py add_api_key --VT_API_KEY $VT_API_KEY" ENTER`

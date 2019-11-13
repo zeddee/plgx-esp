@@ -111,16 +111,19 @@ downloadDependents() {
 
   echo "Downloading flags file, secret file, cert file for $OS os"
   if [ "$OS" = "linux" ]; then
+    mkdir -p /etc/osquery
     curl -o /etc/osquery/osquery.flags  "$url"linux/osquery.flags -k || wget -O /etc/osquery/osquery.flags "$url"linux/osquery.flags --no-check-certificate
     curl -o /etc/osquery/secret.txt   "$url"secret.txt -k || wget -O /etc/osquery/secret.txt "$url"secret.txt --no-check-certificate
     curl -o /etc/osquery/certificate.crt  "$url"certificate.crt -k || wget  -O /etc/osquery/certificate.crt "$url"certificate.crt --no-check-certificate 
   fi
   if [ "$OS" = "darwin" ]; then
+    mkdir -p /private/var/osquery
     curl -o /private/var/osquery/osquery.flags  "$url"darwin/osquery.flags -k || wget -O /private/var/osquery/osquery.flags "$url"darwin/osquery.flags --no-check-certificate
     curl -o /private/var/osquery/secret.txt  "$url"secret.txt -k|| wget -O /private/var/osquery/secret.txt "$url"secret.txt --no-check-certificate
     curl -o /private/var/osquery/certificate.crt  "$url"certificate.crt -k || wget  -O /private/var/osquery/certificate.crt "$url"certificate.crt --no-check-certificate
   fi
   if [ "$OS" = "freebsd" ]; then
+    mkdir -p /usr/local/etc
     curl -o /usr/local/etc/osquery.flags  "$url"freebsd/osquery.flags -k || wget -O /usr/local/etc/osquery.flags "$url"freebsd/osquery.flags --no-check-certificate
     curl -o /usr/local/etc/secret.txt   "$url"secret.txt -k || wget -O /usr/local/etc/secret.txt "$url"secret.txt --no-check-certificate
     curl -o /usr/local/etc/certificate.crt  "$url"certificate.crt -k || wget  -O /usr/local/etc/certificate.crt "$url"certificate.crt --no-check-certificate
