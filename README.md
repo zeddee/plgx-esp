@@ -5,6 +5,8 @@ PolyLogyx ESP levarages the [Osquery](https://osquery.io/) tool, with [PolyLogx 
 - git client software
 - Internet connectivity
 - 5000 and 9000 ports should be available and accessible through firewall
+- Docker(18.03.1-CE or above) and [docker-compose (1.21.1 or above)](https://docs.docker.com/compose/install/#install-compose)
+
 
 ## Build and deploy
 
@@ -33,7 +35,7 @@ server.
     In the syntax, \<IP address\> is the IP address of the system on which on to host the PolyLogyx server. This will generate 
     the certificate for osquery (used for provisioning clients) and place the certificate in the nginx folder.
 
-4.  Modify and save the docker-compose.yml file.
+4.  Modify and save the .env file.
 
     1.  Edit the following configuration parameters in the file. In the syntax, replace the values in angle brackets with required values.
     ```
