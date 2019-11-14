@@ -1,5 +1,5 @@
 # PolyLogyx Endpoint Security Platform (ESP) - Community Edition
-PolyLogyx ESP levarages the [Osquery](https://osquery.io/) tool, with [PolyLogx Extension](https://github.com/polylogyx/osq-ext-bin) to provide endpoint visibility and monitoring at scale. To get the details of the architecture of the full platofrm, please read the [platform docs](https://github.com/polylogyx/platform-docs). This repository provides the community release of the platform which focuses on the Osquery based agent management to provide visbility into endpoint activities, query configuration management, a live query interface and alerting capabilities based on security critical events.
+PolyLogyx ESP leverages the [Osquery](https://osquery.io/) tool, with [PolyLogx Extension](https://github.com/polylogyx/osq-ext-bin) to provide endpoint visibility and monitoring at scale. To get the details of the architecture of the full platform, please read the [platform docs](https://github.com/polylogyx/platform-docs). This repository provides the community release of the platform which focuses on the Osquery based agent management to provide visbility into endpoint activities, query configuration management, a live query interface and alerting capabilities based on security critical events.
 
 ## Prerequisites
 - git client software
@@ -122,7 +122,7 @@ Osquery is cross platform agent that supports 64 bit variants of Windows (7 and 
 PolyLogyx ESP can be programatically interacted with using the extensive  [REST API](https://github.com/polylogyx/platform-docs/tree/master/13_Rest_API) interface. This allows for multiple use case like Incident Response, Threat Hunting, Compromise Assessment, Compliance checks etc to be easily served with the platform. This also provides an easy for integration with [SOAR platforms](https://youtu.be/XbpleymXpSg) 
 
 ## Integration with Big Data/Analytic systems
-PolyLogyx ESP is packaged with an rSysLog container. This container can be configured to stream the query results and other logs from the endpoint population to the back-end systems like Splunk, ELK, GreyLog etc for cross-product correlation, alert enrichments and other SIEM related use cases.
+PolyLogyx ESP is packaged with an rSysLog container. This container can be configured to stream the query results and other logs from the endpoint population to the back-end systems like Splunk, ELK, GrayLog etc for cross-product correlation, alert enrichments and other SIEM related use cases.
 
 ## PolyLogyx ESP - Community Edition License
 Please read the [LICENSE](LICENSE) file for details on the license.
