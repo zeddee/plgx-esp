@@ -8,7 +8,7 @@
 --events_expiry=1800
 --disable_distributed=false
 --distributed_plugin=tls
---distributed_interval=25
+--distributed_interval=15
 --distributed_tls_max_attempts=5
 --distributed_tls_read_endpoint=/distributed/read
 --distributed_tls_write_endpoint=/distributed/write
