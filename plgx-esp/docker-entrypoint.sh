@@ -119,7 +119,7 @@ else
   echo "Setting auto database purge duration..."
   exec `tmux send -t plgx_celery 'python manage.py delete_historical_data --purge_data_duration '"$PURGE_DATA_DURATION" ENTER`
 fi
-exec `tmux send -t plgx_celery "celery worker -A polylogyx.worker:celery --concurrency=$WORKERS_CELERY -Q default_queue_tasks -l INFO &" ENTER`
+exec `tmux send -t plgx_celery "celery worker -A polylogyx.worker:celery --concurrency=$WORKERS_CELERY -Q default_queue_tasks --max-memory-per-child=250000 -l INFO &" ENTER`
 
 echo "Sever is up and running.."
 exec `tmux send -t flower "flower -A polylogyx.worker:celery --address=0.0.0.0  --broker_api=http://guest:guest@$RABBITMQ_URL:5672/api --basic_auth=$POLYLOGYX_USER:$POLYLOGYX_PASSWORD" ENTER`
