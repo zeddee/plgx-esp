@@ -90,7 +90,7 @@ server.
 9.  Log on to the server using the credentials provided above at step 5a.
 
 10.  Provision the clients. For more information, see [Provisioning the PolyLogyx
-    Client for Endpoints](../03_Provisioning_Polylogyx_Client/Readme.md).
+    Client for Endpoints](https://github.com/polylogyx/platform-docs/tree/master/03_Provisioning_Polylogyx_Client).
 
 ## Uninstalling the Server 
 ------------------------
