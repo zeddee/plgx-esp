@@ -17,8 +17,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.getcwd())))
 from example_scripts.helper_scripts import fetch_vt_reputation
 from polylogyx_apis.api import PolylogyxApi
 
-directory = "C:\\Users\\mehta\\Downloads\\"
-sql = "select file.path,hash.md5 from file join  hash on hash.path=file.path where file.directory ='" + directory + "';"
+directory = "C:\\Users\\%\\Downloads\\%"
+sql = "select file.path,hash.md5 from file join  hash on hash.path=file.path where file.path like '" + directory + "';"
 
 
 def main(domain=None, username=None, password=None):
