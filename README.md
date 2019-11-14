@@ -2,7 +2,8 @@
 PolyLogyx ESP levarages the [Osquery](https://osquery.io/) tool, with [PolyLogx Extension](https://github.com/polylogyx/osq-ext-bin) to provide endpoint visibility and monitoring at scale. To get the details of the architecture of the full platofrm, please read the [platform docs](https://github.com/polylogyx/platform-docs). This repository provides the community release of the platform which focuses on the Osquery based agent management to provide visbility into endpoint activities, query configuration management, a live query interface and alerting capabilities based on security critical events.
 
 ## Prerequisites
-- git
+- git client software
+- Internet connectivity
 - 5000 and 9000 ports should be available and accessible through firewall
 
 ## Build and deploy
