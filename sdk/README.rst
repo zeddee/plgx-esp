@@ -3,14 +3,14 @@ polylogyx-api
 ==============
 
 
-
-
 Installation
 ------------
 
+Install the additional dependencies using the below command
+
 .. code-block:: bash
 
-    $ pip install polylogyx-api
+    $ python setup.py install
 
 
 Usage
@@ -32,10 +32,6 @@ Documentation
 
 You're looking at it.
 
-Issues
-------
-
-Find a bug? Want more features? Find something missing in the documentation? Let me know! Please don't hesitate to `file an issue <https://github.com/polylogyx/polylogyx-api/issues/new>`_ and I'll get right on it.
 
 License
 -------
