@@ -18,10 +18,10 @@ server.
    
 2.  Switch to the folder where the repository is cloned.
 
-    ```~/Downloads\$ cd plgx_esp/```
+    ```~/Downloads\$ cd plgx-esp/```
 3.  Enter the certificate-generate.sh script to generate certificates for
     osquery.  
-    ```~/Downloads/plgx_esp$ sh ./certificate-generate.sh <IP address>```
+    ```~/Downloads/plgx-esp$ sh ./certificate-generate.sh <IP address>```
     ```x.x.x.x
     Generating a 2048 bit RSA private key
     .........................................................................................+++
@@ -63,14 +63,14 @@ server.
 
 6.  Run the following command to start Docker compose.
 
-    ```docker-compose -p 'plgx_esp' up -d```
+    ```docker-compose -p 'plgx-esp' up -d```
     
     Typically, this takes approximately 10-15 minutes. The following lines appear on
     the screen when Docker starts:
-    ````Starting plgx_esp_rabbit1_1  ... done
-        Starting plgx_esp_postgres_1 ... done
-        Starting plgx_esp_vasp_1     ... done
-        Attaching to plgx_esp_rabbit1_1, plgx_esp_postgres_1, plgx_esp_vasp_1
+    ````Starting plgx-esp_rabbit1_1  ... done
+        Starting plgx-esp_postgres_1 ... done
+        Starting plgx-esp_plgx-esp_1     ... done
+        Attaching to plgx-esp_rabbit1_1, plgx-esp_postgres_1, plgx-esp_plgx-esp_1
         .
         .
         .
@@ -102,8 +102,8 @@ existing Docker images and containers.
 **Note:** This will clean **all** the images and containers.
 
 ## PolyLogyx ESP Components
-- plgx_esp - Manages requests coming from endpoint
-- plgx_fleet_ui - Mangement server for taking actions, modifying properties  of an endpoint.
+- plgx-esp - Manages requests coming from endpoint
+- plgx-esp-ui - Mangement server for taking actions, modifying properties  of an endpoint.
 - RabbitMQ
 - nginx
 - rSysLogF
