@@ -1,0 +1,1 @@
+osqueryd --flagfile osquery.flags

@@ -1,0 +1,43 @@
+FROM python:3.7-alpine3.8
+
+
+ENV LANG C.UTF-8
+
+
+
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.8/main" >> /etc/apk/repositories \
+  && apk add --update \
+              bash \
+	      wget \
+              build-base \
+              git \
+              libffi-dev \
+              musl \
+              runit \
+              postgresql-dev \
+              tmux \
+  && pip install --upgrade pip 
+
+
+RUN cd /usr/bin \
+  && ln -sf easy_install-3.7 easy_install \
+  && ln -sf python3.7 python \
+  && ln -sf python3.7-config python-config \
+  && ln -sf pip3.7 pip
+
+# Copy and install our requirements first, so they can be cached
+COPY ./plgx-esp-ui/requirements/prod.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt
+
+# Add our application to the container
+COPY ./plgx-esp-ui/. /src/plgx-esp-ui/
+COPY ./nginx/private.key /src/plgx-esp-ui/private.key
+COPY ./resources/. /src/plgx-esp-ui/resources/ 
+COPY ./nginx/certificate.crt /src/plgx-esp-ui/resources/certificate.crt
+
+RUN chmod a+x /src/plgx-esp-ui/docker-entrypoint.sh
+
+
+ENTRYPOINT ["/src/plgx-esp-ui/docker-entrypoint.sh"]
+
+

@@ -1,0 +1,39 @@
+<table class="table table-hover table-checkable">
+    <thead>
+    <th>Host</th>
+    <th>Session</th>
+    <th>File</th>
+        <th>Blocks Acquired</th>
+
+    <th>Status</th>
+    <th>Created At</th>
+
+    </thead>
+
+    <tbody>
+    {% for carve in carves %}
+    <tr>
+        <td>
+            <a href="{{ url_for('manage.get_node', node_id=carve.node_id) }}">{{ carve.node.display_name }}</a>
+        </td>
+        <td>
+            <code>{{ carve.session_id }}</code>
+
+        </td>
+        <td>
+           {% if carve.archive  %}
+           <a href="{{ url_for('manage.carve_downloads', host_identifier=carve.node.host_identifier,filename=carve.archive) }}">{{ carve.archive }}</a>
+            {% else %}Getting File..{% endif %}
+        </td>
+         <td>
+          {{ carve.completed_blocks }}/{{ carve.block_count }}
+        </td>
+        <td>
+          {{ carve.status }}
+        </td>
+        <td>{{ carve.created_at }}</td>
+
+        {% endfor %}
+    </tbody>
+
+</table>

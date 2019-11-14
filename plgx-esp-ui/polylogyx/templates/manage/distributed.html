@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block content %}
+
+    <div class="body-content"  style="overflow-y: scroll;width:90vw;overflow-x:auto;height: 100vh;">
+        <div class="row">
+            {% if queries is defined %}
+
+            <div class="col-md-12">
+                <h1>{% if status %}{{ status }} {% endif %}distributed queries</h1>
+
+                {% if queries %}
+                {% include "tables/distributed.html" %}
+                {% else %}
+                <p>No distributed queries in {{ status | default('any', true) }} state.</p>
+                {% endif %}
+
+            {% else %}
+            <div class="col-md-9">
+                {% include "forms/distributed.html" %}
+            {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+{% endblock %}

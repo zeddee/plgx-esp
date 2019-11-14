@@ -1,0 +1,270 @@
+{% extends "layout.html" %}
+{% block page_title %}
+PolyLogyx - Threat Intel Keys
+{% endblock %}
+
+{% block content %}
+
+<style type="text/css">
+  .paragraph-align {
+    color: #464457;
+  }
+	.section_title {
+		display: block;
+    padding: 0;
+    margin: 0 0 1.75rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #b50404ad;
+	}
+  .kt-section .kt-section__title.kt-section__title-lg {
+   font-size: 1rem;
+ }
+</style>
+
+<!-- begin:: Content -->
+<div class="kt-content  kt-grid__item kt-grid__item--fluid" id="kt_content">
+	<div class="row">
+		<div class="col-lg-12">
+
+			<!--begin::Portlet-->
+			<div class="kt-portlet kt-portlet--last kt-portlet--responsive-mobile" id="kt_page_portlet">
+				<div class="kt-portlet__head kt-portlet__head--lg">
+					<div class="kt-portlet__head-label">
+						<span class="kt-portlet__head-icon">
+              <i class="kt-font-brand fab fa-keycdn"></i>
+            </span>
+						<h3 class="kt-portlet__head-title">
+							Threat Intel API Keys
+						</h3>
+					</div>
+					<div class="kt-portlet__head-toolbar">
+		        <div class="kt-portlet__head-wrapper">
+							<a href="javascript:void(0);" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+                <i class="fas fa-chevron-left"></i>
+                Back
+              </a>
+		        </div>
+		      </div>
+				</div>
+				<div class="kt-portlet__body">
+					<form class="form-horizontal kt-form" onsubbmit="return saveSettingJson(this)" method="POST" id="kt_form">
+						 <input id="csrf_token" name="csrf_token" type="hidden" value="{{ csrf_token() }}">
+
+						<div class="row">
+							<div class="col-xl-1"></div>
+							<div class="col-xl-10">
+								<div class="kt-section kt-section--first">
+									<div class="kt-section__body">
+										<h3 class="kt-section__title kt-section__title-lg">
+											<p>PolyLogyx ESP ships with support for connectors to multiple Threat Intelligence resources. This
+	                    provides an effective way of identifying potentially malicious files in your endpoint fleet.</p>
+	                    <p>To use these connectors, you must have a valid API key. The Public/Free API keys to these resources may be
+	                    severely restrictive and it is <b>strictly recommended</b> that only private API keys are used. On a match
+	                    being found, the threat report returned from the Intel source is submitted as part of the alert.</p>
+										</h3>
+										<h3 class="section_title">Threat Intelligence Feed:</h3>
+										<div class="form-group row">
+											<label class="col-3 col-form-label"><a class="black" href="https://exchange.xforce.ibmcloud.com/" target="_blank">IBM X-Force Key</a></label>
+											<div class="col-9">
+												<input type="text" class="form-control" name="IBMxForceKey"{% if api_keys.ibmxforce %} value="{{api_keys.ibmxforce.key}}"{% endif %} id="IBMxForceKey"/>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-3 col-form-label"><a class="black" href="https://exchange.xforce.ibmcloud.com/" target="_blank">IBM X-Force Pass</a></label>
+											<div class="col-9">
+												<input type="text" class="form-control" name="IBMxForcePass"{% if api_keys.ibmxforce %} value="{{api_keys.ibmxforce.pass}}"{% endif %} id="IBMxForcePass"/>
+											</div>
+										</div>
+										<div class="form-group row">
+											<label class="col-3 col-form-label"><a class="black" href="https://developers.virustotal.com/v2.0/reference" target="_blank">VirusTotal Key</a></label>
+											<div class="col-9">
+												<input type="text" name="vt_key"  class="form-control" {% if api_keys.virustotal %} value="{{api_keys.virustotal.key}}"{% endif %} id="vt_key"/>
+											</div>
+										</div>
+                    <div class="form-group row">
+				  					<label class="col-3 col-form-label"><a class="black" href="https://otx.alienvault.com/api" target="_blank">AlienVault OTX Key</a></label>
+											<div class="col-9">
+												<input type="text" name="otx_key"  class="form-control" {% if api_keys.alienvault %} value="{{api_keys.alienvault.key}}"{% endif %} id="otx_key"/>
+											</div>
+										</div>
+									</div>
+								</div>
+                <div class="kt-portlet__foot">
+  								<div class="kt-form__actions kt-form__actions--center">
+										<button type="submit" class="btn btn-success"><i class="fa fa-sync-alt"></i>
+			              	<span>Update</span>
+										</button>
+  									<button type="reset"  onclick="goBack()" class="btn btn-secondary">Cancel</button>
+
+  								</div>
+  							</div>
+							</div>
+							<div class="col-xl-1"></div>
+						</div>
+					</form>
+				</div>
+			</div>
+			<!--end::Portlet-->
+		</div>
+	</div>
+</div>
+<!-- end:: Content -->
+
+
+<script src="/static/js/base64/jquery.base64.js"></script>
+
+<script>
+    var idEmailAddress = document.getElementById('idEmailAddress');
+    var idEmailPassword = document.getElementById('idEmailPassword');
+    var json;
+    var node_setting = '{{setting}}';
+
+    if (node_setting == '' || node_setting == 'None' || node_setting == null) {
+
+    } else {
+        json = '{{setting}}';
+
+        if (json != '') {
+            json = json.replace(/\&#34;/g, '"');
+            console.log(json);
+            json = JSON.parse(json);
+        }
+
+        document.getElementById('idEmailAddress').value = json.email;
+         document.getElementById('smtpAddress').value = json.smtpAddress;
+      document.getElementById('smtpPort').value = json.smtpPort;
+          document.getElementById('idEmailAddress').value = json.email;
+                    document.getElementById('emailRecipients').value = json.emailRecipients;
+
+        document.getElementById('idEmailPassword').value = window.atob(json.password);
+
+    }
+
+    function isEmail(email) {
+      var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+      return regex.test(email);
+    }
+
+ function validateEmailRecipients(emailRecipients){
+    var validEmail=true;
+        var emails = emailRecipients.split(",").map(function(item) {
+            return item.trim();
+        });
+    for (i = 0; i < emails.length; i++) {
+         if(!isEmail(emails[i]))
+        {
+            validEmail= false;
+            break;
+        }}
+        return validEmail;
+
+    }
+
+    function saveSettingJson(form) {
+        if(!isEmail(document.getElementById('idEmailAddress').value))
+        {
+            // alert("Please enter a valid email address");
+						Swal.fire({
+								title: '',
+								text: 'Updating...',
+								timer: 2000,
+								onOpen: function() {
+										swal.showLoading()
+								}
+							}).then(function(result){
+									if (result.value) {
+											Swal.fire()
+									} else if (result.dismiss === 'timer') {
+											Swal.fire({
+												type: 'info',
+												title: 'Please enter a valid email address',
+												timer: 3000,
+												showConfirmButton: false
+											})
+									}
+							});
+            return false;
+        }
+
+         if(!validateEmailRecipients(document.getElementById('emailRecipients').value))
+        {
+            // alert("One of your email recipients is invalid. Use comma separated emails");
+						Swal.fire({
+								title: '',
+								text: 'Updating...',
+								timer: 2000,
+								onOpen: function() {
+										swal.showLoading()
+								}
+							}).then(function(result){
+									if (result.value) {
+											Swal.fire()
+									} else if (result.dismiss === 'timer') {
+											Swal.fire({
+												type: 'info',
+												title: 'One of your email recipients is invalid. Use comma separated emails',
+												timer: 3000,
+												showConfirmButton: false
+											})
+									}
+							});
+            return false;
+        }
+
+        document.getElementById('setting').value = '{ "smtpPort": "' + document.getElementById('smtpPort').value + '", '+ '"emailRecipients": "' + document.getElementById('emailRecipients').value + '", ' + '"smtpAddress": "' + document.getElementById('smtpAddress').value + '", ' + '"email": "' + document.getElementById('idEmailAddress').value + '", ' + '"password": "' + window.btoa(document.getElementById('idEmailPassword').value, true) + '" }';
+
+
+				Swal.fire({
+						title: '',
+						text: 'Updating...',
+						timer: 2000,
+						onOpen: function() {
+								swal.showLoading()
+						}
+					}).then(function(result){
+							if (result.value) {
+									Swal.fire()
+							} else if (result.dismiss === 'timer') {
+									Swal.fire({
+										type: 'success',
+										title: 'Successfully Uploaded',
+										timer: 3000,
+										showConfirmButton: false
+									})
+							}
+					});
+        return false;
+    }
+
+
+
+</script>
+
+<script type="text/javascript">
+	// Class definition
+	var Inputmask = function () {
+
+	    // Private functions
+	    var demos = function () {
+
+	        //ip address
+	        $("#ip-address").inputmask({
+	            "mask": "999.999.999.999:99999"
+	        });
+	    }
+
+	    return {
+	        // public functions
+	        init: function() {
+	            demos();
+	        }
+	    };
+	}();
+
+	jQuery(document).ready(function() {
+	   Inputmask.init();
+	});
+</script>
+
+{% endblock %}

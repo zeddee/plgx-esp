@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% block content %}
+
+    <div class="body-content">
+        <div class="row">
+            <div class="col-md-9">
+                <h1>settings</h1>
+
+                {% if settings %}
+
+                {% for setting in setting | sort(attribute='name') %}
+                {% include "_setting.html" %}
+                {% endfor %}
+
+                {% else %}
+                <p>No settings defined. You may <a href="{{ url_for('manage.add_setting') }}">create a new setting</a>.
+                {% endif %}
+
+            </div>
+
+            <nav class="col-md-3 bs-docs-sidebar">
+                <ul class="nav nav-stacked fixed" id="sidebar">
+                {% if settings %}
+                    {% for setting in setting | sort(attribute='name') %}
+                    <li><a href="#setting-{{ setting.id }}">{{ setting.name }}</a></li>
+                    {% endfor %}
+                {% endif %}
+                </ul>
+            </nav>
+
+        </div>
+    </div>
+
+{% endblock %}

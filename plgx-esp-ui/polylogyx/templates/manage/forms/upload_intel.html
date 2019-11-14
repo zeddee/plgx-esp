@@ -1,0 +1,146 @@
+<style type="text/css">
+  #jsoneditor {
+    width: 100%;
+    height: 400px;
+  }
+  .paragraph-align {
+    color: #464457;
+    font-weight: 600;
+  }
+	.section_title {
+		display: block;
+    padding: 0;
+    margin: 0 0 1.75rem 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #b50404ad;
+	}
+  .kt-section .kt-section__title.kt-section__title-lg {
+   font-size: 1rem;
+   line-height: 1.5;
+}
+</style>
+<!--begin::Portlet-->
+<div class="kt-portlet kt-portlet--last kt-portlet--responsive-mobile" id="kt_page_portlet">
+  <div class="kt-portlet__head kt-portlet__head--lg">
+    <div class="kt-portlet__head-label">
+      <span class="kt-portlet__head-icon">
+        <i class="kt-font-brand fa fa-server"></i>
+      </span>
+      <h3 class="kt-portlet__head-title">
+        Upload IOC
+      </h3>
+    </div>
+    <div class="kt-portlet__head-toolbar">
+      <div class="kt-portlet__head-wrapper">
+        <div class="">
+          <a href="javascript:void(0);" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+            <i class="fas fa-chevron-left"></i>
+            Back
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="kt-portlet__body">
+    <form onsubmit="return saveConfigJson(this)" class="kt-form" id="kt_form" method="POST" role="form" enctype="multipart/form-data" novalidate>
+    {{ form.csrf_token() }}
+      <div class="row">
+        <div class="col-xl-1"></div>
+        <div class="col-xl-10">
+          <div class="kt-section kt-section--first">
+            <div class="kt-section__body">
+              <div class="paragraph-align">
+                <p class="section_title">PolyLogyx Endpoint Security Platform supports three types of user -provided IOCs:</p>
+                <h3 class="kt-section__title kt-section__title-lg">
+                <div class="row">
+                  <span class="col-md-3">1) IPv4 Address</span>
+                  <span class="col-md-3">2) Domain Name</span>
+                  <span class="col-md-3">3) MD5</span>
+                </div>
+                <br>
+                <p>The Indicators of Compromise (IOC) provided are compared to the endpoint data as it arrives on the
+                server. The indicator values need to be provided as a JSON array under their respective category.
+                Any
+                matches will generate an alert. IOC matches can lead to performance cost on the server depending on
+                the
+                number of entries. It is recommended to use this feature for monitoring a targeted list of
+                indicators
+                and do not exceed a count of 5000 per indicator type at one time.</p>
+                </h3>
+              </div>
+              <div id="jsoneditor"></div>
+            </div>
+          </div>
+           <div class="form-group" style="display:none">
+
+              {{ form.intel(id='intel') }}
+          </div>
+          <!-- <div class="kt-separator kt-separator--border-dashed kt-separator--space-lg"></div> -->
+
+          <div class="kt-portlet__foot">
+						<div class="kt-form__actions kt-form__actions--center">
+              <button type="submit" class="btn btn-success" onclick="message_upload();">
+                <span>Upload Intel</span>
+                <i class="fa fa-level-up-alt"></i>
+              </button>
+              <button type="reset"  onclick="goBack()" class="btn btn-secondary">Cancel</button>
+						</div>
+					</div>
+        </div>
+        <div class="col-xl-1"></div>
+      </div>
+    </form>
+  </div>
+</div>
+<!--end::Portlet-->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script>
+<link href="/static/css/jsoneditor/jsoneditor.min.css" rel="stylesheet" type="text/css">
+<script src="/static/js/jsoneditor/jsoneditor-minimalist.min.js"></script>
+<script src="/static/js/filereader.js"></script>
+
+<script>
+  var container = document.getElementById('jsoneditor');
+  var options = {
+      modes: ['text', 'code', 'tree', 'form', 'view'],
+      mode: 'code',
+      ace: ace
+  };
+  var intel_data = {{ intel_data | safe }};
+  var editor = new JSONEditor(container, options, intel_data);
+
+  function saveConfigJson(form) {
+    try {
+      var json = editor.get();
+      console.log('JSON is valid', json);
+      var blob = new Blob([editor.getText()], {type: 'application/json;charset=utf-8'});
+      var reader = new FileReader();
+      reader.onload = function () {
+        document.getElementById('intel').value = reader.result;
+      }
+      reader.readAsText(blob);
+      setTimeout(function () {
+        form.submit();
+      }, 1000);
+    } catch (err) {
+        alert('JSON is invalid');
+    }
+    return false;
+  }
+
+	function message_upload() {
+		Swal.fire({
+			title: '',
+			text: 'Uploading...',
+			timer: 4000,
+			onOpen: function() {
+				swal.showLoading()
+			}
+		}).then(function(result) {
+			if (result.dismiss === 'timer') {
+				console.log('Sucessfully Uploaded')
+			}
+		})
+	}
+</script>

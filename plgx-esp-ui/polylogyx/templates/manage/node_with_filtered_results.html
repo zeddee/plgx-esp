@@ -1,0 +1,60 @@
+<table class="table table-hover table-checkable display dt-body-left table-condensed">
+    <thead>
+    <tr>
+        <th>Host Identifier</th>
+        <th>Node Key</th>
+        {% if current_app.config.POLYLOGYX_CAPTURE_NODE_INFO %}
+            {% for column, label in current_app.config.POLYLOGYX_CAPTURE_NODE_INFO %}
+                <th class="text-right">{{ label | title }}</th>
+            {% endfor %}
+        {% endif %}
+        <th>Last IP Address</th>
+        <th>Enrolled Date</th>
+        <th>Last Check-in Date</th>
+        <th>Tags</th>
+    </tr>
+    </thead>
+
+    {% for node in nodes %}
+
+        <tbody>
+
+        <tr class="{{ node | health }}">
+            <td>
+                <a href="{{ url_for('manage.get_node', node_id=node.id) }}">{{ node.display_name }}</a>
+            </td>
+            <td>{{ node.node_key }}</td>
+            {% if current_app.config.POLYLOGYX_CAPTURE_NODE_INFO %}
+                {% for column, label in current_app.config.POLYLOGYX_CAPTURE_NODE_INFO %}
+                    <td>{{ node.node_info[column] }}</td>
+                {% endfor %}
+            {% endif %}
+            <td>{{ node.last_ip | default('', true) }}</td>
+            <td>{{ node.enrolled_on }}</td>
+            <td>{{ node.last_checkin }}</td>
+            <td>
+                <input class="tagsinput" value="{{ node.tags | map(attribute='value') | sort | join(',') }}"
+                       data-uri="{{ url_for('manage.tag_node', node_id=node.id) }}">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <button id="showMore_{{node.id}}" onclick="showHideElement('activity_{{ node.id }}','showMore_{{node.id}}')">Show more</button>
+            </td>
+        </tr>
+        <tr style="display: none;" id="activity_{{ node.id }}">
+            <td colspan="13">
+                <div>
+                    {% include "_filter_activity.html" %}
+                </div>
+            </td>
+
+        </tr>
+
+        </tbody>
+        <tbody class="hide">
+        </tbody>
+    {% endfor %}
+
+
+</table>

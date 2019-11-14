@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+{% block content %}
+
+    <div class="body-content">
+        <div class="row">
+            <div class="col-md-12">
+
+                <h1><a href="{{ url_for('manage.get_node', node_id=node.id) }}">{{ node.display_name }}</a></h1>
+
+                <p class="lead">{{ query.distributed_query.description or '' }}</p>
+
+                <p>
+                <pre>{{ query.distributed_query.sql }}</pre>
+                </p>
+
+                {% if query.results %}
+
+                    {% set columns = query.results | first | attr('columns') | list | sort %}
+
+                    <div class="table-responsive">
+                        <table class="table table-hover table-checkable display dt-body-left table-condensed">
+                            <thead>
+                            {% for column in columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                            </thead>
+                            <tbody>
+                            {% for result in query.results %}
+
+                                <tr>
+                                    {% for column in columns %}
+
+                                        {% if column == 'md5' and  result.columns[column]!='' %}
+                                            <td><a target="_blank" href="https://www.virustotal.com/#/file/{{ result.columns[column] }}/detection">
+
+                                                {{ result.columns[column] }}</a>
+                                            </td>
+                                        {% elif column == 'url' and  result.columns[column]!='' %}
+                                            <td><a href="javascript:void(0);" onclick="window.open(SHA256('{{ result.columns[column] }}'));">{{ result.columns[column] }}</a></td>
+                                        {% else %}
+                                            <td>{{ result.columns[column] }}</td>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tr>
+
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+        <script type="text/javascript">
+
+            var guid = "{{ guid }}";
+            $(document).ready(function () {
+                doAjax()
+            });
+
+            function doAjax() {
+
+                $.ajax({
+                    type: "POST",
+                    url: '/manage/ajax/distributedquerytask/update/' + guid  // URL to your view that serves new info
+                })
+                    .done(function (response) {
+
+                        console.log('updated the time');
+
+                    });
+            }
+
+
+
+
+        </script>
+
+    </div>
+
+{% endblock %}

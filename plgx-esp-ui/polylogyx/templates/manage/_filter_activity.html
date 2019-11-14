@@ -1,0 +1,67 @@
+<div class="col-md-3">
+    <ul class="nav nav-tabs tabs-left" role="tablist">
+
+
+        {% for group in node.recent | groupby('name') %}
+            <li class="{% if not queries and loop.first %}active{% endif %}">
+                <a href="#{{ loop.index }}node{{ node.id }}" onclick="showHide('{{ loop.index }}node{{ node.id }}',{{node.id}})" aria-controls="{{ loop.index }}node{{ node.id }}"  role="tab"
+                   data-toggle="tab">{{ group.grouper }}
+                    <span class="badge">{{ group.list | count }}</span>
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="col-md-9">
+    <div class="tab-content">
+
+
+
+        {% for grouper, results in node.recent | groupby('name') %}
+            <div role="tabpanel" class="node{{ node.id }} tab-pane{% if not node.query and loop.first %} active{% endif %}"
+                 id="{{ loop.index }}node{{ node.id }}">
+
+                {% set columns = results | first | attr('columns') | list | sort %}
+
+                    <table class="table table-hover table-checkable">
+                        <thead>
+{#                        <th>activity</th>#}
+                        <th>timestamp</th>
+                        {% for column in columns %}
+                            <th>{{ column }}</th>
+                        {% endfor %}
+                        </thead>
+
+                        <tbody>
+                        {% for result in results %}
+                            {%   if result.action == None or result.action != 'removed' %}
+                              <tr>
+{#                                <td>{{ result.action }}</td>#}
+                                <td>{{ result.timestamp }}</td>
+                                {% for column in columns %}
+                                    {% if column == 'md5' and  result.columns[column]!='' %}
+                                        <td><a target="_blank"
+                                               href="https://www.virustotal.com/#/file/{{ result.columns[column] }}/detection">{{ result.columns[column] }}</a>
+                                        </td>
+                                    {% elif column == 'url' and  result.columns[column]!=''  %}
+                                        <td><a  href="javascript:void(0);" onclick="window.open(SHA256('{{ result.columns[column] }}'));"
+                                               >{{ result.columns[column] }}</a></td>
+                                    {% else %}
+                                        <td>{{ result.columns[column] }}</td>
+                                    {% endif %}
+                                {% endfor %}
+                              </tr>
+                            {% endif %}
+                        {% endfor %}
+
+                        </tbody>
+                    </table>
+
+
+            </div><!-- ./tab-pane -->
+
+        {% endfor %}
+
+    </div><!-- ./tab-content -->
+</div>

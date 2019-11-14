@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<!-- begin:: Content -->
+<div class="kt-content  kt-grid__item kt-grid__item--fluid" id="kt_content">
+  <div class="row">
+    <div class="col-lg-12">
+
+      <!--begin::Portlet-->
+      <div class="kt-portlet kt-portlet--last kt-portlet--responsive-mobile" id="kt_page_portlet">
+        <div class="kt-portlet__head kt-portlet__head--lg">
+          <div class="kt-portlet__head-label">
+            <span class="kt-portlet__head-icon">
+              <i class="kt-font-brand fa fa-trash"></i>
+            </span>
+            <h3 class="kt-portlet__head-title">
+              Delete<small>Schedule query result data</small>
+            </h3>
+          </div>
+          <div class="kt-portlet__head-toolbar">
+            <div class="kt-portlet__head-wrapper">
+              <a href="javascript:void(0);" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+                <i class="fas fa-chevron-left"></i>
+                Back
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="kt-portlet__body">
+          <form class="kt-form " id="kt_form" action="/manage/queryresult/delete" method="POST">
+            {{ form.csrf_token() }}
+            <div class="row">
+              <div class="col-xl-1"></div>
+              <div class="col-xl-10">
+                <div class="kt-section">
+                  <div class="kt-section__body">
+                    <div class="form-group row">
+                      <label class="col-3 col-form-label">Delete data exceeding:</label>
+                      <div class="col-9">
+                        <!-- <input class="form-control" type="number"> -->
+                        <select class="form-control kt-selectpicker">
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                          <option value="3">3</option>
+                          <option value="4">4</option>
+                          <option value="5">5</option>
+                          <option value="6">6</option>
+                          <option value="7">7</option>
+                          <option value="8">8</option>
+                          <option value="9">9</option>
+                          <option value="10">10</option>
+                        </select>
+                        <strong>Days</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- <div class="kt-separator kt-separator--border-dashed kt-separator--space-lg"></div> -->
+
+                <div class="kt-portlet__foot">
+                  <div class="kt-form__actions kt-form__actions--center">
+                    <button type="submit" class="btn btn-success"><i class="fa fa-trash-alt"></i>
+                      <span>Delete</span>
+                    </button>
+                    <!-- <button type="reset" onclick="goBack()" class="btn btn-secondary">Cancel</button> -->
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-1"></div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!--end::Portlet-->
+    </div>
+  </div>
+</div>
+<!-- end:: Content -->
+{% endblock %}
