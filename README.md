@@ -11,7 +11,7 @@ PolyLogyx ESP leverages the [Osquery](https://osquery.io/) tool, with [PolyLogx 
 ## Build and deploy
 
 After you install Docker and Docker Compose, you can install the PolyLogyx
-server. Please ensure that the following commands are executed from a root privileged terminal.
+server. Please ensure that the following commands are executed from a root/administrator privileged terminal.
 
 1.  Clone this repository.
 
