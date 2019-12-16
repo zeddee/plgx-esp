@@ -52,11 +52,7 @@ celery.conf.beat_schedule = {
         "task": "polylogyx.tasks.send_threat_intel_alerts",
         "schedule": threat_frequency * 60,
         'options': {'queue': 'default_queue_tasks'}
-    }, "update_phishtank_data": {
-        "task": "polylogyx.tasks.update_phishtank_data",
-        "schedule": threat_frequency * 60,
-        'options': {'queue': 'default_queue_tasks'}
-    },
+    }
 
 }
 
@@ -117,31 +113,36 @@ def learn_from_result(result, node):
 @celery.task()
 def pull_and_match_with_rules():
     while True:
-        import time
-        task_id = str(uuid.uuid4())
-        from polylogyx.database import db
-        sq = db.session.query(ResultLog.id).filter( ResultLog.status == ResultLog.NEW) \
-            .order_by(ResultLog.id.asc()) \
-            .limit(1000) \
-            .with_for_update()
-        count=db.session.query(ResultLog).filter(
-           ResultLog.id.in_(sq.as_scalar())).update(
-            {"status": ResultLog.PENDING, "task_id": task_id}, synchronize_session='fetch')
+        analyse_result_log_data_with_rule_ioc_intel()
 
-        if count > 0:
-            print("Executing tasks for task_id : "+task_id)
-            tasks = db.session.query(ResultLog).filter(ResultLog.task_id == task_id).all()
-            check_for_iocs(tasks)
-            match_with_rules(tasks)
-            db.session.query(ResultLog).filter(
-                    ResultLog.task_id == task_id).update(
-                    {"status": ResultLog.COMPLETE}, synchronize_session='fetch')
-            db.session.commit()
-            time.sleep(5)
-        else:
-            print("No pending tasks!")
-            db.session.commit()
-            time.sleep(15)
+@celery.task()
+def analyse_result_log_data_with_rule_ioc_intel():
+    import time
+    task_id = str(uuid.uuid4())
+    from polylogyx.database import db
+    sq = db.session.query(ResultLog.id).filter(ResultLog.status == ResultLog.NEW) \
+        .order_by(ResultLog.id.asc()) \
+        .limit(1000) \
+        .with_for_update()
+    count = db.session.query(ResultLog).filter(
+        ResultLog.id.in_(sq.as_scalar())).update(
+        {"status": ResultLog.PENDING, "task_id": task_id}, synchronize_session='fetch')
+
+    if count > 0:
+        print("Executing tasks for task_id : " + task_id)
+        tasks = db.session.query(ResultLog).filter(ResultLog.task_id == task_id).all()
+        check_for_iocs(tasks)
+        match_with_rules(tasks)
+        db.session.query(ResultLog).filter(
+            ResultLog.task_id == task_id).update(
+            {"status": ResultLog.COMPLETE}, synchronize_session='fetch')
+        db.session.commit()
+        time.sleep(5)
+    else:
+        print("No pending tasks!")
+        db.session.commit()
+        time.sleep(15)
+    return
 
 @celery.task()
 def build_carve_session_archive(session_id):
