@@ -124,7 +124,7 @@ PolyLogyx ESP can be programatically interacted with using the extensive  [REST 
 ## Integration with Big Data/Analytic systems
 PolyLogyx ESP is packaged with an rSysLog container. This container can be configured to stream the query results and other logs from the endpoint population to the back-end systems like Splunk, ELK, GrayLog etc for cross-product correlation, alert enrichments and other SIEM related use cases.
 
-To configure rsyslog forwarding modify the [rsyslogd.conf](rSysLogF/rsyslogd.conf) and specify the destination address of the server accepting logs in syslog format.
+To configure rsyslog forwarding modify the [rsyslogd.conf](rSysLogF/rsyslogd.conf) and specify the destination address of the server accepting logs in syslog format. In the absense of any destination address, the container may not come up. It can be configured at a later point, although the container will have to be manually started.
 
 ## PolyLogyx ESP - Community Edition License
 Please read the [LICENSE](LICENSE) file for details on the license.
