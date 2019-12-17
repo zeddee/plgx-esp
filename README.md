@@ -107,7 +107,7 @@ existing Docker images and containers.
 ## Uninstalling the Agent
 -------------------------
 
-Agent from the endpoints can be uninstalled following the [instructions here](https://github.com/polylogyx/platform-docs/tree/master/03_Provisioning_Polylogyx_Client#uninstalling-the-client). If for any reasons these instructions do not work, then a brute force clean could be accomplished on the Windows sytems using _agent_cleanup.bat_ file provided as a part of this repository.
+Agent from the endpoints can be uninstalled following the [instructions here](https://github.com/polylogyx/platform-docs/tree/master/03_Provisioning_Polylogyx_Client#uninstalling-the-client). If for any reasons these instructions do not work, then a brute force clean could be accomplished on the Windows sytems using _agent_cleanup.bat_ file provided as a part of this repository. The batch file can be downloaded on the target system and invoked from an administrator privileged command prompt.
 
 
 ## PolyLogyx ESP Components
