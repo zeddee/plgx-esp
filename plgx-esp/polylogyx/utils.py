@@ -51,7 +51,6 @@ def assemble_configuration(node):
     if platform_filter and platform_filter.filters:
         configuration = platform_filter.filters
     configuration['options'] = assemble_options(node)
-    configuration['file_paths'] = assemble_file_paths(node)
     configuration['schedule'] = assemble_schedule(node)
     configuration['packs'] = assemble_packs(node)
 
