@@ -104,6 +104,12 @@ existing Docker images and containers.
 
 **Note:** This will clean **all** the images and containers.
 
+## Uninstalling the Agent
+-------------------------
+
+Agent from the endpoints can be uninstalled following the [instructions here](https://github.com/polylogyx/platform-docs/tree/master/03_Provisioning_Polylogyx_Client#uninstalling-the-client). If for any reasons these instructions do not work, then a brute force clean could be accomplished on the Windows sytems using _agent_cleanup.bat_ file provided as a part of this repository.
+
+
 ## PolyLogyx ESP Components
 - plgx-esp - Manages requests coming from endpoint
 - plgx-esp-ui - Mangement server for taking actions, modifying properties  of an endpoint.
