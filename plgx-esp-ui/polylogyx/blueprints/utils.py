@@ -49,7 +49,7 @@ def validate_json(f):
 
     return decorated_function
 
-def get_hostname(request_data):
+def validate_command(request_data):
     response = {}
     types = ['file', 'process']
     status = 'failure'
@@ -58,31 +58,19 @@ def get_hostname(request_data):
     for type in types:
         try:
             if request_data.get('target').get(type):
-                ipValid = validate_ip(request_data.get('target').get(type).get('device').get('hostname'))
 
-                if ipValid:
-                    node = Node.query.filter(
-                        Node.last_ip == request_data.get('target').get(type).get('device').get('hostname')).all()
-
-                else:
-                    node = Node.query.filter(
-                        Node.node_info['computer_name'].astext == request_data.get('target').get(type).get(
+                node = Node.query.filter(
+                        Node.host_identifier == request_data.get('target').get(type).get(
                             'device').get(
-                            'hostname')).all()
-
-                if not node or len(node) == 0:
-                    message = 'Invalid node name/ip'
-                else:
-                    request_data.get('target').get(type).get('device')['hostname'] = node[0].node_info['computer_name']
-                    return None
+                            'hostname')).first()
+                if node: return True,node
         except:
             status = 'failure'
             message = 'Please provide a valid command'
 
     response['status'] = status
     response['message'] = message
-    return jsonify(response)
-
+    return False,jsonify(response)
 
 def validate_ip(s):
     a = s.split('.')
@@ -240,7 +228,8 @@ def add_pack_through_json_data(args):
     from polylogyx.utils import create_tags, validate_osquery_query
     from flask_restplus import marshal
 
-    tags = args['tags']
+    if 'tags' in args: tags = args['tags'].split(',')
+    else: tags=[]
     name = args['name']
     queries = args['queries']
     pack = packs_dao.get_pack_by_name(name)
@@ -259,20 +248,20 @@ def add_pack_through_json_data(args):
             current_app.logger.debug("Adding new query %s to pack %s",
                                      q.name, pack.name)
             continue
+        else:
+            if q.sql == query['query']:
+                current_app.logger.debug("Adding existing query %s to pack %s",
+                                         q.name, pack.name)
+                pack.queries.append(q)
+            else:
+                q2 = queries_dao.add_query(query_name, **query)
+                current_app.logger.debug(
+                    "Created another query named %s, but different sql: %r vs %r",
+                    query_name, q2.sql.encode('utf-8'), q.sql.encode('utf-8'))
+                pack.queries.append(q2)
 
         if q in pack.queries:
             continue
-
-        if q.sql == query['query']:
-            current_app.logger.debug("Adding existing query %s to pack %s",
-                                     q.name, pack.name)
-            pack.queries.append(q)
-        else:
-            q2 = queries_dao.add_query(query_name, **query)
-            current_app.logger.debug(
-                "Created another query named %s, but different sql: %r vs %r",
-                query_name, q2.sql.encode('utf-8'), q.sql.encode('utf-8'))
-            pack.queries.append(q2)
 
     if pack:
         if tags:
@@ -477,14 +466,6 @@ def make_condition(klass, *args, **kwargs):
     # Save the condition
     conditions[key] = inst
     return inst
-
-
-def debug_body_args(args,args_ip):
-    # making None values for the inputs which we are not passing
-    for item in args_ip:
-        if not item in args.keys():
-            args[item] = None
-    return args
 
 def get_tags_list_to_add(tags):
     from polylogyx.models import Tag

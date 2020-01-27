@@ -171,10 +171,14 @@ class Query(SurrogatePK, Model):
 
 
 class DefaultQuery(SurrogatePK, Model):
+    ARCH_x86="x86"
+    ARCH_x64="x86_64"
+
     name = Column(db.String, nullable=False)
     sql = Column(db.String, nullable=False)
     interval = Column(db.Integer, default=3600)
     platform = Column(db.String)
+    arch = Column(db.String,nullable=False)
     version = Column(db.String)
     description = Column(db.String)
     value = Column(db.String)
@@ -185,7 +189,7 @@ class DefaultQuery(SurrogatePK, Model):
 
     def __init__(self, name, query=None, sql=None, interval=3600, platform=None,
                  version=None, description=None, value=None, removed=False,
-                 shard=None,status=None, snapshot=False, **kwargs):
+                 shard=None,status=None, snapshot=False,arch=ARCH_x64, **kwargs):
         self.name = name
         self.sql = query or sql
         self.interval = int(interval)
@@ -197,6 +201,7 @@ class DefaultQuery(SurrogatePK, Model):
         self.snapshot = snapshot
         self.shard = shard
         self.status = status
+        self.arch=arch
 
     def __repr__(self):
         return '<Query: {0.name}>'.format(self)
@@ -218,18 +223,23 @@ class DefaultQuery(SurrogatePK, Model):
 
 
 class DefaultFilters(SurrogatePK, Model):
+    ARCH_x86 = "x86"
+    ARCH_x64 = "x86_64"
+
     filters = Column(JSONB)
     platform = Column(db.String, nullable=False)
+    arch = Column(db.String,nullable=False)
     apply_by_default = Column(db.Boolean, nullable=False, default=False)
     created_at = Column(db.DateTime, nullable=False)
     updated_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
 
-    def __init__(self, filters, platform,created_at, apply_by_default=False, **kwargs):
+    def __init__(self, filters, platform,created_at, apply_by_default=False, arch=ARCH_x64, **kwargs):
         self.filters = filters
         self.platform = platform
         self.apply_by_default = apply_by_default
         self.created_at=created_at
         self.updated_at = dt.datetime.utcnow()
+        self.arch = arch
 
     @property
     def serialize(self):
@@ -238,8 +248,10 @@ class DefaultFilters(SurrogatePK, Model):
             'id': self.id,
             'filters': json.loads(self.filters),
             'platform': self.platform,
+            'arch': self.arch,
             'created_at': dump_datetime(self.created_at),
             'updated_at': dump_datetime(self.updated_at)
+
         }
 
 
@@ -807,8 +819,8 @@ class User(UserMixin, SurrogatePK, Model):
             return bcrypt.generate_password_hash(value) and False
         return bcrypt.check_password_hash(self.password, value)
 
-    def generate_auth_token(self, expiration=600):
-        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
+    def generate_auth_token(self):
+        s = Serializer(current_app.config['SECRET_KEY'])
         return s.dumps({'id': self.id})
 
     @staticmethod
@@ -835,6 +847,11 @@ class Alerts(SurrogatePK, Model):
 
     RESOLVED="RESOLVED"
     OPEN="OPEN"
+
+    CRITICAL="CRITICAL"
+    WARNING="WARNING"
+    LOW="LOW"
+    INFO="INFO"
 
     query_name = Column(db.String, nullable=False)
     message = Column(JSONB)

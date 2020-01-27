@@ -12,9 +12,10 @@ from flask_script import Command, Manager, Server, Shell
 from flask_script.commands import Clean, ShowUrls
 
 from polylogyx import create_app, db
+from polylogyx.extensions import bcrypt
 from polylogyx.models import Query, Rule, Options, Settings, DefaultFilters, DefaultQuery
 from polylogyx.settings import CurrentConfig
-from polylogyx.constants import PolyLogyxServerDefaults, UtilQueries
+from polylogyx.constants import PolyLogyxServerDefaults, UtilQueries, PolyLogyxConstants
 from werkzeug.contrib.fixers import ProxyFix
 import sys
 
@@ -79,8 +80,9 @@ def extract_ddl(specs_dir):
 
 @manager.option('--filepath')
 @manager.option('--platform')
-def add_default_filters( filepath, platform):
-    if DefaultFilters.query.filter_by(platform=platform).first():
+@manager.option('--arch', default=DefaultFilters.ARCH_x64)
+def add_default_filters( filepath, platform, arch):
+    if DefaultFilters.query.filter_by(platform=platform, arch=arch).first():
         raise ValueError("Filter already exists!")
     else:
         print("Filter does not exist, adding new...")
@@ -88,7 +90,7 @@ def add_default_filters( filepath, platform):
         jsonStr = open(filepath, 'r').read()
         filter=json.loads(jsonStr)
         try:
-            DefaultFilters.create( filters=filter, platform=platform,created_at=dt.datetime.utcnow())
+            DefaultFilters.create( filters=filter, platform=platform,created_at=dt.datetime.utcnow(), arch=arch)
         except Exception as error:
             print(str(error))
     except Exception as error:
@@ -97,14 +99,18 @@ def add_default_filters( filepath, platform):
 
 @manager.option('--filepath')
 @manager.option('--platform')
-def add_default_queries( filepath, platform):
+@manager.option('--arch',   default=DefaultQuery.ARCH_x64)
+def add_default_queries( filepath, platform,arch):
     try:
         sys.stderr.write('Adding queries for '+platform)
         jsonStr = open(filepath, 'r').read()
         query = json.loads(jsonStr)
         queries = query['schedule']
         for query_key in queries.keys():
-            query = DefaultQuery.query.filter_by(platform=platform).filter_by(name=query_key).first()
+            query_filter=DefaultQuery.query.filter_by(platform=platform).filter_by(name=query_key)
+            if arch==DefaultQuery.ARCH_x86:
+                query_filter=query_filter.filter_by(platform=DefaultQuery.ARCH_x86)
+            query=query_filter.first()
             description=queries[query_key]['query']
             try:
                 if query:
@@ -116,9 +122,12 @@ def add_default_queries( filepath, platform):
                     query.update(query)
                 else:
                     sys.stderr.write(query_key+" does not exist, adding new...")
+                    status=True
+                    if "status" in queries[query_key]:
+                        status=queries[query_key]['status']
 
-                    DefaultQuery.create(name=query_key, sql=queries[query_key]['query'],
-                                            interval=queries[query_key]['interval'], status=True, platform=platform,
+                    DefaultQuery.create(name=query_key, sql=queries[query_key]['query'],arch=arch,
+                                            interval=queries[query_key]['interval'], status=status, platform=platform,
                                             description=queries[query_key].get('description'))
             except Exception as error:
                 sys.stderr.write(str(error))
@@ -171,9 +180,8 @@ def addpack(packname, filepath):
 @manager.command
 def add_default_options():
     existing_option = Options.query.filter(Options.name == PolyLogyxServerDefaults.plgx_config_all_options).first()
-    data = { "schedule_splay_percent": 10}
 
-    for k, v in data.items():
+    for k, v in PolyLogyxConstants.DEFAULT_OPTIONS.items():
         option = Options.query.filter(Options.name == k).first()
         if option:
             option.option = v
@@ -182,10 +190,10 @@ def add_default_options():
             Options.create(name=k, option=v)
 
     if existing_option:
-        existing_option.option = json.dumps(data)
+        existing_option.option = json.dumps(PolyLogyxConstants.DEFAULT_OPTIONS)
         existing_option.update(option)
     else:
-        Options.create(name=PolyLogyxServerDefaults.plgx_config_all_options, option=json.dumps(data))
+        Options.create(name=PolyLogyxServerDefaults.plgx_config_all_options, option=json.dumps(PolyLogyxConstants.DEFAULT_OPTIONS))
     exit(0)
 
 
@@ -205,8 +213,10 @@ def add_rules(filepath):
                     rule.description = data['description']
                     rule.conditions = data['conditions'],
                     rule.conditions = rule.conditions[0]
-
-                    rule.type = Rule.MITRE
+                    if 'type' not in data:
+                        rule.type = Rule.MITRE
+                    else:
+                        rule.type = data['type']
                     rule.save(rule)
 
         else:
@@ -276,6 +286,28 @@ def add_user(username, password, email):
         exit(0)
 
 
+
+@manager.option('--username')
+@manager.option('--password', default=None)
+@manager.option('--email', default=None)
+def update_user(username, password, email):
+    from polylogyx.models import User
+    user=User.query.filter_by(username=username).first()
+    if not user :
+        raise ValueError("User with this username doesn't exists!")
+
+    # password = getpass.getpass(stream=sys.stderr)
+
+    try:
+
+        user.update(
+            password=bcrypt.generate_password_hash(password.encode("utf-8")).decode("utf-8"))
+        print("Successfully updated password for user {0}".format(user.username))
+
+    except Exception as error:
+        print("Failed to create user {0} - {1}".format(username, error))
+        exit(1)
+    exit(0)
 
 
 if __name__ == '__main__':

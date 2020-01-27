@@ -18,7 +18,6 @@ credentials = pika.PlainCredentials("guest", "guest")
 
 class Config(object):
     EMAIL_RECIPIENTS = []
-
     SECRET_KEY = b2a_hex(os.urandom(20))
 
 
@@ -68,6 +67,8 @@ class Config(object):
         ('hardware_model', 'model'),
         ('hardware_serial', 'serial'),
         ('cpu_brand', 'cpu'),
+        ('cpu_type', 'cpu type'),
+
         ('cpu_physical_cores', 'cpu cores'),
         ('physical_memory', 'memory'),
         ('mac', 'Mac address'),
@@ -136,8 +137,8 @@ class Config(object):
     POLYLOGYX_OSQUERY_SCHEMA_JSON = {
 
     }
-
     CELERY_IMPORTS = ('polylogyx.tasks')
+    CELERY_AMQP_TASK_RESULT_EXPIRES=60
     CELERY_TASK_RESULT_EXPIRES = 30
     CELERY_ROUTES = {
         'polylogyx.tasks.*': {'queue': 'worker1', 'routing_key': 'default1'},

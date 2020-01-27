@@ -11,6 +11,7 @@ from functools import wraps
 from jinja2 import Markup, Template
 from operator import itemgetter
 from os.path import basename, join, splitext
+from sqlalchemy import and_
 
 from flask_mail import Message, Mail
 
@@ -38,7 +39,6 @@ schema = [x for x in schema.strip().split('\n') if not x.startswith('--')]
 # SQLite in Python will complain if you try to use it from multiple threads.
 # We create a threadlocal variable that contains the DB, lazily initialized.
 osquery_mock_db = threading.local()
-
 
 
 def send_email(body, subject, config, node,db):
@@ -108,7 +108,7 @@ def assemble_file_paths(node):
     return file_paths
 
 
-def assemble_schedule(node, config_json):
+def assemble_schedule(node, config_json=None):
     schedule = {}
     for query in node.queries.options(db.lazyload('*')):
         schedule[query.name] = query.to_dict()
@@ -117,7 +117,7 @@ def assemble_schedule(node, config_json):
     return schedule
 
 
-def assemble_packs(node, config_json):
+def assemble_packs(node, config_json=None):
     packs = {}
     for pack in node.packs.join(querypacks).join(Query) \
             .options(db.contains_eager(Pack.queries)).all():
@@ -193,7 +193,17 @@ def assemble_filters(node):
     platform = node.platform
     if platform not in DEFAULT_PLATFORMS:
         platform = 'linux'
-    default_filters_obj = DefaultFilters.query.filter(DefaultFilters.platform == platform).first()
+    is_x86 = False
+    if node.node_info and 'cpu_type' in node.node_info and node.node_info['cpu_type'] == DefaultFilters.ARCH_x86:
+        is_x86 = True
+    query = DefaultFilters.query.filter(DefaultFilters.platform == platform)
+
+    if is_x86:
+        default_filters_obj=query.filter(DefaultFilters.arch == DefaultFilters.ARCH_x86).first()
+    else:
+        default_filters_obj=query.filter(
+            and_(DefaultFilters.arch == None, DefaultFilters.arch != DefaultFilters.ARCH_x86)).first()
+
     return default_filters_obj
 
 
@@ -296,20 +306,21 @@ def create_query_pack_from_upload(upload,category):
             current_app.logger.debug("Adding new query %s to pack %s",
                                      q.name, pack.name)
             continue
+        else:
+            if q.sql == query['query']:
+                current_app.logger.debug("Adding existing query %s to pack %s",
+                                         q.name, pack.name)
+                pack.queries.append(q)
+            else:
+                q2 = Query.create(name=query_name, **query)
+                current_app.logger.debug(
+                    "Created another query named %s, but different sql: %r vs %r",
+                    query_name, q2.sql.encode('utf-8'), q.sql.encode('utf-8'))
+                pack.queries.append(q2)
 
         if q in pack.queries:
             continue
 
-        if q.sql == query['query']:
-            current_app.logger.debug("Adding existing query %s to pack %s",
-                                     q.name, pack.name)
-            pack.queries.append(q)
-        else:
-            q2 = Query.create(name=query_name, **query)
-            current_app.logger.debug(
-                "Created another query named %s, but different sql: %r vs %r",
-                query_name, q2.sql.encode('utf-8'), q.sql.encode('utf-8'))
-            pack.queries.append(q2)
 
     else:
         pack.save()
@@ -685,11 +696,11 @@ class Serializer(object):
 
 
 def invalidate_token(loggedin_token):
-    qs_object = HandlingToken.query.filter(HandlingToken.token == loggedin_token).first()
-    if qs_object.token_expired == True:
-        return False
-    else:
+    qs_object = HandlingToken.query.filter(HandlingToken.token == loggedin_token).filter(HandlingToken.token_expired == False).first()
+    if qs_object:
         return True
+    else:
+        return False
 
 
 def require_api_key(f):

@@ -9,6 +9,7 @@ pack_wrapper = Model('packs_list',{
     'version' :fields.String(default = None),
     'description' : fields.String(default = None),
     'shard' : fields.Integer(default = None),
+    'category' : fields.String(default = 'General')
 })
 
 pack_list_wrapper = Model('packs_list',{

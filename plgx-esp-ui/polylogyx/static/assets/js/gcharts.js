@@ -6542,7 +6542,7 @@
   };
   google.v.w.J.hn = function(b) {
     var c = google.v.w.J.qn(b),
-      d = H.c.M.from("https://www.gstatic.com/charts/%{version}/loader.js");
+      d = H.c.M.from("/static/assets/js/loader.js");
     return google.v.w.Qa.load(d, {
       version: c.jn
     }).then(function() {

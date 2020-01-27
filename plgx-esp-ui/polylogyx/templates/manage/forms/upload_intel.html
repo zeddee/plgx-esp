@@ -18,7 +18,7 @@
   .kt-section .kt-section__title.kt-section__title-lg {
    font-size: 1rem;
    line-height: 1.5;
-}
+  }
 </style>
 <!--begin::Portlet-->
 <div class="kt-portlet kt-portlet--last kt-portlet--responsive-mobile" id="kt_page_portlet">
@@ -33,11 +33,9 @@
     </div>
     <div class="kt-portlet__head-toolbar">
       <div class="kt-portlet__head-wrapper">
-        <div class="">
-          <a href="javascript:void(0);" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
-            <i class="fas fa-chevron-left"></i>
-            Back
-          </a>
+        <div style="cursor: pointer;" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+          <i class="fas fa-chevron-left"></i>
+          Back
         </div>
       </div>
     </div>
@@ -73,11 +71,9 @@
             </div>
           </div>
            <div class="form-group" style="display:none">
-
-              {{ form.intel(id='intel') }}
-          </div>
+            {{ form.intel(id='intel') }}
+           </div>
           <!-- <div class="kt-separator kt-separator--border-dashed kt-separator--space-lg"></div> -->
-
           <div class="kt-portlet__foot">
 						<div class="kt-form__actions kt-form__actions--center">
               <button type="submit" class="btn btn-success" onclick="message_upload();">
@@ -95,7 +91,7 @@
 </div>
 <!--end::Portlet-->
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script>
+<script src="/static/js/ace.js"></script>
 <link href="/static/css/jsoneditor/jsoneditor.min.css" rel="stylesheet" type="text/css">
 <script src="/static/js/jsoneditor/jsoneditor-minimalist.min.js"></script>
 <script src="/static/js/filereader.js"></script>

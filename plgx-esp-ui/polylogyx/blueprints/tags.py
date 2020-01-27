@@ -30,17 +30,16 @@ class TagsList(Resource):
 
 @require_api_key
 @ns.route('/add', endpoint = "add_tags")
-@ns.doc(params = {'tags':"tags to add"})
+@ns.doc(params={'tags': "tags to add"})
 class AddTag(Resource):
     '''adds a new tag to the Tag model'''
 
-    parser = requestparse(['tags'],[list],["tags to add"],[True])
+    parser = requestparse(['tags'], [str], ["list of comma separated tags to add"], [True])
 
     @ns.expect(parser)
     def post(self):
         args = self.parser.parse_args()  # need to exists for input payload validation
-        args = get_body_data(request)
-        add_tags = args['tags']
+        add_tags = args['tags'].split(',')
         add_tags = create_tags(*add_tags)
         message = "Tags are added successfully"
         status = "success"

@@ -16,9 +16,6 @@ PolyLogyx - Readme
   .head-color h1,h2,h3,h4 {
     color: #518c24;
   }
-  .head_link {
-    color: #518c24;
-  }
   .head-color ul,i {
     color: grey;
   }
@@ -112,8 +109,8 @@ PolyLogyx - Readme
                   <div class="kt-section__body read_align">
                   <!-- Begin:: readme -->
                     <div id="readme" class="head-color">
-                      <h2><a class="head_link" href="https://github.com/polylogyx/plgx-esp" target="_blank">PolyLogyx Endpoint Security Platform (ESP)</a> - Community Edition</h2>
-                      <p id="top">Welcome to<a href="https://github.com/polylogyx/plgx-esp" target="_blank"> PolyLogyx Endpoint Security Platform (ESP)</a>. PolyLogyx ESP provides deep visibility into endpoints using osquery based agent. To enhance the visibility on Windows platform, PolyLogyx provides a Windows extension to the osquery.</p>
+                      <h2>PolyLogyx Endpoint Security Platform (ESP) - Enterprise Edition</h2>
+                      <p id="top">Welcome to PolyLogyx Endpoint Security Platform (ESP). PolyLogyx ESP provides deep visibility into endpoints using osquery based agent. To enhance the visibility on Windows platform, PolyLogyx provides a Windows extension to the osquery.</p>
                       <ul>
                         <li>Information about osquery can be found at <a href="https://osquery.io" target="_blank">https://osquery.io</a>
                         </li>
@@ -127,7 +124,7 @@ PolyLogyx - Readme
                       <p>Finally, you have any unanswered questions, feel free to mail us at <a href="mailto:support@polylogyx.com">support@polylogyx.com</a> or join us on osquery slack. We can be found in the channel <i>#polylogyx-extension</i>.</p>
                       <h3>PolyLogyx Client Provisioning Tool</h3>
                         PolyLogyx Client Provisioning Tool (CPT) is a utility that simplifies the installation of osquery and PolyLogyx extension on Windows operating system by taking away the cumbersome steps of installing osquery manually. This tool requires <a href="/manage/downloads/certificate.crt" target="_blank">server certificate</a> to run.
-                        <a href="/manage/downloads/plgx_cpt.exe" target="_blank">Download the CPT</a> and run the following command on the target endpoint.
+                        <a href="/manage/downloads/windows/plgx_cpt.exe" target="_blank">Download the CPT</a> and run the following command on the target endpoint.
                         <pre> plgx_cpt.exe -p -i &lt; SERVER_IP(x.x.x.x) &gt;  -k &lt; Full path to the certificate file &gt; </pre>
                         <p>After the successful execution of the installation, following line will be displayed.</p>
                         <pre> [+] === PolyLogyx osquery agent installed Successfully ===</pre>
@@ -137,8 +134,18 @@ PolyLogyx - Readme
                         <p>For more CPT options run the tool without any parameters</p>
                       <h3>Managing Endpoints</h3>
                         <p>PolyLogyx ESP allows administrators to remotely manage the osquery configurations retrieved by endpoints. Administrators can dynamically configure the set of packs, queries using tags. FIM(file integrity monitoring) target paths can be configured under <a href= "{{ url_for('manage.configs') }}">Config Management</a>. Default queries and filters under Config Management is applied to all  the endpoints based on their platform. Tags are used to map endpoints to queries and packs.</p>
+                          <pre>
+  {{'{'}}
+       "custom_plgx_enable_respserver": "true",
+       "custom_plgx_ServerPort": "443",
+       "custom_plgx_EnableLogging": "true",
+       "custom_plgx_LogFileName": "c:\\Program Files\\osquery\\plgx_win_extn\\log\\plgx-agent-test.log",
+       "custom_plgx_LogLevel": "1",
+       "custom_plgx_LogModeQuiet": "0"
+  {{'}'}}               </pre>
+                          <p>By default, these fields are set and enabled.</p>
                       <h4>Non-Windows Hosts</h4>
-                        <p>For Non-Windows endpoints, osquery agent can be installed from an upstream package. These packages are available on osquery website. And as described above, they can be configured to be manged with the PolyLogyx ESP.
+                        <p>For Non-Windows endpoints, osquery agent can be installed from an upstream package. These packages are available on osquery website. And as described above, they can be configured to be managed with the PolyLogyx ESP.
                       <h4>Adding Tags to Endpoint</h4>
                         <p>"Tags" are arbitrary strings chosen at user discretion that can be used to group a set of endpoints together, to enable bulk querying of endpoints. Tags can directly be associated with endpoints by typing the tag string in the rightmost column of the dashboard or tags can be added independently and then applied to endpoints. Adding tags is not mandatory, and is their to enable operational ease. </p>
                       <h4>Querying the Endpoint</h4>

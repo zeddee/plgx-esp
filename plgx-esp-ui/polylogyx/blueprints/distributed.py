@@ -26,14 +26,11 @@ class DistributedQueryClass(Resource):
     Retrieve an osquery configuration for a given node.
     returns: an osquery configuration file
     '''
-    parser = requestparse(['query','tags','nodes','description'],[str, list, list, str],['query','tags','nodes','description'],[True, False, False, False])
+    parser = requestparse(['query','tags','nodes','description'],[str, str, str, str],['query','tags list string seperated by commas','nodes list by comma separated','description'],[True, False, False, False])
 
     @ns.expect(parser)
     def post(self, node=None):
         args = self.parser.parse_args()  # need to exists for input payload validation
-        args = get_body_data(request)
-        args_ip = ['query','tags','nodes','description']
-        args = debug_body_args(args, args_ip)
         onlineNodes = 0
 
         sql = args['query']
@@ -49,17 +46,22 @@ class DistributedQueryClass(Resource):
             )
             # all nodes get this query
             nodes = []
-            tags = args['tags']
-            nodeKeyList = args['nodes']
+            tags = []
+            if args['tags']:
+                tags = args['tags'].split(',')
+            if args['nodes']:
+                nodeKeyList = args['nodes'].split(',')
+            else:
+                nodeKeyList = []
 
             if not nodeKeyList and not tags:
                 # all nodes get this query
                 nodes = nodedao.get_all_nodes()
 
             if nodeKeyList:
-                nodedao.extendNodesByNodeKeyList(nodes, nodeKeyList)
+                nodes = nodedao.extendNodesByNodeKeyList(nodeKeyList)
             if tags:
-                nodedao.extendNodesByTag(nodes, tags)
+                nodes = nodedao.extendNodesByTag(tags)
             query = dao.add_distributed_query(sql,args['description'])
             win_sql_query = None
 

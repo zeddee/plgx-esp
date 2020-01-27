@@ -55,18 +55,15 @@ class PackById(Resource):
 
 @require_api_key
 @ns.route('/add', endpoint = 'pack_add')
-@ns.doc(params={'tags': 'list of tags', 'name':'name of the pack', 'queries':'list of queries'})
+@ns.doc(params={'tags': 'list of tags', 'name':'name of the pack', 'queries':'list of queries', 'category':'category name'})
 class AddPack(Resource):
     '''adds a new pack to the Pack model'''
 
-    parser = requestparse(['tags','name','queries'],[list, str, dict],['list of tags', 'name of the pack', 'dict of queries'],[False, True, True])
+    parser = requestparse(['tags','name','queries','category','platform','version','description','shard'],[str, str, dict, str, str, str, str, int],['list of comma separated tags', 'name of the pack', 'dict of queries', 'category', 'platform', 'version', 'description', 'shard'],[False, True, True, False, False, False, False, False])
 
     @ns.expect(parser)
     def post(self):
         args = self.parser.parse_args()  # need to exists for input payload validation
-        args = get_body_data(request)
-        args_ip = ['tags','name','queries']
-        args = debug_body_args(args, args_ip)
         pack = add_pack_through_json_data(args)
         return marshal({'pack_id': pack.id}, wrapper.response_add_pack)
 
@@ -76,22 +73,18 @@ class AddPack(Resource):
 @ns.doc(params={'pack_id': 'id of the pack', 'add_tags':'list of tags to add', 'remove_tags':'list of tags to remove'})
 class EditTagsToPack(Resource):
     '''adds tag to pack'''
-    parser = requestparse(['pack_id', 'add_tags', 'remove_tags'], [int, list, list],
-                          ["id of the pack", "tags to add", "tags to remove"], [True, False, False])
+    parser = requestparse(['pack_id', 'add_tags', 'remove_tags'], [int, str, str],
+                          ["id of the pack", "list of comma separated tags to add", "list of comma separated tags to remove"], [True, False, False])
 
     @ns.expect(parser)
     def post(self):
         args = self.parser.parse_args()  # need to exists for input payload validation
-        args = get_body_data(request)
-        args_ip = ['pack_id', 'add_tags', 'remove_tags']
-        args = debug_body_args(args, args_ip)
         pack_id = args['pack_id']
         status = 'failure'
         message = None
 
-        add_tags = args['add_tags']
-        print("add_tags-----",add_tags)
-        remove_tags = args['remove_tags']
+        add_tags = args['add_tags'].split(',')
+        remove_tags = args['remove_tags'].split(',')
 
         pack = dao.get_pack_by_id(pack_id)
         if not pack:
@@ -123,7 +116,7 @@ class EditTagsToPack(Resource):
 @ns.doc(params={'pack_name': 'pack name'})
 class ListTagsOfPack(Resource):
     '''list tags of a pack by its pack_name'''
-    parser = requestparse(['tags'], [list], ["list of tags to be created to the pack"])
+    parser = requestparse(['tags'], [str], ["list of comma separated tags to be created to the pack"])
 
     def get(self, pack_name):
         status = 'failure'
@@ -141,7 +134,7 @@ class ListTagsOfPack(Resource):
     @ns.expect(parser)
     def post(self, pack_name):
         args = self.parser.parse_args()  # need to exists for input payload validation
-        tags = get_body_data(request)['tags']
+        tags = args['tags'].split(',')
         pack = dao.get_pack_by_name(pack_name)
         obj_list = get_tags_list_to_add(tags)
         pack.tags.extend(obj_list)
@@ -156,16 +149,15 @@ class UploadPack(Resource):
     '''packs will be added through the uploaded file'''
 
     from werkzeug import datastructures
-    parser = requestparse(['file'],[datastructures.FileStorage],['packs file'])
+    parser = requestparse(['file', 'category'],[datastructures.FileStorage, str],['packs file', 'pack category'],[True,False])
 
     @ns.expect(parser)
     def post(self):
-        import json
-        #from polylogyx.utils import create_query_pack_from_upload
-        args_dict = self.parser.parse_args()
-        args = json.loads(args_dict['file'].read().decode("utf-8"))
-        args_ip = ['tags', 'name', 'queries']
-        args = debug_body_args(args, args_ip)
-        pack = add_pack_through_json_data(args)
+        args = self.parser.parse_args()  # need to exists for input payload validation
+        args_dict = json.loads(args['file'].read())
+        args_dict['name'] = args['file'].filename.lower().split('.')[0]
+        if not 'category' in args_dict:
+            args_dict['category'] = args['category']
+        pack = add_pack_through_json_data(args_dict)
         return marshal(respcls("pack uploaded successfully","success",pack.id),parentwrapper.common_response_wrapper)
 

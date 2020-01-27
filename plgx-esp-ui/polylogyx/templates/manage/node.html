@@ -129,11 +129,9 @@ PolyLogyx - Hosts
       </div>
       <div class="kt-portlet__head-toolbar">
         <div class="kt-portlet__head-wrapper">
-          <div class="">
-            <a href="javascript:void(0);" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
-              <i class="fas fa-chevron-left"></i>
-              Back
-            </a>
+          <div style="cursor: pointer;" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+            <i class="fas fa-chevron-left"></i>
+            Back
           </div>
         </div>
       </div>
@@ -146,7 +144,6 @@ PolyLogyx - Hosts
             <li class="nav-item">
               <a class="nav-link active" data-toggle="tab" href="#host_details" role="tab">Details</a>
             </li>
-
             <li class="nav-item">
               <a class="nav-link" data-toggle="tab" href="#network_information" role="tab">Network Info</a>
             </li>
@@ -158,8 +155,8 @@ PolyLogyx - Hosts
             </li>
           </ul>
           <div class="tab-content">
+            <!--begin:: Host Details -->
             <div class="tab-pane active" id="host_details" role="tabpanel">
-              <!--begin:: Host Details -->
               <div id="kt_form" class="kt-form form-horizontal" method="POST">
                 <div class="row">
                   <div class="col-md-6">
@@ -187,13 +184,20 @@ PolyLogyx - Hosts
                     </div>
                     <div class="row">
                       <label class="col-md-3 col-form-label form--label">
+                        Node Key
+                      </label>
+                      <div class="col-md-9 col-form-label form--p">
+                        <p class="">{{ node.node_key }}</p>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <label class="col-md-3 col-form-label form--label">
                         Host Identifier
                       </label>
                       <div class="col-md-9 col-form-label form--p">
                         <p class="">{{ node.host_identifier }}</p>
                       </div>
                     </div>
-
                   </div>
 
                   <div class="col-md-6">
@@ -253,22 +257,15 @@ PolyLogyx - Hosts
                         <p class="">{{ node.last_query_write | date_diff  }}</p>
                       </div>
                     </div>
-                    <div class="row">
-                      <label class="col-md-3 col-form-label form--label">
-                        Node Key
-                      </label>
-                      <div class="col-md-9 col-form-label form--p">
-                        <p class="">{{ node.node_key }}</p>
-                      </div>
-                    </div>
+
+
                   </div>
                 </div>
               </div>
-              <!--end:: Host Details -->
             </div>
-
+            <!--end:: Host Details -->
+            <!--begin:: Network Information -->
             <div class="tab-pane" id="network_information" role="tabpanel">
-              <!--begin:: Network Information -->
               <div id="kt_form" class="kt-form form-horizontal" method="POST">
                 <table class="table table-striped- table-bordered table-hover table-checkable ">
                   {% if node.network_info %}
@@ -278,7 +275,6 @@ PolyLogyx - Hosts
                   {% if loop.first %}
                   <thead>
                     <tr>
-
                       {% for key, value in network_detail.items() %}
                       <th>{{ key | capitalize }}</th>
                       {% endfor %}
@@ -299,20 +295,13 @@ PolyLogyx - Hosts
                   {% endif %}
                 </table>
               </div>
-              <!--end:: Network Information -->
             </div>
+            <!--end:: Network Information -->
+            <!--begin:: Status Log -->
             <div class="tab-pane" id="status_log" role="tabpanel">
-      <table class="table table-hover table-checkable" id="status_log_table">
-<thead>
-        <tr>
-            <th>Line</th>
-            <th>Message</th>
-            <th>Severity</th>
-            <th>Filename</th>
-        </tr>
-    </thead>
-      </table>
+              <table class="table table-hover table-checkable" id="status_log_table"></table>
             </div>
+            <!--end:: Status Log -->
             <!--begin:: Additional/packs/query/tags -->
             <div class="tab-pane" id="additional_packs_query_tags" role="tabpanel">
               <!--begin:: Packs -->
@@ -435,7 +424,7 @@ PolyLogyx - Hosts
                                  <div class="kt-notification conf-div" id="search_query-name-list" style="cursor:pointer; " data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="{{query.name}}">
                                    <a data-target="{{query.id}}" class="kt-notification__item conf-link-query">
                                      <div class="kt-notification__item-icon">
-                                       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                                       <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                                          <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                                            <rect id="bound" x="0" y="0" width="24" height="24" />
                                            <path
@@ -467,7 +456,7 @@ PolyLogyx - Hosts
                              <div class="kt-portlet__head">
                               <div class="kt-portlet__head-label">
                                 <span class="kt-portlet__head-icon">
-                                   <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                                   <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                                        <rect id="bound" x="0" y="0" width="24" height="24" />
                                        <path
@@ -611,26 +600,28 @@ PolyLogyx - Hosts
 <script>
  var table=$('#status_log_table');
  var node_id={{ node.id }};
-               var elem_table=table.DataTable({
-        "processing": true,
-        "serverSide": true,
-        "ordering": false,
-        "searching": false,
-         "ajax": {
-                    "url": '/manage/ajax/node/'+node_id+'/status',
-                    "type": "GET"
-                },
-        "columns": [
-            { "data": "line","name": "line" },
-            { "data": "message","name": "message" },
-            { "data": "severity","name": "severity" },
-            { "data": "filename","name": "filename" },
+ var node_name='{{ node.display_name }}';
+  var host_identifier='{{ node.host_identifier }}';
 
-        ]
+ var elem_table=table.DataTable({
+  "processing": true,
+  "serverSide": true,
+  "ordering": false,
+  "searching": false,
+   "ajax": {
+      "url": '/manage/ajax/node/'+node_id+'/status',
+      "type": "GET"
+    },
+    "columns": [
+      { "data": "line","sTitle": "Line" },
+      { "data": "message","sTitle": "Message" },
+      { "data": "severity","sTitle": "Severity" },
+      { "data": "filename","sTitle": "File Name" },
+      { "data": "created","sTitle": "Created At" },
+      { "data": "version","sTitle": "Version" },
 
-              });
-
-
+    ]
+  });
 
     $('.conf-link').on('click', function() {
       var div_id = "#" + $(this).data('target');
@@ -649,27 +640,12 @@ PolyLogyx - Hosts
       $(this).find("div.conf-box").addClass('show').addClass('box-clicked');
    });
      $(document).ready(function() {
+
       $(".right-conf").first().addClass('show');
       $('.conf-box').first().addClass('box-clicked');
       $(".right-conf-query").first().addClass('show');
-       for (var i = 0; i < node_data.length; i++) {
-         var obj = node_data[i];
-         var name = obj['name']
-         var dataObj = obj['data']
-         if (!isEmpty(dataObj)) {
-           populateDatable(name, dataObj);
-           } else {
-         var id = name;
-         var table = $('#' + id + '_table');
-         var tbl =  document.getElementById(id+'_table')
-         tbl.classList.add("p_table");
-         let p_tag =   document.createElement("p");
-         p_tag.classList.add("txt-clr");
-         p_tag.classList.add("p_tag");
-         p_tag.innerHTML = "No results found."
-         table.append(p_tag);
-         }
-       }
+
+
      });
   $(document).ready(function(){
     $("#search_pack_query_name").on("keyup", function() {
@@ -680,5 +656,4 @@ PolyLogyx - Hosts
     });
   });
 </script>
-
 {% endblock %}

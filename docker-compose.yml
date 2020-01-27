@@ -61,10 +61,14 @@ services:
     volumes:
          - ./nginx:/etc/nginx:ro
          - ./resources:/resources
-         - yara:/resources/yara         
+         - yara:/resources/yara
     command: >
           sh -c "cp /etc/nginx/certificate.crt /resources/
+          && cp /etc/nginx/certificate.crt /resources/windows/x64/
+          && cp /etc/nginx/certificate.crt /resources/windows/x86/
           && echo $${ENROLL_SECRET}>/resources/secret.txt
+          && echo $${ENROLL_SECRET}>/resources/windows/x64/secret.txt
+          && echo $${ENROLL_SECRET}>/resources/windows/x86/secret.txt
           && nginx-debug -g 'daemon off;'"
     restart: always
     ports:
@@ -72,6 +76,7 @@ services:
      - "9000:9000"
   postgres:
     image: "postgres:11.1"
+    command: postgres -c 'max_connections=500'
     env_file:
       - .env
     ports:

@@ -6,12 +6,11 @@ from flask_restplus import Namespace, Resource, marshal
 from .utils import *
 from polylogyx.utils import require_api_key
 from polylogyx.wrappers import parent_wrappers as parentwrapper
-
+from polylogyx.constants import PolyLogyxServerDefaults
 
 
 ns = Namespace('yara', description='yara related operations')
-YARA_URL = "./../resources/yara/"
-
+YARA_URL = PolyLogyxServerDefaults.BASE_URL + "/yara/"
 
 @require_api_key
 @ns.route('/', endpoint='list_yara')
@@ -48,7 +47,7 @@ class AddYara(Resource):
             try:
                 args['file'].save(file_path)
             except FileNotFoundError:
-                os.mkdir(file_path.replace(args['file'].filename.lower(),''))
+                os.makedirs(file_path.replace(args['file'].filename.lower(),''))
                 args['file'].save(file_path)
             files = os.listdir(YARA_URL)
             with open(YARA_URL+'list.txt', 'w') as the_file:

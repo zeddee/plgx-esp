@@ -30,9 +30,7 @@ class NodeList(Resource):
         '''returns list of all nodes information'''
         args = self.parser.parse_args()
         queryset = dao.filterNodesByStateActivity(args['platform'], args['state'])
-        data = marshal(queryset, wrapper.nodewrapper)
-        for i in range(len(data)):
-            data[i]['tags'] = [tag.to_dict() for tag in queryset[i].tags]
+        data = [node.get_dict() for node in queryset]
         message="nodes data fetched successfully"
         if not data: message = "There are no data to be shown and it is empty"
         return respcls(message,"success",data)
@@ -143,21 +141,18 @@ class NodeScheduleQueryResults(Resource):
 
 @require_api_key
 @ns.route('/tag/edit', endpoint='node_tag_edit')
-@ns.doc(params={'host_identifier': 'Host identifier of the Node', 'add_tags':'list of tags needed to be added for the node', 'remove_tags': 'list of tags needed to be removed from the node'})
+@ns.doc(params={'host_identifier': 'Host identifier of the Node', 'add_tags':'list of comma separated tags needed to be added for the node', 'remove_tags': 'list of comma separated tags needed to be removed from the node'})
 class EditTagToNode(Resource):
     '''edits tags to a node by its host_identifier'''
-    parser = requestparse(['host_identifier', 'add_tags', 'remove_tags'], [str, list, list], ["host identifier of the node", "list of tags needed to be added for the node", "list of tags needed to be removed from the node"], [True, False, False])
+    parser = requestparse(['host_identifier', 'add_tags', 'remove_tags'], [str, str, str], ["host identifier of the node", "list of comma separated tags needed to be added for the node", "list of comma separated tags needed to be removed from the node"], [True, False, False])
 
     @ns.expect(parser)
     def post(self):
         args = self.parser.parse_args()  # need to exists for input payload validation
-        args = get_body_data(request)
-        args_ip = ['host_identifier', 'add_tags', 'remove_tags']
-        args = debug_body_args(args,args_ip)
         status = 'failure'
         host_identifier = args['host_identifier']
-        add_tags = args['add_tags']
-        remove_tags = args['remove_tags']
+        add_tags = args['add_tags'].split(',')
+        remove_tags = args['remove_tags'].split(',')
         node = dao.get_node_by_host_identifier(host_identifier)
         if not node:
             message = 'Invalid host identifier. This node does not exist'
@@ -185,10 +180,10 @@ class EditTagToNode(Resource):
 
 @require_api_key
 @ns.route('/<string:host_identifier>/tags', endpoint='node_tags_list')
-@ns.doc(params={'host_identifier': 'Host identifier of the Node', 'tags': 'tags to careate'})
+@ns.doc(params={'host_identifier': 'Host identifier of the Node', 'tags': 'list of comma separated tags to careate'})
 class ListTagsOfNode(Resource):
     '''list/creates tags of a node by its host_identifier'''
-    parser = requestparse(['tags'], [list], ["tags to create to the node"])
+    parser = requestparse(['tags'], [str], ["list of comma separated tags to create to the node"])
 
     def get(self, host_identifier):
         status = 'failure'
@@ -206,7 +201,7 @@ class ListTagsOfNode(Resource):
     @ns.expect(parser)
     def post(self, host_identifier):
         args = self.parser.parse_args()  # need to exists for input payload validation
-        tags = get_body_data(request)['tags']
+        tags = args['tags'].split(',')
         node = dao.get_node_by_host_identifier(host_identifier)
         if not node:
             message = 'Invalid host identifier. This node does not exist'

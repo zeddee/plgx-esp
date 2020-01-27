@@ -7,7 +7,7 @@ import os
 from io import BytesIO
 from operator import itemgetter, and_
 
-
+import requests
 import sqlalchemy
 import unicodecsv as csv
 from flask import (
@@ -15,7 +15,7 @@ from flask import (
     request, send_file, url_for)
 from flask_login import login_required, current_user
 from flask_paginate import Pagination
-from sqlalchemy import or_, func, desc, cast, text,asc
+from sqlalchemy import or_, func, desc, cast,asc
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from polylogyx.database import db
@@ -27,9 +27,10 @@ from polylogyx.models import (
 from polylogyx.search_rules import AndCondition, OPERATOR_MAP, BaseCondition, OrCondition
 
 from polylogyx.constants import PolyLogyxServerDefaults, DefaultInfoQueries
+from polylogyx.util.constants import DEFAULT_EVENT_STATE_QUERIES
 from polylogyx.utils import (
     create_query_pack_from_upload, flash_errors, get_paginate_options,
-    merge_two_dicts, get_node_health)
+    merge_two_dicts, get_node_health, DateTimeEncoder)
 from polylogyx.util.mitre import MitreApi, TestMail
 
 from .forms import (
@@ -253,6 +254,7 @@ def export_node_csv():
     return response
 
 
+
 @blueprint.route('/live_queries')
 @blueprint.route('/live_queries/<int:page>')
 @blueprint.route('/live_queries/<any(active, inactive):status>')
@@ -398,7 +400,7 @@ def export_alerts_source_csv():
         res['Created At'] = data["created_at"]
         if source == 'rule':
             res['rule_name'] = value.rule.name
-        elif source == 'self' or source == 'IOC':
+        elif source == 'self' or source == 'IOC' or source == 'ioc':
             pass
         else:
             res['Intel_data'] = data["source_data"]
@@ -696,7 +698,8 @@ def node__status_logs(node_id, page=1):
     except:
         print('error in request')
     status_logs = db.session.query(StatusLog).with_entities(StatusLog.line, StatusLog.message, StatusLog.severity,
-                                                            StatusLog.filename).filter(StatusLog.node_id == node_id) \
+                                                            StatusLog.filename, StatusLog.created, StatusLog.version).filter(StatusLog.node_id == node_id) .order_by(
+            desc(StatusLog.id))\
         .offset(startPage).limit(
         perPageRecords).all()
 
@@ -707,6 +710,8 @@ def node__status_logs(node_id, page=1):
             "message": status_log[1],
             "severity": status_log[2],
             "filename": status_log[3],
+            "created": status_log[4],
+            "version": status_log[5],
         })
 
     output = {}
@@ -776,10 +781,11 @@ def packs():
 def add_pack():
     form = UploadPackForm()
     if form.validate_on_submit():
-        pack = create_query_pack_from_upload(form.pack, form.category.datat)
+        pack = create_query_pack_from_upload(form.pack, form.category.data)
 
         # Only redirect back to the pack list if everything was successful
         if pack is not None:
+            flash(u"Successfully created the pack", 'success')
             return redirect(url_for('manage.packs', _anchor=pack.name))
 
     flash_errors(form)
@@ -814,8 +820,16 @@ def queries():
         db.joinedload(Query.tags),
         db.joinedload(Query.packs),
         db.joinedload(Query.packs, Pack.queries, innerjoin=True)
-    ).filter(~Query.packs.any()).all()
-    return render_template('queries.html', queries=queries)
+    ).all()
+
+    pack_queries = Query.query \
+        .options(
+        db.joinedload(Query.tags),
+        db.joinedload(Query.packs),
+        db.joinedload(Query.packs, Pack.queries, innerjoin=True)
+    ).filter(Query.packs.any()).all()
+
+    return render_template('queries.html', queries=queries, pack_queries=pack_queries)
 
 
 @blueprint.route('/queries/add', methods=['GET', 'POST'])
@@ -827,6 +841,10 @@ def add_query():
     if form.validate_on_submit():
         if not form.shard.data:
             form.shard.data = 100
+        if form.packs.data:
+            packs = Pack.query.filter(Pack.name.in_(form.packs.data)).all()
+        else:
+            packs = []
         query = Query(name=form.name.data,
                       sql=form.sql.data,
                       interval=form.interval.data,
@@ -834,6 +852,7 @@ def add_query():
                       version=form.version.data,
                       description=form.description.data,
                       value=form.value.data,
+                      packs=packs,
                       removed=form.removed.data,
                       shard=form.shard.data,
                       snapshot=form.snapshot.data)
@@ -844,7 +863,7 @@ def add_query():
         return redirect(url_for('manage.query', query_id=query.id))
 
     flash_errors(form)
-    return render_template('query.html', form=form)
+    return render_template('query.html', form=form,query={})
 
 
 @blueprint.route('/readme', methods=['GET'])
@@ -940,9 +959,9 @@ def query(query_id):
         if request.method == 'POST':
             flash(u'Successfully updated', 'success')
         return redirect(url_for('manage.query', query_id=query.id))
+    flash_errors(form)
 
     form = UpdateQueryForm(request.form, obj=query)
-    flash_errors(form)
     return render_template('query.html', form=form, query=query)
 
 
@@ -1039,6 +1058,7 @@ def tags():
     form = CreateTagForm()
     if form.validate_on_submit():
         create_tags(*form.value.data.splitlines())
+        flash(u'Successfully added to the Tags', 'success')
         return redirect(url_for('manage.tags'))
 
     flash_errors(form)
@@ -1067,13 +1087,29 @@ def configs():
     config_data = {}
     for platform in platforms:
         default_platform_queries = DefaultQuery.query.filter(DefaultQuery.platform == platform).all()
-        queries_data = {default_query.name: default_query.to_dict() for default_query in default_platform_queries}
-        default_filter = {}
-        default_filter_obj = DefaultFilters.query.filter(DefaultFilters.platform == platform).first()
-        if default_filter_obj:
-            default_filter = default_filter_obj.filters
+        queries_data = {}
+        queries_data_x86 = {}
+        for default_query in default_platform_queries:
+            if default_query.arch == DefaultQuery.ARCH_x86:
+                queries_data_x86[default_query.name] = default_query.to_dict()
+            else:
+                queries_data[default_query.name] = default_query.to_dict()
+
+
+        #default_filter_obj = DefaultFilters.query.filter(DefaultFilters.platform == platform).first()
+        filters_data_x86_64 = DefaultFilters.query.filter(DefaultFilters.platform == platform).filter(
+                DefaultFilters.arch != DefaultFilters.ARCH_x86).first()
+        filters_data_x86 = DefaultFilters.query.filter(DefaultFilters.platform == platform).filter(
+                DefaultFilters.arch == DefaultFilters.ARCH_x86).first()
+
+        # if default_filter_obj:
+        #     default_filter = default_filter_obj.filters
         config_data[platform] = {"queries": queries_data,
-                                 "filters": default_filter}
+                                 "filters": filters_data_x86_64.filters}
+        if queries_data_x86:
+            config_data[platform + "_x86"] = {"queries": queries_data_x86,
+                                              "filters": filters_data_x86.filters}
+
     return render_template('configs.html', configs=json.dumps(config_data))
 
 
@@ -1088,18 +1124,34 @@ def update_platform_filter_query():
     platform = form_data.get('platform')
     queries_data = form_data.get('queries')
     filters = form_data.get('filters')
+    arch = form_data.get('arch')
 
     # fetching the filters data to insert to the config dict
-    default_filters_obj = DefaultFilters.query.filter(DefaultFilters.platform == platform.lower()).first()
+    if arch and arch == DefaultFilters.ARCH_x86:
+        default_filters_obj = DefaultFilters.query.filter(DefaultFilters.platform == platform.lower()).filter(
+                DefaultFilters.arch == DefaultFilters.ARCH_x86).first()
+    else:
+        default_filters_obj = DefaultFilters.query.filter(DefaultFilters.platform == platform.lower()).filter(
+                DefaultFilters.arch != DefaultFilters.ARCH_x86).first()
     if default_filters_obj:
         default_filters_obj.update(filters=filters)
 
     for key in list(queries_data.keys()):
-        query = DefaultQuery.query.filter(DefaultQuery.name == key).filter(
-            DefaultQuery.platform == platform.lower()).first()
-        query = query.update(status=queries_data[key]['status'],
+        if arch and arch == DefaultQuery.ARCH_x86:
+            query = DefaultQuery.query.filter(DefaultQuery.name == key).filter(
+                DefaultQuery.arch == DefaultQuery.ARCH_x86).filter(
+                DefaultQuery.platform == platform.lower()).first()
+        else:
+            query = DefaultQuery.query.filter(DefaultQuery.name == key).filter(
+                DefaultQuery.arch != DefaultQuery.ARCH_x86).filter(
+                DefaultQuery.platform == platform.lower()).first()
+
+        if query:
+            query = query.update(status=queries_data[key]['status'],
                              interval=queries_data[key]['interval'])
-        result_queries[key] = query
+            result_queries[key] = query
+        else:
+            current_app.logger.error("error for updating query : "+key+" on platform "+platform+" "+arch)
 
     # formatting the dict of final config
     response = {}
@@ -1132,8 +1184,10 @@ def add_option():
         if existing_option:
             existing_option.option = form.option.data
             existing_option.update(option)
+            flash(u"Successfully updated Options", 'success')
         else:
             Options.create(name=PolyLogyxServerDefaults.plgx_config_all_options, option=form.option.data)
+            flash(u"Successfully created Options", 'success')
 
         # create_tags(*form.value.data.splitlines())
         return redirect(url_for('manage.add_option'))
@@ -1179,8 +1233,10 @@ def add_setting():
         if existing_setting:
             existing_setting.setting = form.setting.data
             existing_setting.update(setting)
+            flash(u"Successfully updated Email Configuration", 'success')
         else:
             Settings.create(name=PolyLogyxServerDefaults.plgx_config_all_settings, setting=form.setting.data)
+            flash(u"Successfully created Email Configuration", 'success')
 
         # create_tags(*form.value.data.splitlines())
         return redirect(url_for('manage.add_setting'))
@@ -1244,6 +1300,7 @@ def add_tag():
     if form.validate_on_submit():
         create_tags(*form.value.data.splitlines())
         return redirect(url_for('manage.tags'))
+        flash(u"Successfully created tag", 'success')
 
     flash_errors(form)
     return render_template('tag.html', form=form)
@@ -2099,7 +2156,7 @@ def submit_distributed():
 
         if not form.nodes.data and not form.tags.data:
             # all nodes get this query
-            form.errors['sql'] = 'No node selected'
+            form.errors['sql'] = 'No host selected'
             return jsonify(errors=form.errors)
 
         if form.nodes.data:
@@ -2144,7 +2201,7 @@ def submit_distributed():
     if bool(form.errors):
         return jsonify(errors=form.errors)
     elif onlineNodes == 0:
-        form.errors['sql'] = 'No active node present'
+        form.errors['sql'] = 'No active host present'
         return jsonify(errors=form.errors)
     else:
         return jsonify(errors=form.errors, id=query.id, onlineNodes=onlineNodes, sql=sql)
@@ -2278,19 +2335,8 @@ def alerts():
 
         alerts_severity = db.session.query(Alerts).with_entities(Alerts.id, Alerts.severity, Alerts.created_at).filter(
             or_(Alerts.status == None, Alerts.status != Alerts.RESOLVED)).all()
-        data = []
-        for alert in alerts_severity:
-            color = ""
-            if alert[1]:
-                if alert[1] == Rule.WARNING:
-                    color = "green-m"
-                elif alert[1] == Rule.INFO:
-                    color = ""
-                elif alert[1] == Rule.CRITICAL:
-                    color = "yellow"
 
-            data.append({"start": alert[2].timestamp() * 1000, "content": "", "event_id": alert[0], "className": color})
-        return render_template('alertbysource.html', alert_source=alert_source, alert_severity=data)
+        return render_template('alertbysource.html', alert_source=alert_source)
     except Exception as e:
         print(e, 'error in request')
 
@@ -2392,13 +2438,12 @@ def get_results_by_alert_source(startPage, perPageRecords, source):
                 rID = value.Rule.id
                 rName = value.Rule.name
                 res['Rule Name'] = {'name': rName, 'id': rID}
-            elif source == 'self' or source == 'IOC':
+            elif source == 'self' or (source == 'IOC' or source == 'ioc'):
                 pass
             else:
                 res['Intel Data'] = value.Alerts.source_data
             res['Alerted Entry'] = value.Alerts.message
 
-            # res['Investigate'] = value.Alerts.id
             res['Status'] = value.Alerts.id
 
             results.append(res)
@@ -2425,13 +2470,12 @@ def get_results_by_alert_source(startPage, perPageRecords, source):
                 rID = value.rule.id
                 rName = value.rule.name
                 res['Rule Name'] = {'name': rName, 'id': rID}
-            elif source == 'self' or source == 'IOC':
+            elif source == 'self' or (source == 'IOC' or source == 'ioc'):
                 pass
             else:
                 res['Intel Data'] = data["source_data"]
             res['Alerted Entry'] = data["message"]
 
-            # res['Investigate'] = value.id
             res['Status'] = value.id
 
             results.append(res)

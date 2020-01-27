@@ -184,7 +184,7 @@ PolyLogyx - Dashboard
                           <br>
                           <div class="">
                             <span class="down-font" style="font-size: medium;">Windows CPT Installer</span>
-                            <button href="/manage/downloads/plgx_win_extn.ext.exe" type="button" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" id="btn_download_exe" onclick="downloadFile(this)" value="plgx_cpt.exe" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title=" Download Windows CPT Installer">
+                            <button href="/manage/downloads/plgx_win_extn.ext.exe" type="button" class="btn btn-clean btn-elevate btn-elevate-air btn-sm focus pull-right downloadCode" id="btn_download_exe" onclick="downloadFile(this)" value="windows/plgx_cpt.exe" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title=" Download Windows CPT Installer">
                               <i class="fa fa-2x fa-cloud-download-alt"></i>
                             </button>
                           </div>
@@ -633,7 +633,8 @@ PolyLogyx - Dashboard
               </div>
             </div>
             <div class="kt-portlet__body">
-              <canvas id="bar-chart-node"></canvas>
+              <!-- <canvas id="bar-chart-node"></canvas> -->
+              <div id="chart_node" style="width: 275px; height: 150px;"></div>
             </div>
           </div>
           <!--end::Portlet-->
@@ -652,7 +653,8 @@ PolyLogyx - Dashboard
               </div>
             </div>
             <div class="kt-portlet__body">
-              <canvas id="bar-chart-query"></canvas>
+              <!-- <canvas id="bar-chart-query"></canvas> -->
+              <div id="chart_query" style="width: 275px; height: 150px;"></div>
             </div>
           </div>
 
@@ -672,7 +674,8 @@ PolyLogyx - Dashboard
               </div>
             </div>
             <div class="kt-portlet__body">
-              <canvas id="bar-chart-alert"></canvas>
+              <!-- <canvas id="bar-chart-alert"></canvas> -->
+              <div id="chart_alert" style="width: 275px; height: 150px;"></div>
             </div>
           </div>
           <!--end::Portlet-->
@@ -680,8 +683,8 @@ PolyLogyx - Dashboard
       </div>
       <!--End::Bar Charts/Section-3-->
       <!--Begin::Section-3-->
-      <div id="graph" class="row">
-      </div>
+{#       <div id="graph" class="row">#}
+{#      </div>#}
       <!--End::Section-3-->
     </div>
   </div>
@@ -704,13 +707,11 @@ PolyLogyx - Dashboard
 
   }
 </script>
-<script src="/static/assets/js/chartjs.min.js"></script>
 <script type="text/javascript" src="/static/assets/js/gcharts.js"></script>
+
 <script type="text/javascript">
   var chartData = '{{ chart_data }}';
-
   chartData = chartData.replace(/\&#34;/g, '"');
-
   chartData = JSON.parse(chartData);
   var alertExists = chartData['alertExists'];
   var alert_count=chartData['alert_count'];
@@ -736,377 +737,129 @@ PolyLogyx - Dashboard
   var nodes_online_offline = chartData['online_offline'];
   var query_count = chartData['query_count'];
   var platform_count = chartData['platform_count'];
-
   var chrome_ie_extensions = 'dummy';
 
-  createPieGraph1('pie-chart-platform-count', 'Platform Distribution', platform_count['name_array'], platform_count['count_array'], [], chrome_ie_extensions, true);
-  createPieGraph3('pie-chart-online-offline', 'Online Offline', nodes_online_offline['name_array'], nodes_online_offline['count_array'], [], chrome_ie_extensions, true);
-  createPieGraph2('pie-chart-query-count', 'Top Queries', query_count['name_array'], query_count['count_array'], [], chrome_ie_extensions, true);
-  if (alertExists) {
-    document.getElementById('graph').style.display = 'block';
+  google.charts.load('current', {'packages': ['corechart']});
 
-    var nodeNames = [];
-    var alertCountByNode = [];
-    for (i = 0; i < nodes.length; i++) {
+
+  draw_pie_graph('pie-chart-platform-count', 'Platform Distribution', platform_count['name_array'], platform_count['count_array']);
+
+  draw_pie_graph('pie-chart-online-offline', 'Online Offline', nodes_online_offline['name_array'], nodes_online_offline['count_array']);
+  draw_pie_graph('pie-chart-query-count', 'Top Queries', query_count['name_array'], query_count['count_array']);
+
+    // Begin Google bar charts
+
+  var nodeNames = [];
+  var alertCountByNode = [];
+  for (i = 0; i < nodes.length; i++) {
       nodeNames[i] = nodes[i][1];
       alertCountByNode[i] = nodes[i][2];
-    }
+  }
+  draw_bar_graph(nodeNames, alertCountByNode, 'chart_node');
 
-    var alertNames = [];
-    var alertCountByAlertName = [];
-    for (i = 0; i < rules.length; i++) {
-      alertNames[i] = rules[i][1];
-      alertCountByAlertName[i] = rules[i][2];
-    }
 
-    var queryNames = [];
-    var alertCountByQueryName = [];
-    for (i = 0; i < queries.length; i++) {
+  // Google barcharts2
+
+  var queryNames = [];
+  var alertCountByQueryName = [];
+  for (i = 0; i < queries.length; i++) {
       queryNames[i] = queries[i][0];
       alertCountByQueryName[i] = queries[i][1];
-    }
-
-    new Chart(document.getElementById("bar-chart-node"), {
-      type: 'bar',
-
-      data: {
-        labels: nodeNames,
-        datasets: [{
-          label: "Alerts",
-          // backgroundColor: ["#3e95cd", "#8e5ea2", "#3cba9f", "#e8c3b9","#c45850"],
-          backgroundColor: [" #ffc300 ", " #E6F69D ", " #AADEA7 ", " #64C2A6 ", " #2D87BB "],
-          data: alertCountByNode
-        }]
-      },
-      options: {
-        scales: {
-          yAxes: [{
-              categoryPercentage: 0.2,
-              ticks: {
-                beginAtZero: true,
-                callback: function(value, index, values) {
-                  if (Math.floor(value) === value) {
-                    return value;
-                  }
-                }
-              },
-              scaleLabel: {
-                display: true,
-                labelString: 'Alert Count'
-              }
-            }
-
-          ],
-          xAxes: [{
-            // Change here
-            barPercentage: 1.0,
-            display: false,
-
-            categoryPercentage: 0.2,
-            afterSetDimensions: function(axes) {
-
-            },
-            scaleLabel: {
-              display: true,
-              labelString: 'Nodes'
-            }
-
-          }]
-        },
-        legend: {
-          display: false
-        },
-        title: {
-          display: false,
-          text: 'Node alerts'
-        }
-      }
-    });
-
-    new Chart(document.getElementById("bar-chart-query"), {
-      type: 'bar',
-
-      data: {
-        labels: queryNames,
-        datasets: [{
-          label: "Queries",
-          backgroundColor: [" #ffc300 ", " #E6F69D ", " #AADEA7 ", " #64C2A6 ", " #2D87BB "],
-
-          data: alertCountByQueryName
-        }]
-      },
-      options: {
-        scales: {
-          yAxes: [{
-            categoryPercentage: 0.2,
-            ticks: {
-              beginAtZero: true,
-              callback: function(value, index, values) {
-                if (Math.floor(value) === value) {
-                  return value;
-                }
-              }
-
-            },
-            scaleLabel: {
-              display: true,
-              labelString: 'Alert Count'
-            }
-          }],
-          xAxes: [{
-            // Change here
-            barPercentage: 1.0,
-            categoryPercentage: 0.2,
-            display: false,
-            afterSetDimensions: function(axes) {
-
-            },
-            scaleLabel: {
-              display: true,
-              labelString: 'Query'
-            }
-
-          }]
-        },
-        legend: {
-          display: false
-        },
-        title: {
-          display: false,
-          text: 'Query alerts'
-        }
-      }
-    });
-
-    new Chart(document.getElementById("bar-chart-alert"), {
-      type: 'bar',
-
-      data: {
-        labels: alertNames,
-        datasets: [{
-          label: "Rules",
-          backgroundColor: [" #ffc300 ", " #E6F69D ", " #AADEA7 ", " #64C2A6 ", " #2D87BB "],
-
-          data: alertCountByAlertName
-        }]
-      },
-      options: {
-        scales: {
-          yAxes: [{
-            categoryPercentage: 0.2,
-            ticks: {
-              beginAtZero: true,
-              callback: function(value, index, values) {
-                if (Math.floor(value) === value) {
-                  return value;
-                }
-              }
-
-            },
-            scaleLabel: {
-              display: true,
-              labelString: 'Alert Count'
-            }
-          }],
-          xAxes: [{
-            // Change here
-            barPercentage: 1.0,
-            display: false,
-
-            categoryPercentage: 0.2,
-            afterSetDimensions: function(axes) {
-
-            },
-            scaleLabel: {
-              display: true,
-              labelString: 'Rule'
-            }
-
-          }]
-        },
-        legend: {
-          display: false
-        },
-        title: {
-          display: false,
-          text: 'Rule alerts'
-        }
-      }
-    });
   }
-
-  function createPieGraph(graph_id, graph_name, name_array, count_array, column_array, query_name, is_recon) {
-    var chart = new Chart(document.getElementById(graph_id), {
-      type: 'pie',
-      data: {
-        labels: name_array,
-        datasets: [{
-          // backgroundColor: [ " 1.green color  ", " 2.red color  ", " 3.yellow color ", " 4.blue color ", " 5.grey color "],
-          // backgroundColor: [" #ffc300 ", " #E6F69D ", " #AADEA7 ", " #64C2A6 ", " #2D87BB "],
-          // backgroundColor: [ " #5b942d  ", " #ed4336 ", " #40aff8 ", " #f6b343 ", " #091d3a "],
-          // backgroundColor: [ " #518c24  ", " #EF5350  ", " #F3D060 ", " #00539B", " #25282A "],
-          backgroundColor: [ " #518c24  ", " #dd4814  ", " #ff9900 ", " #007cc0", " #072C61 "],
+  draw_bar_graph(queryNames, alertCountByQueryName, 'chart_query');
 
 
-          data: count_array
-        }]
-      },
-      options: {
 
-        legend: {
-          display: true,
-          position: 'right',
-          labels: {
-            fontColor: "#2B0B3F",
-          }
-        },
-        onClick: function(evt, item) {
-
-        },
-
-
-        title: {
-          display: false,
-          text: graph_name
-        }
-      }
-
-    });
-
+  var alertNames = [];
+  var alertCountByAlertName = [];
+  for (i = 0; i < rules.length; i++) {
+      alertNames[i] = rules[i][1];
+      alertCountByAlertName[i] = rules[i][2];
   }
+  draw_bar_graph(alertNames, alertCountByAlertName, 'chart_alert');
 
-  $(document).ready(function() {
-    $('#right-panel').css('background-color', '#fafafa')
+
+  $(document).ready(function () {
+      $('#right-panel').css('background-color', '#fafafa')
   });
 
+    function draw_bar_graph(name_array, count_array, graph_id) {
 
-  var name_array_t, count_array_t, graph_id_t;
 
-  function createPieGraph1(graph_id, graph_name, name_array, count_array, column_array, query_name, is_recon) {
-    // google charts
-    name_array_t = name_array;
-    count_array_t = count_array;
-    graph_id_t =  graph_id;
-      google.charts.load('current', {'packages':['corechart']});
-      google.charts.setOnLoadCallback(drawChart);
+      google.setOnLoadCallback(
+          function () {
+              var data_obj = [['Names', 'Alerts']]
+              for (i = 0; i < name_array.length; i++) {
+                  data_obj.push([name_array[i], count_array[i]])
+              }
+
+              var data = google.visualization.arrayToDataTable(data_obj);
+              var options = {
+                  legend: {
+                      position: 'none'
+                  },
+                  chartArea: {
+                      left: 0,
+                      top: 10,
+                      width: '100%',
+                      height: '70%'
+                  },
+              };
+
+              var chart = new google.visualization.ColumnChart(document.getElementById(graph_id));
+              console.log(data_obj);
+              if (name_array.length == 0) {
+                  $("#" + graph_id).append("No data");
+
+
+              } else {
+                  chart.draw(data, options);
+
+              }
+          }
+      );
   }
 
-  function drawChart() {
+
+  function draw_pie_graph(graph_id, graph_name, name_array, count_array,) {
 
 
-  var datak = [['name_array', 'count_array']]
-   for (i=0;i<name_array_t.length;i++){
-     datak.push([name_array_t[i],count_array_t[i]])
-   }
-
-    var data = google.visualization.arrayToDataTable(datak);
-
-
-    var options = {
-      chartArea: {
-        left: 0,
-        top: 10,
-        width:'100%',
-        height:'70%'
-      },
-      legend: {
-        position: 'right',
-        textStyle: {
-          color: '#2B0B3F',
-          fontSize: 13
-        }
+      // google charts
+      var data_obj = [['query_name', 'query_count']];
+      for (i = 0; i < name_array.length; i++) {
+          data_obj.push([name_array[i], count_array[i]]);
       }
-    };
 
-    var chart = new google.visualization.PieChart(document.getElementById(graph_id_t));
+      google.charts.setOnLoadCallback(function () {
+          var data = google.visualization.arrayToDataTable(data_obj);
+          var options = {
+              chartArea: {
+                  left: 0,
+                  top: 10,
+                  width: '100%',
+                  height: '70%'
+              },
+              legend: {
+                  position: 'right',
+                  textStyle: {
+                      color: '#2B0B3F',
+                      fontSize: 13
+                  }
+              },
+              sliceVisibilityThreshold: 0
+          };
 
-    chart.draw(data, options);
+          var chart = new google.visualization.PieChart(document.getElementById(graph_id));
+          if (name_array.length == 0) {
+              $("#" + graph_id).append("No data");
+          } else {
+              chart.draw(data, options);
+          }
+      });
   }
 
-  var query_name_t, query_count_t, graph_id_t2;
-  function createPieGraph2(graph_id, graph_name,a, query_count,column_array, query_name, is_recon) {
-    // google charts
-    query_name_t = query_count;
-    query_count_t = a;
-    graph_id_t2 =  graph_id;
-      google.charts.load('current', {'packages':['corechart']});
-      google.charts.setOnLoadCallback(drawChart1);
-  }
-
-  function drawChart1() {
 
 
-  var datak1 = [['query_name', 'query_count']]
-   for (i=0;i<query_name_t.length;i++){
-     datak1.push([query_count_t[i],query_name_t[i]])
-   }
-
-    var data = google.visualization.arrayToDataTable(datak1);
-
-
-    var options = {
-      chartArea: {
-        left: 0,
-        top: 10,
-        width:'100%',
-        height:'70%'
-      },
-      legend: {
-        position: 'right',
-        textStyle: {
-          color: '#2B0B3F',
-          fontSize: 13
-        }
-      }
-    };
-
-    var chart = new google.visualization.PieChart(document.getElementById(graph_id_t2));
-
-    chart.draw(data, options);
-  }
-
-  var count_t, name_t, graph_id_t3;
-
-  function createPieGraph3(graph_id, graph_name,name,count,column_array, query_name, is_recon) {
-    // google charts
-    count_t = count;
-    name_t = name;
-    graph_id_t3 =  graph_id;
-      google.charts.load('current', {'packages':['corechart']});
-      google.charts.setOnLoadCallback(drawChart2);
-  }
-
-  function drawChart2() {
-
-
-  var datak2 = [['query_name', 'query_count']]
-   for (i=0;i<name_t.length;i++){
-     datak2.push([name_t[i],count_t[i]])
-   }
-
-    var data = google.visualization.arrayToDataTable(datak2);
-
-
-    var options = {
-      chartArea: {
-        left: 0,
-        top: 10,
-        width:'100%',
-        height:'70%'
-      },
-      legend: {
-        position: 'right',
-        textStyle: {
-          color: '#2B0B3F',
-          fontSize: 13
-        }
-      }
-    };
-
-    var chart = new google.visualization.PieChart(document.getElementById(graph_id_t3));
-
-    chart.draw(data, options);
-  }
 </script>
 
 {% endblock %}

@@ -134,3 +134,32 @@ def configure_email_recipient_and_sender(request):
     response_json['message']= message
     response_json['status'] = status
     return response_json
+
+
+@require_api_key
+@ns.route('/test', endpoint='test_send_email')
+@ns.doc(params={"username": "username", "smtp": "smtp", "recipients": "recipients", "password": "password"})
+class TestMailSend(Resource):
+    '''tests email config by sending a test mail'''
+
+    parser = requestparse(["username", "smtp", "password", "recipients"],
+                          [str, str, str, str],
+                          ["username to send mail from", "smtp", "password of the username", "recipients with comma separated"], [True, True, True, True])
+
+    @ns.expect(parser)
+    def post(self):
+        from polylogyx.util.mitre import TestMail
+        test_mail = TestMail()
+        args = self.parser.parse_args()
+        username = args['username']
+        password = args['password']
+        smtp = args['smtp']
+        recipients = args['recipients'].split(",")
+        is_credntials_valid = test_mail.test(username=username, password=password, smtp=smtp, recipients=recipients)
+        if is_credntials_valid:
+            status = 'success'
+            message = 'A Test mail is sent to the recipients successfully'
+        else:
+            status = 'failure'
+            message = 'Could not validate credentials. Please enable less secure apps if using gmail and verify security alert prompt on your mail. '
+        return marshal(respcls(message,status), parentwrapper.common_response_wrapper, skip_none=True)

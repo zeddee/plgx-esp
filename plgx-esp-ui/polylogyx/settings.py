@@ -16,7 +16,6 @@ except Exception as e:
 
 class Config(object):
     EMAIL_RECIPIENTS = []
-
     SECRET_KEY = '744463b9d4cf3d8e61e7dc5dc52718dd60cf76fb'
 
     # Set the following to ensure Celery workers can construct an
@@ -108,7 +107,7 @@ class Config(object):
         TEXT, version TEXT, pubkey TEXT, pubkey_length TEXT, pubkey_signhash_algo \
         TEXT, issuer_name TEXT, subject_name TEXT, serial_number TEXT, signature_algo \
     TEXT, subject_dn TEXT, issuer_dn TEXT);',
-        'CREATE TABLE  win_yara_events( eid TEXT, target_path TEXT, category TEXT, action TEXT, matches TEXT, count INTEGER);',
+        'CREATE TABLE  win_yara_events( eid TEXT, target_path TEXT, category TEXT, action TEXT, matches TEXT, count INTEGER,md5 TEXT,time BIGINT, utc_time TEXT);',
 
         'CREATE TABLE  win_obfuscated_ps(script_id TEXT, time_created TEXT, obfuscated_state TEXT, obfuscated_score TEXT);',
         'CREATE TABLE  win_dns_events(event_type TEXT,eid TEXT, domain_name TEXT,request_type BIGINT,request_class BIGINT, pid TEXT, remote_address TEXT, remote_port BIGINT, time BIGINT, utc_time TEXT);',
@@ -133,6 +132,7 @@ class Config(object):
 
     USE_X_FORWARDED_HOST = True
     CELERY_IMPORTS = ('polylogyx.tasks')
+    CELERY_AMQP_TASK_RESULT_EXPIRES=60
     CELERY_TASK_RESULT_EXPIRES = 30
 
     CELERY_ACCEPT_CONTENT = ['djson', 'application/x-djson', 'application/json']
@@ -341,6 +341,7 @@ class DevConfig(Config):
     DEBUG_TB_ENABLED = True
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     ASSETS_DEBUG = True
+
     BROKER_URL = 'pyamqp://guest:guest@localhost//'
     CELERY_RESULT_BACKEND = 'rpc://'
     SQLALCHEMY_DATABASE_URI = 'postgresql://polylogyx:polylogyx@localhost:5432/polylogyx'

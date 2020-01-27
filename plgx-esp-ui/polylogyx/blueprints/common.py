@@ -234,6 +234,26 @@ class DeleteQueryResult(Resource):
 
 
 @require_api_key
+@ns.route('/queryresult/<int:days_of_data>', endpoint = "preview_queryresult")
+@ns.doc(params = {'days_of_data':"no.of days of data to preview"})
+class PreviewQueryResult(Resource):
+    '''Previewing the scheduled query result will be done here'''
+
+    def get(self, days_of_data=None):
+        from polylogyx.wrappers import resultlog_wrappers
+        since = dt.datetime.now() - dt.timedelta(hours=24 * int(days_of_data))
+        data = marshal(dao.get_result_log_since(since), resultlog_wrappers.result_log_wrapper)
+        message = "The following is the data we have received since the no.of days you passed"
+        status = "success"
+        if not data:
+            message = "there is no data display, its empty!"
+            status = "failure"
+        return marshal(respcls(message, status, data),
+                       parentwrapper.common_response_wrapper, skip_none=True)
+
+
+
+@require_api_key
 @ns.route('/schedule_query/export', endpoint="schedule_query_export")
 @ns.doc(params = {})
 class ExportScheduleQueryCSV(Resource):
@@ -424,24 +444,41 @@ class UpdateApiKeys(Resource):
 
 
 @require_api_key
-@ns.route('/cpt/<string:platform>', endpoint='cpt_file')
+@ns.route('/cpt/<string:platform>/', endpoint='cpt_file_')
+@ns.route('/cpt/<string:platform>/<string:arch>', endpoint='cpt_file')
 @ns.doc(params = {})
 class CPTForPlatForm(Resource):
     '''returns polylogyx CPT file for windows, mac, linux platform'''
 
-    def get(self, platform):
-        print("flatform is",platform)
+    def get(self, platform, arch=None):
         if not platform:
             return marshal(respcls("please provide platform name(windows/linux/mac) to get the POLYLOGYX CPTfile", "failure"),parentwrapper.failure_response_parent)
         if platform == "windows":
-            file_data = send_file(
-               base_resource_folder+'plgx_cpt.exe',
-                mimetype='application/octet-stream',
-                as_attachment=True,
-                attachment_filename='plgx_cpt.exe'
-            )
+            if not arch:
+                return marshal(
+                    respcls("please provide architecture details(x86/x86_64) to get the POLYLOGYX CPTfile", "failure"),
+                    parentwrapper.failure_response_parent)
+            elif arch=="x86":
+                file_data = send_file(
+                    base_resource_folder + 'windows/plgx_cpt.exe',
+                    mimetype='application/octet-stream',
+                    as_attachment=True,
+                    attachment_filename='plgx_cpt.exe'
+                )
+            elif arch=="x86_64":
+                file_data = send_file(
+                    base_resource_folder + 'windows/x64/plgx_cpt64.exe',
+                    mimetype='application/octet-stream',
+                    as_attachment=True,
+                    attachment_filename='plgx_cpt.exe'
+                )
+            else:
+                return marshal(
+                    respcls("please provide correct architecture details(x86/x86_64) to get the POLYLOGYX CPTfile", "failure"),
+                    parentwrapper.failure_response_parent)
             return file_data
-        if platform == "linux":
+
+        elif platform == "linux" or platform == "mac":
             file_data = send_file(
                 base_resource_folder+'plgx_cpt.sh',
                 mimetype='application/x-sh',
@@ -449,14 +486,11 @@ class CPTForPlatForm(Resource):
                 attachment_filename='plgx_cpt.sh'
             )
             return file_data
-        if platform == "mac":
-            file_data = send_file(
-                base_resource_folder+'mac_cpt.sh',
-                mimetype='application/x-sh',
-                as_attachment=True,
-                attachment_filename='mac_cpt.sh'
-            )
-            return file_data
+        else:
+            return marshal(
+                respcls("please provide correct platform name to get the POLYLOGYX CPTfile",
+                        "failure"),
+                parentwrapper.failure_response_parent)
 
 
 @require_api_key
