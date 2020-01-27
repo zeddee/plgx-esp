@@ -16,7 +16,6 @@ except Exception as e:
 
 class Config(object):
     EMAIL_RECIPIENTS = []
-
     SECRET_KEY = '744463b9d4cf3d8e61e7dc5dc52718dd60cf76fb'
 
     # Set the following to ensure Celery workers can construct an
@@ -133,6 +132,7 @@ class Config(object):
 
     USE_X_FORWARDED_HOST = True
     CELERY_IMPORTS = ('polylogyx.tasks')
+    CELERY_AMQP_TASK_RESULT_EXPIRES=60
     CELERY_TASK_RESULT_EXPIRES = 30
 
     CELERY_ACCEPT_CONTENT = ['djson', 'application/x-djson', 'application/json']
@@ -341,6 +341,7 @@ class DevConfig(Config):
     DEBUG_TB_ENABLED = True
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     ASSETS_DEBUG = True
+
     BROKER_URL = 'pyamqp://guest:guest@localhost//'
     CELERY_RESULT_BACKEND = 'rpc://'
     SQLALCHEMY_DATABASE_URI = 'postgresql://polylogyx:polylogyx@localhost:5432/polylogyx'

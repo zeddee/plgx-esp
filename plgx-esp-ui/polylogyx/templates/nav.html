@@ -42,7 +42,7 @@
             {% if current_user and current_user.is_authenticated %}
                 <ul class="nav navbar-nav">
                     {% for href, page_id, page_name in navigation_bar %}
-                        <li{% if page_id == request.endpoint %} class="active"{% endif %}>
+                        <li {% if page_id == request.endpoint %} class="active"{% endif %}>
                             <a href="{{ href }}">{{ page_name }}</a>
                         </li>
                     {% endfor %}

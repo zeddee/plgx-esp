@@ -20,6 +20,7 @@ nodewrapper = Model('node', {
     'host_identifier': fields.String(),
     'os_info': fields.Raw(),
     'node_info': fields.Nested(node_info_wrapper, default=None),
+    'arch': fields.String(),
     'network_info': fields.Raw(),
     'last_checkin': fields.DateTime(default = None),
     'enrolled_on': fields.DateTime(default = None),

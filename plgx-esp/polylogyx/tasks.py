@@ -10,7 +10,7 @@ from io import BytesIO
 import requests
 from celery import Celery
 from flask import current_app
-
+import json
 from sqlalchemy import desc
 
 from polylogyx.constants import TO_CAPTURE_COLUMNS, PolyLogyxServerDefaults
@@ -43,8 +43,11 @@ except Exception as e:
     print(e)
 
 celery.conf.beat_schedule = {
-    "scan_and_match_with_threat_intel": {
-
+    "fetch-command-status": {
+        "task": "polylogyx.tasks.fetch_command_status",
+        "schedule":10,
+        'options': {'queue': 'default_queue_tasks'}
+    },"scan_and_match_with_threat_intel": {
         "task": "polylogyx.tasks.scan_result_log_data_and_match_with_threat_intel",
         "schedule": 60.0,
         'options': {'queue': 'default_queue_tasks'}
@@ -53,6 +56,12 @@ celery.conf.beat_schedule = {
         "schedule": threat_frequency * 60,
         'options': {'queue': 'default_queue_tasks'}
     }
+    
+    # , "update_phishtank_data": {
+    #     "task": "polylogyx.tasks.update_phishtank_data",
+    #     "schedule": threat_frequency * 60,
+    #     'options': {'queue': 'default_queue_tasks'}
+    # },
 
 }
 

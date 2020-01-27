@@ -117,16 +117,16 @@ function nodeData(){
         {
          render: function (data, type, full, meta) { //console.log(full);
 
-          var color = '';
+          var color = '#518c24';
           if (full['health'] == 'danger') {
               color = "#f86c6b";
                // color ="#3e3938";
           }
           if (full['results_updated']) {
-              return "<a class='active' data-skin='dark' data-toggle='kt-tooltip' data-placement='top' title='click -> Host Details' style='color: " + color + "' href='" + full["node_url"] + "'>" + data + "</a>" ;
+              return "<a class='active' data-skin='dark' data-toggle='kt-tooltip' data-placement='top' title='click -> Host Details' style='font-weight: 400; color: " + color + "' href='" + full["node_url"] + "'>" + data + "</a>" ;
 
           } else {
-              return "<a class='active' data-skin='dark' data-toggle='kt-tooltip' data-placement='top' title='click -> Host Details' style='color: " + color + "' href='" + full["node_url"] + "'>" + data + "</a>";
+              return "<a class='active' data-skin='dark' data-toggle='kt-tooltip' data-placement='top' title='click -> Host Details' style='font-weight: 400; color: " + color + "' href='" + full["node_url"] + "'>" + data + "</a>";
           }
 
         },
@@ -142,19 +142,26 @@ function nodeData(){
                   }
                   var platform = full['platform'];
                   if (platform == 'windows') {
-                      return "<i style='color: " + color + "' class='logo-color menu-icon fab fa-windows'><span>&ensp;</span>" + data + "</i>";
+                      return "<span class='logo-color menu-icon' style='font-weight: 400;'><img alt='' src='/static/assets/media/logo/windows.svg' height='19px' width='16px' /><span>&ensp;</span>" + data + "</span>";
+                      // return "<i style='color: " + color + "' class='logo-color menu-icon fab fa-windows'><span>&ensp;</span>" + data + "</i>";
                   } else if (platform == 'darwin') {
-                      return "<i style='color: " + color + "' class='logo-color menu-icon fab fa-apple'><span>&ensp;</span>" + data + "</i>";
+                      return "<span class='logo-color menu-icon' style='font-weight: 400;'><i class='fab fa-apple'style='font-size: 18px; color: #8e8e93;'></i><span>&ensp;</span>" + data + "</span>";
+                      // return "<i style='color: " + color + "' class='logo-color menu-icon fab fa-apple'><span>&ensp;</span>" + data + "</i>";
                   } else if (platform == 'linux') {
-                      return "<i style='color: " + color + "' class='logo-color menu-icon fab fa-linux'><span>&ensp;</span>" + data + "</i>";
+                      return "<span class='logo-color menu-icon' style='font-weight: 400;'><img alt='' src='/static/assets/media/logo/Linux1.svg' height='19px' width='16px' /><span>&ensp;</span>" + data + "</span>";
+                      // return "<i style='color: " + color + "' class='logo-color menu-icon fab fa-linux'><span>&ensp;</span>" + data + "</i>";
                   } else if (platform == 'centos') {
-                      return "<i style='color: " + color + "' class='logo-color menu-icon fab fa-linux'><span>&ensp;</span>" + data + "</i>";
+                      return "<span class='logo-color menu-icon' style='font-weight: 400;'><img alt='' src='/static/assets/media/logo/Linux1.svg' height='19px' width='16px' /><span>&ensp;</span>" + data + "</span>";
+                      // return "<i style='color: " + color + "' class='logo-color menu-icon fab fa-linux'><span>&ensp;</span>" + data + "</i>";
                   } else if (platform == 'debian') {
-                      return "<i style='color: " + color + "' class='logo-color menu-icon fab fa-linux'><span>&ensp;</span>" + data + "</i>";
+                      return "<span class='logo-color menu-icon' style='font-weight: 400;'><img alt='' src='/static/assets/media/logo/Linux1.svg' height='19px' width='16px' /><span>&ensp;</span>" + data + "</span>";
+                      // return "<i style='color: " + color + "' class='logo-color menu-icon fab fa-linux'><span>&ensp;</span>" + data + "</i>";
                   } else if (platform == 'ubuntu') {
-                      return "<i style='text-align: center; color: " + color + "' class='logo-color menu-icon fab fa-linux'><span>&ensp;</span>" + data + "</i>";
+                      return "<span class='logo-color menu-icon' style='font-weight: 400;'><img alt='' src='/static/assets/media/logo/Linux1.svg' height='19px' width='16px' /><span>&ensp;</span>" + data + "</span>";
+                      // return "<i style='text-align: center; color: " + color + "' class='logo-color menu-icon fab fa-linux'><span>&ensp;</span>" + data + "</i>";
                   }else{
-                      return "<i style='text-align: center; color: " + color + "' class='logo-color menu-icon fab fa-linux'><span>&ensp;</span>" + data + "</i>";
+                      return "<span class='logo-color menu-icon' style='font-weight: 400;'><img alt='' src='/static/assets/media/logo/Linux1.svg' height='19px' width='16px' /><span>&ensp;</span>" + data + "</span>";
+                      // return "<i style='text-align: center; color: " + color + "' class='logo-color menu-icon fab fa-linux'><span>&ensp;</span>" + data + "</i>";
 
                   }
 
@@ -167,7 +174,7 @@ function nodeData(){
                       if (full['health'] == 'danger') {
                           color = "#25282a";
                       }
-                      return "<div style=' color: " + color + "' class='text-wrap width'>" + data + "</div>";
+                      return "<div style='font-weight: 400; color: " + color + "' class='text-wrap width'>" + data + "</div>";
 
 
                   },

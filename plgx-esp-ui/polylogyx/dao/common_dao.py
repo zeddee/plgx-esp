@@ -9,6 +9,10 @@ def del_result_log_obj(since):
     return ResultLog.query.filter(ResultLog.timestamp < since).delete()
 
 
+def get_result_log_since(since):
+    return ResultLog.query.filter(ResultLog.timestamp < since).all()
+
+
 def options_query():
     return Options.query.filter(Options.name == PolyLogyxServerDefaults.plgx_config_all_options).first()
 

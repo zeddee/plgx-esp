@@ -124,7 +124,8 @@ class RuleManager(object):
             # Verify the alerters
             for alerter in rule.alerters:
                 if alerter not in self.alerters:
-                    raise ValueError('No such alerter: "{0}"'.format(alerter))
+                    current_app.logger.error('No such alerter: "{0}"'.format(alerter))
+                    # raise ValueError('No such alerter: "{0}"'.format(alerter))
 
             # Create the rule.
             try:
@@ -136,7 +137,6 @@ class RuleManager(object):
         # possible that we've reloaded a rule in between the two functions, and
         # thus we accidentally don't reload when we should.
         self.last_update = max(r.updated_at for r in all_rules)
-
     def handle_result_log_entry(self, entry):
         from polylogyx.models import Node
         """ The actual entrypoint for handling input log entries. """
@@ -174,12 +174,12 @@ class RuleManager(object):
         # Now that we've collected all results, start triggering them.
         for alerters, match in to_trigger:
             alert = self.save_in_db(match.result['columns'], match.result['name'], match.node, match.rule, uuid)
+            node=match.node
             node['alert'] = alert
             for alerter in alerters:
 
                 match=match._replace(alert_id=alert.id)
                 self.alerters[alerter].handle_alert(node, match, None)
-
 
     def handle_log_entry(self, entry, node):
         """ The actual entrypoint for handling input log entries. """

@@ -5,6 +5,8 @@ import re
 from flask import current_app
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
+from sqlalchemy import or_, and_
+from wtforms import FormField
 
 from wtforms.fields import (
     BooleanField,
@@ -14,12 +16,12 @@ from wtforms.fields import (
     SelectField,
     SelectMultipleField,
     StringField,
-    TextAreaField
-)
+    TextAreaField,
+    RadioField, FieldList, HiddenField)
 from wtforms.validators import DataRequired, Optional, ValidationError
 from wtforms.widgets import HiddenInput
 
-from polylogyx.models import Rule, Pack
+from polylogyx.models import Rule, Pack, DefaultQuery
 from polylogyx.utils import validate_osquery_query
 
 
@@ -51,7 +53,7 @@ class HiddenJSONField(Field):
 
 
 class UploadPackForm(Form):
-    category =  platform = SelectField('Category', default=Pack.GENERAL, choices=[
+    category = platform = SelectField('Category', default=Pack.GENERAL, choices=[
         (Pack.MONITORING, Pack.MONITORING),
         (Pack.GENERAL, Pack.GENERAL),
         (Pack.FORENSICS_IR, Pack.FORENSICS_IR),
@@ -66,8 +68,10 @@ class UploadPackForm(Form):
 class UploadIntelForm(Form):
     intel = StringField(u'Intel', validators=[DataRequired()])
 
+
 class UploadYARAForm(Form):
     yara = FileField(u'Yara', validators=[DataRequired()])
+
 
 class DeleteResultForm(Form):
     days = SelectField('Name', validators=[DataRequired()])
@@ -153,7 +157,9 @@ class AddDistributedQueryForm(Form):
         if isinstance(checkin_interval, (int, float)):
             checkin_interval = dt.timedelta(seconds=checkin_interval)
 
-        choices_nodes = Node.query.filter(Node.is_active == True).filter(dt.datetime.utcnow() - Node.last_checkin < checkin_interval).with_entities(Node.node_key, Node.node_info['computer_name'].astext, Node.host_identifier).all();
+        choices_nodes = Node.query.filter(Node.is_active == True).filter(
+            dt.datetime.utcnow() - Node.last_checkin < checkin_interval).with_entities(Node.node_key, Node.node_info[
+            'computer_name'].astext, Node.host_identifier).all();
         for choice_node in choices_nodes:
             display_name = choice_node[1]
             if (not display_name or display_name == ''):
@@ -190,17 +196,24 @@ class RuleForm(Form):
     ])
     description = TextAreaField('Description', validators=[Optional()])
     status = SelectField('Status', default='ACTIVE', choices=[('ACTIVE', 'ACTIVE'), ('INACTIVE', 'INACTIVE')])
-    severity = SelectField('Severity', default=Rule.INFO, choices=[(Rule.INFO, Rule.INFO), (Rule.WARNING, Rule.WARNING), (Rule.CRITICAL, Rule.CRITICAL)])
+    severity = SelectField('Severity', default=Rule.INFO, choices=[(Rule.INFO, Rule.INFO), (Rule.WARNING, Rule.WARNING),
+                                                                   (Rule.CRITICAL, Rule.CRITICAL)])
 
     recon_queries = StringField('Recon Queries')
 
     conditions = HiddenJSONField('Conditions')
     type = SelectField('Type', default=Rule.DEFAULT, choices=[(Rule.DEFAULT, Rule.DEFAULT), (Rule.MITRE, Rule.MITRE)])
-    technique_id= StringField('Technique Id')
-    tactics = SelectMultipleField('Tactics', choices=[('initial-access', 'Initial Access'), ('execution', 'Execution'), ('persistence', 'Persistence'),
-                                                      ('privilege-escalation', 'Privilege Escalation'), ('defense-evasion', 'Defense Evasion'), ('credential-access', 'Credential Access'),
-                                                      ('discovery', 'Discovery'), ('lateral-movement', 'Lateral Movement'), ('collection', 'Collection'),
-                                                      ('command-and-control', 'Command and Control'), ('exfiltration', 'Exfiltration'), ('impact', 'Impact')])
+    technique_id = StringField('Technique Id')
+    tactics = SelectMultipleField('Tactics', choices=[('initial-access', 'Initial Access'), ('execution', 'Execution'),
+                                                      ('persistence', 'Persistence'),
+                                                      ('privilege-escalation', 'Privilege Escalation'),
+                                                      ('defense-evasion', 'Defense Evasion'),
+                                                      ('credential-access', 'Credential Access'),
+                                                      ('discovery', 'Discovery'),
+                                                      ('lateral-movement', 'Lateral Movement'),
+                                                      ('collection', 'Collection'),
+                                                      ('command-and-control', 'Command and Control'),
+                                                      ('exfiltration', 'Exfiltration'), ('impact', 'Impact')])
 
     def set_choices(self):
         self.alerters.choices = []

@@ -1,9 +1,0 @@
-[Unit]
-Description=Osquery Service.
-
-[Service]
-Type=simple
-ExecStart=/bin/bash /usr/bin/osquery.sh
-
-[Install]
-WantedBy=multi-user.target

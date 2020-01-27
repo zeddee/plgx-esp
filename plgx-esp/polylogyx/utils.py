@@ -14,7 +14,7 @@ from operator import itemgetter
 from os.path import basename, join, splitext
 
 from flask_mail import Message, Mail
-from sqlalchemy import func
+from sqlalchemy import func, or_, and_
 
 from polylogyx.plugins import AbstractAlerterPlugin
 from polylogyx.constants import DEFAULT_PLATFORMS, PolyLogyxServerDefaults, public_server
@@ -30,7 +30,7 @@ from polylogyx.models import (
     Node, Pack, Query, ResultLog, querypacks,
     Options, Tag, DefaultQuery, DefaultFilters, StatusLog)
 
-Field = namedtuple('Field', ['name', 'action', 'columns', 'timestamp','uuid'])
+Field = namedtuple('Field', ['name', 'action', 'columns', 'timestamp', 'uuid'])
 
 # Read DDL statements from our package
 schema = pkg_resources.resource_string('polylogyx', join('resources', 'osquery_schema.sql'))
@@ -46,12 +46,22 @@ def assemble_configuration(node):
     platform = node.platform
     if platform not in DEFAULT_PLATFORMS:
         platform = 'linux'
-    platform_filter = DefaultFilters.query.filter(DefaultFilters.platform == platform).first()
+    is_x86 = False
+    if node.node_info and 'cpu_type' in node.node_info and node.node_info['cpu_type'] == DefaultFilters.ARCH_x86:
+        is_x86 = True
+
+    query = DefaultFilters.query.filter(DefaultFilters.platform == platform)
+
+    if is_x86:
+        platform_filter = query.filter(DefaultFilters.arch == DefaultFilters.ARCH_x86).first()
+    else:
+        platform_filter = query.filter(
+            or_(DefaultFilters.arch == None, DefaultFilters.arch != DefaultFilters.ARCH_x86)).first()
+
     configuration = {}
     if platform_filter and platform_filter.filters:
         configuration = platform_filter.filters
     configuration['options'] = assemble_options(node)
-    configuration['file_paths'] = assemble_file_paths(node)
     configuration['schedule'] = assemble_schedule(node)
     configuration['packs'] = assemble_packs(node)
 
@@ -90,9 +100,19 @@ def assemble_schedule(node):
     platform = node.platform
     if platform not in DEFAULT_PLATFORMS:
         platform = 'linux'
+    is_x86 = False
+    if node.node_info and 'cpu_type' in node.node_info and node.node_info['cpu_type'] == DefaultQuery.ARCH_x86:
+        is_x86 = True
 
-    for default_query in DefaultQuery.query.filter(DefaultQuery.status == True).filter(
-            DefaultQuery.platform == platform).all():
+    query = DefaultQuery.query.filter(DefaultQuery.status == True).filter(
+        DefaultQuery.platform == platform)
+    if is_x86:
+        queries = query.filter(DefaultQuery.arch == DefaultQuery.ARCH_x86).all()
+    else:
+        queries = query.filter(
+            or_(DefaultQuery.arch == None, DefaultQuery.arch != DefaultQuery.ARCH_x86)).all()
+
+    for default_query in queries:
         schedule[default_query.name] = default_query.to_dict()
 
     return schedule
@@ -454,19 +474,17 @@ def learn_from_result(result, node):
     node.update(node_info=node_info)
     return
 
+
 def process_result(result, node):
     if not result['data']:
+        current_app.logger.error("No results to process from %s", node)
         return
-    result_logs=[]
-    subject_dn = []
+    result_logs = []
 
-    for name, action, columns, timestamp,uuid in extract_results(result):
-        if 'subject_dn' in columns and columns['subject_dn'] and columns['subject_dn'] != '':
-            subject_dn.append(columns['subject_dn'])
-        else:
-            result_logs.append( ResultLog(name=name,uuid=uuid, action=action, columns=columns, timestamp=timestamp, node_id=node['id']))
-    return  result_logs
-
+    for name, action, columns, timestamp, uuid in extract_results(result):
+        result_logs.append(
+            ResultLog(name=name, uuid=uuid, action=action, columns=columns, timestamp=timestamp, node_id=node['id']))
+    return result_logs
 
 
 def extract_results(result):
@@ -484,7 +502,7 @@ def extract_results(result):
     for entry in result['data']:
 
         if 'uuid' not in entry:
-            entry['uuid']=str(uuid.uuid4())
+            entry['uuid'] = str(uuid.uuid4())
 
         name = entry['name']
 
@@ -494,7 +512,7 @@ def extract_results(result):
             yield Field(name=name,
                         action=entry['action'],
                         columns=entry['columns'],
-                        timestamp=timestamp,uuid=entry['uuid'])
+                        timestamp=timestamp, uuid=entry['uuid'])
 
         elif 'diffResults' in entry:
             added = entry['diffResults']['added']
@@ -506,14 +524,14 @@ def extract_results(result):
                     yield Field(name=name,
                                 action=action,
                                 columns=columns,
-                                timestamp=timestamp,uuid=entry['uuid'])
+                                timestamp=timestamp, uuid=entry['uuid'])
 
         elif 'snapshot' in entry:
             for columns in entry['snapshot']:
                 yield Field(name=name,
                             action='snapshot',
                             columns=columns,
-                            timestamp=timestamp,uuid=entry['uuid'])
+                            timestamp=timestamp, uuid=entry['uuid'])
 
         else:
             current_app.logger.error("Encountered a result entry that "
@@ -671,14 +689,13 @@ def append_node_and_rule_information_to_alert(node, input):
     return output
 
 
-
 def extract_result_logs(result):
     """
     extract_results will convert the incoming log data into a series of Fields,
     normalizing and/or aggregating both batch and event format into batch
     format, which is used throughout the rest of polylogyx.
     """
-    Field = namedtuple('Field', ['name', 'action', 'columns', 'timestamp', 'uuid','node_id'])
+    Field = namedtuple('Field', ['name', 'action', 'columns', 'timestamp', 'uuid', 'node_id'])
 
     for data in result:
 
@@ -689,5 +706,3 @@ def extract_result_logs(result):
                     action=data.action,
                     columns=data.columns,
                     timestamp=data.timestamp, uuid=data.uuid, node_id=data.node_id)
-
-

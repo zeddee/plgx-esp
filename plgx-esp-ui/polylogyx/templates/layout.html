@@ -17,7 +17,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!--begin::Fonts -->
+  <!-- <script src="/static/js/webfont.js"></script> -->
   <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.16/webfont.js"></script>
+
   <script>
     WebFont.load({
       google: {
@@ -58,9 +60,10 @@
       color: #f1f2f4 !important;
       font-weight: 600 !important;
       text-align: right;
-      font-size: 10px;
+      font-size: 12px;
       margin-right: 1rem;
       margin-top: -15px;
+      font-family: system-ui;
     }
     .kt-aside__brand .kt-aside__brand-tools .kt-aside__brand-aside-toggler svg g [fill] {
       fill: #ffffffab !important;
@@ -82,6 +85,19 @@
       color: #fff !important;
       background-color: #518c24 !important;
       border-color: #518c24 !important;
+    }
+    /* .dropdown-item:hover, .dropdown-item:focus {
+      color: #383c40 !important;
+      background-color: #c5cee0 !important;
+    } */
+    .bootstrap-select .dropdown-menu.inner>li.selected>a {
+      background: #83ae5c !important;
+    }
+    .bootstrap-select .dropdown-menu.inner>li.selected>a span.check-mark {
+      color: #ffffff !important;
+    }
+    .bootstrap-select .dropdown-menu.inner>li.selected>a .text {
+      color: #ffffff !important;
     }
   </style>
 
@@ -225,6 +241,8 @@
 
   <!-- <script type="text/javascript" src="/static/assets/vendors/general/jquery-form/dist/jquery.form.min.js"></script>
   <script type="text/javascript" src="/static/assets/vendors/general/block-ui/jquery.blockUI.js"></script>  -->
+  <script type="text/javascript" src="/static/assets/vendors/general/bootstrap/dist/js/bootstrap.bundle.js"></script>
+
   <script type="text/javascript" src="/static/assets/app/custom/general/crud/forms/widgets/bootstrap-select.js"></script>
 
   <script type="text/javascript" src="/static/assets/vendors/general/bootstrap-select/dist/js/bootstrap-select.js"></script>
@@ -259,6 +277,7 @@
 
   <!-- <script type="text/javascript" src="/static/effects/js/classie.js"></script>
   <script type="text/javascript" src="/static/effects/js/modernizr.custom.js"></script> -->
+  <script src="/static/js/jquery-ui.min.js"></script>
 
 {#<script type="text/javascript" src="/static/js/util.js"></script>#}
 
@@ -299,7 +318,7 @@
           </div>
           <div class="kt-aside__brand-tools">
             <button class="kt-aside__brand-aside-toggler" id="kt_aside_toggler">
-              <span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+              <span><svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                   <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                     <polygon id="Shape" points="0 0 24 0 24 24 0 24" />
                     <path
@@ -310,7 +329,7 @@
                       id="Path-94" fill="#000000" fill-rule="nonzero" opacity="0.3" transform="translate(15.999997, 11.999999) scale(-1, 1) rotate(-270.000000) translate(-15.999997, -11.999999) " />
                   </g>
                 </svg></span>
-              <span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+              <span><svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                   <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                     <polygon id="Shape" points="0 0 24 0 24 24 0 24" />
                     <path
@@ -336,7 +355,7 @@
               <li class="kt-menu__item kt-menu__item--rel " id="dashboard" aria-haspopup="true">
                 <!-- <a class="kt-menu__link " onclick="window.open({{ url_for('manage.index') }}, 'dashboard', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;"> -->
                 <a href="{{ url_for('manage.index') }}" class="kt-menu__link ">
-                  <span class="kt-menu__link-icon"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                  <span class="kt-menu__link-icon"><svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <polygon id="Bound" points="0 0 24 0 24 24 0 24" />
                         <path
@@ -351,7 +370,7 @@
               <li class="kt-menu__item kt-menu__item--rel" id="nodes" aria-haspopup="true">
                 <a href="{{ url_for('manage.nodes') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="bound" x="0" y="0" width="24" height="24" />
                         <path
@@ -366,7 +385,7 @@
                 </a>
               </li>
               <li class="kt-menu__item  kt-menu__item--submenu kt-menu__item--rel" id="management" aria-haspopup="true" data-ktmenu-submenu-toggle="hover"><a class="kt-menu__link kt-menu__toggle"><span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="bound" x="0" y="0" width="24" height="24" />
                         <path
@@ -401,7 +420,7 @@
               <li class="kt-menu__item kt-menu__item--rel" id="alerts" aria-haspopup="true">
                 <a href="{{ url_for('manage.alerts') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="bound" x="0" y="0" width="24" height="24" />
                         <circle id="Oval-5" fill="#000000" opacity="0.3" cx="12" cy="12" r="10" />
@@ -417,7 +436,7 @@
               <li class="kt-menu__item kt-menu__item--rel" id="live-queries" aria-haspopup="true">
                 <a href="{{ url_for('manage.live_queries') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="bound" x="0" y="0" width="24" height="24" />
                         <path
@@ -430,28 +449,10 @@
                   <span class="kt-menu__link-text">Live Queries</span>
                 </a>
               </li>
-              <li class="kt-menu__item kt-menu__item--rel" id="iocs" aria-haspopup="true">
-                <a href="{{ url_for('manage.upload_intel') }}" class="kt-menu__link ">
-                  <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                        <rect id="bound" x="0" y="0" width="24" height="24" />
-                        <path
-                          d="M7,3 L17,3 C19.209139,3 21,4.790861 21,7 C21,9.209139 19.209139,11 17,11 L7,11 C4.790861,11 3,9.209139 3,7 C3,4.790861 4.790861,3 7,3 Z M7,9 C8.1045695,9 9,8.1045695 9,7 C9,5.8954305 8.1045695,5 7,5 C5.8954305,5 5,5.8954305 5,7 C5,8.1045695 5.8954305,9 7,9 Z"
-                          id="Combined-Shape" fill="#000000" />
-                        <path
-                          d="M7,13 L17,13 C19.209139,13 21,14.790861 21,17 C21,19.209139 19.209139,21 17,21 L7,21 C4.790861,21 3,19.209139 3,17 C3,14.790861 4.790861,13 7,13 Z M17,19 C18.1045695,19 19,18.1045695 19,17 C19,15.8954305 18.1045695,15 17,15 C15.8954305,15 15,15.8954305 15,17 C15,18.1045695 15.8954305,19 17,19 Z"
-                          id="Combined-Shape" fill="#000000" opacity="0.3" />
-                      </g>
-                    </svg>
-                  </span>
-                  <span class="kt-menu__link-text">IOC</span>
-                </a>
-              </li>
               <li class="kt-menu__item kt-menu__item--rel" id="rule" aria-haspopup="true">
                 <a href="{{ url_for('manage.rules') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="bound" x="0" y="0" width="24" height="24" />
                         <path
@@ -472,10 +473,28 @@
                   <span class="kt-menu__link-text">Rules</span>
                 </a>
               </li>
+              <li class="kt-menu__item kt-menu__item--rel" id="iocs" aria-haspopup="true">
+                <a href="{{ url_for('manage.upload_intel') }}" class="kt-menu__link ">
+                  <span class="kt-menu__link-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                        <rect id="bound" x="0" y="0" width="24" height="24" />
+                        <path
+                          d="M7,3 L17,3 C19.209139,3 21,4.790861 21,7 C21,9.209139 19.209139,11 17,11 L7,11 C4.790861,11 3,9.209139 3,7 C3,4.790861 4.790861,3 7,3 Z M7,9 C8.1045695,9 9,8.1045695 9,7 C9,5.8954305 8.1045695,5 7,5 C5.8954305,5 5,5.8954305 5,7 C5,8.1045695 5.8954305,9 7,9 Z"
+                          id="Combined-Shape" fill="#000000" />
+                        <path
+                          d="M7,13 L17,13 C19.209139,13 21,14.790861 21,17 C21,19.209139 19.209139,21 17,21 L7,21 C4.790861,21 3,19.209139 3,17 C3,14.790861 4.790861,13 7,13 Z M17,19 C18.1045695,19 19,18.1045695 19,17 C19,15.8954305 18.1045695,15 17,15 C15.8954305,15 15,15.8954305 15,17 C15,18.1045695 15.8954305,19 17,19 Z"
+                          id="Combined-Shape" fill="#000000" opacity="0.3" />
+                      </g>
+                    </svg>
+                  </span>
+                  <span class="kt-menu__link-text">IOC</span>
+                </a>
+              </li>
               <li class="kt-menu__item kt-menu__item--rel" id="tag" aria-haspopup="true">
                 <a href="{{ url_for('manage.tags') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="bound" x="0" y="0" width="24" height="24" />
                         <g id="Group" transform="translate(12.500000, 12.000000) rotate(-315.000000) translate(-12.500000, -12.000000) translate(6.000000, 1.000000)" fill="#000000" opacity="0.3">
@@ -491,11 +510,10 @@
                   <span class="kt-menu__link-text">Tags</span>
                 </a>
               </li>
-
               <li class="kt-menu__item kt-menu__item--rel " id="" aria-haspopup="true">
                 <a href="{{ url_for('manage.carves') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="bound" x="0" y="0" width="24" height="24" />
                         <path
@@ -510,7 +528,7 @@
               <li class="kt-menu__item kt-menu__item--rel"  id="" aria-haspopup="true">
                 <a href="{{ url_for('manage.yara_list') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                           <polygon id="Shape" points="0 0 24 0 24 24 0 24"/>
                           <path d="M4.85714286,1 L11.7364114,1 C12.0910962,1 12.4343066,1.12568431 12.7051108,1.35473959 L17.4686994,5.3839416 C17.8056532,5.66894833 18,6.08787823 18,6.52920201 L18,19.0833333 C18,20.8738751 17.9795521,21 16.1428571,21 L4.85714286,21 C3.02044787,21 3,20.8738751 3,19.0833333 L3,2.91666667 C3,1.12612489 3.02044787,1 4.85714286,1 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z" id="Combined-Shape-Copy" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
@@ -524,7 +542,7 @@
               <li class="kt-menu__item kt-menu__item--rel" id="" aria-haspopup="true">
                 <a href="{{ url_for('manage.hunt') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="bound" x="0" y="0" width="24" height="24"/>
                         <path d="M19,11 L21,11 C21.5522847,11 22,11.4477153 22,12 C22,12.5522847 21.5522847,13 21,13 L19,13 C18.4477153,13 18,12.5522847 18,12 C18,11.4477153 18.4477153,11 19,11 Z M3,11 L5,11 C5.55228475,11 6,11.4477153 6,12 C6,12.5522847 5.55228475,13 5,13 L3,13 C2.44771525,13 2,12.5522847 2,12 C2,11.4477153 2.44771525,11 3,11 Z M12,2 C12.5522847,2 13,2.44771525 13,3 L13,5 C13,5.55228475 12.5522847,6 12,6 C11.4477153,6 11,5.55228475 11,5 L11,3 C11,2.44771525 11.4477153,2 12,2 Z M12,18 C12.5522847,18 13,18.4477153 13,19 L13,21 C13,21.5522847 12.5522847,22 12,22 C11.4477153,22 11,21.5522847 11,21 L11,19 C11,18.4477153 11.4477153,18 12,18 Z" id="Oval" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
@@ -533,6 +551,24 @@
                     </svg>
                   </span>
                   <span class="kt-menu__link-text">Hunt</span>
+                </a>
+              </li>
+              <li class="kt-menu__item kt-menu__item--rel" id="search" aria-haspopup="true">
+                <a href="{{ url_for('manage.search_column') }}" class="kt-menu__link ">
+                  <span class="kt-menu__link-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                        <rect id="bound" x="0" y="0" width="24" height="24" />
+                        <path
+                          d="M14.2928932,16.7071068 C13.9023689,16.3165825 13.9023689,15.6834175 14.2928932,15.2928932 C14.6834175,14.9023689 15.3165825,14.9023689 15.7071068,15.2928932 L19.7071068,19.2928932 C20.0976311,19.6834175 20.0976311,20.3165825 19.7071068,20.7071068 C19.3165825,21.0976311 18.6834175,21.0976311 18.2928932,20.7071068 L14.2928932,16.7071068 Z"
+                          id="Path-2" fill="#000000" fill-rule="nonzero" opacity="0.3" />
+                        <path
+                          d="M11,16 C13.7614237,16 16,13.7614237 16,11 C16,8.23857625 13.7614237,6 11,6 C8.23857625,6 6,8.23857625 6,11 C6,13.7614237 8.23857625,16 11,16 Z M11,18 C7.13400675,18 4,14.8659932 4,11 C4,7.13400675 7.13400675,4 11,4 C14.8659932,4 18,7.13400675 18,11 C18,14.8659932 14.8659932,18 11,18 Z"
+                          id="Path" fill="#000000" fill-rule="nonzero" />
+                      </g>
+                    </svg>
+                  </span>
+                  <span class="kt-menu__link-text">Search</span>
                 </a>
               </li>
 
@@ -544,7 +580,7 @@
               <li class="kt-menu__item kt-menu__item--rel" id="config" aria-haspopup="true">
                 <a href="{{ url_for('manage.configs') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="Bound" opacity="0.200000003" x="0" y="0" width="24" height="24" />
                         <path
@@ -562,7 +598,7 @@
               <li class="kt-menu__item kt-menu__item--rel" id="pack" aria-haspopup="true">
                 <a href="{{ url_for('manage.packs') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="bound" x="0" y="0" width="24" height="24" />
                         <path
@@ -578,7 +614,7 @@
               <li class="kt-menu__item kt-menu__item--rel" id="query" aria-haspopup="true">
                 <a href="{{ url_for('manage.queries') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="bound" x="0" y="0" width="24" height="24" />
                         <path
@@ -593,7 +629,7 @@
               <li class="kt-menu__item kt-menu__item--rel " id="" aria-haspopup="true">
                 <a href="{{ url_for('manage.add_option') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                           <rect id="bound" x="0" y="0" width="24" height="24"/>
                           <path d="M10.5,5 L19.5,5 C20.3284271,5 21,5.67157288 21,6.5 C21,7.32842712 20.3284271,8 19.5,8 L10.5,8 C9.67157288,8 9,7.32842712 9,6.5 C9,5.67157288 9.67157288,5 10.5,5 Z M10.5,10 L19.5,10 C20.3284271,10 21,10.6715729 21,11.5 C21,12.3284271 20.3284271,13 19.5,13 L10.5,13 C9.67157288,13 9,12.3284271 9,11.5 C9,10.6715729 9.67157288,10 10.5,10 Z M10.5,15 L19.5,15 C20.3284271,15 21,15.6715729 21,16.5 C21,17.3284271 20.3284271,18 19.5,18 L10.5,18 C9.67157288,18 9,17.3284271 9,16.5 C9,15.6715729 9.67157288,15 10.5,15 Z" id="Combined-Shape" fill="#000000"/>
@@ -607,28 +643,10 @@
 
               <div class="separator-menu"></div>
 
-              <li class="kt-menu__item kt-menu__item--rel" id="search" aria-haspopup="true">
-                <a href="{{ url_for('manage.search_column') }}" class="kt-menu__link ">
-                  <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                        <rect id="bound" x="0" y="0" width="24" height="24" />
-                        <path
-                          d="M14.2928932,16.7071068 C13.9023689,16.3165825 13.9023689,15.6834175 14.2928932,15.2928932 C14.6834175,14.9023689 15.3165825,14.9023689 15.7071068,15.2928932 L19.7071068,19.2928932 C20.0976311,19.6834175 20.0976311,20.3165825 19.7071068,20.7071068 C19.3165825,21.0976311 18.6834175,21.0976311 18.2928932,20.7071068 L14.2928932,16.7071068 Z"
-                          id="Path-2" fill="#000000" fill-rule="nonzero" opacity="0.3" />
-                        <path
-                          d="M11,16 C13.7614237,16 16,13.7614237 16,11 C16,8.23857625 13.7614237,6 11,6 C8.23857625,6 6,8.23857625 6,11 C6,13.7614237 8.23857625,16 11,16 Z M11,18 C7.13400675,18 4,14.8659932 4,11 C4,7.13400675 7.13400675,4 11,4 C14.8659932,4 18,7.13400675 18,11 C18,14.8659932 14.8659932,18 11,18 Z"
-                          id="Path" fill="#000000" fill-rule="nonzero" />
-                      </g>
-                    </svg>
-                  </span>
-                  <span class="kt-menu__link-text">Search</span>
-                </a>
-              </li>
               <li class="kt-menu__item kt-menu__item--rel" id="readme" aria-haspopup="true">
                 <a href="{{ url_for('manage.readme') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="bound" x="0" y="0" width="24" height="24" />
                         <path
@@ -646,7 +664,7 @@
               <li class="kt-menu__item kt-menu__item--rel" aria-haspopup="true">
                 <a href="{{ url_for('users.logout') }}" class="kt-menu__link ">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="bound" x="0" y="0" width="24" height="24" />
                         <path
@@ -666,7 +684,7 @@
               <li class="kt-menu__item kt-menu__item--active" aria-haspopup="true">
                 <div class="kt-menu__link" style="cursor: default !important;">
                   <span class="kt-menu__link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                    <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
                       <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <rect id="Rectangle-5" x="0" y="0" width="24" height="24" />
                         <path
@@ -678,7 +696,7 @@
                       </g>
                     </svg>
                   </span>
-                  <span class="kt-menu__link-text">Version : CE 1.0</span>
+                  <span class="kt-menu__link-text">Version : CE 1.01</span>
                 </div>
               </li>
             </ul>
@@ -717,8 +735,8 @@
       <!-- End:: Content -->
 
       <!-- begin::Sticky Toolbar -->
-      <div class="live-qry">
-        <ul class="" id="drag_button">
+      <div class="live-qry1 live-qry">
+        <ul class="live-qry" id="drag_button">
           <li class="">
             <a href="{{ url_for('manage.live_queries') }}" class="">
               <i class="btn fa fa-code"></i>
@@ -741,7 +759,7 @@
 
   <!-- end container -->
   <script type="text/javascript" src="/static/js/plugins.js?vv=11312"></script>
-
+  <script type="text/javascript" src="/static/js/sha256.js"></script>
   <script type="text/javascript">
   var pages = {
   "{{ url_for('manage.index') }}":"dashboard",
@@ -769,7 +787,6 @@
   document.getElementById(pages[path]).classList.remove("kt-menu__item--rel");
   document.getElementById(pages[path]).classList.add("kt-menu__item--active");
   </script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js" type="text/javascript"></script>
   <script type="text/javascript">
     // $('.close').click(function() {
     //   $(".close").hide()

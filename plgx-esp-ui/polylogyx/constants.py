@@ -1,13 +1,6 @@
-import os
-import datetime as dt
-from flask import json
-from binascii import b2a_hex
 
-SERVER_URL = ""
-clients = {}
-websockets = {}
-public_server = False
-socketio = None
+from flask import json
+
 DEFAULT_PLATFORMS=['windows','linux','darwin','freebsd']
 
 class PolyLogyxServerDefaults:

@@ -6,7 +6,7 @@ import sqlalchemy
 from flask import current_app
 from requests.auth import HTTPBasicAuth
 from polylogyx.database import db
-from polylogyx.models import ResultLogScan, ThreatIntelCredentials
+from polylogyx.models import ResultLogScan, ThreatIntelCredentials, Alerts
 from .base import AbstractIntelPlugin
 
 url = "https://api.xforce.ibmcloud.com:443"
@@ -99,9 +99,15 @@ class IBMxForceIntel(AbstractIntelPlugin):
             result_log_scans = db.session.query(ResultLogScan).filter(
                 ResultLogScan.reputations[source + "_detected"].astext.cast(sqlalchemy.Boolean).is_(True)).all()
             for result_log_scan in result_log_scans:
+                severity=Alerts.INFO
+                if result_log_scan.reputations[source]['malware']['risk']=='high':
+                    severity=Alerts.CRITICAL
+                elif result_log_scan.reputations[source]['malware']['risk']=='medium':
+                    severity=Alerts.WARNING
+
                 check_and_save_intel_alert(scan_type=result_log_scan.scan_type, scan_value=result_log_scan.scan_value,
                                            data=result_log_scan.reputations[source],
                                            source=source,
-                                           severity=result_log_scan.reputations[source]['malware']['risk'])
+                                           severity=severity)
         except Exception as e:
             current_app.logger.error(e)

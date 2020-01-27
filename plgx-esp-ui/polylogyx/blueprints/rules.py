@@ -59,18 +59,16 @@ class GetRuleById(Resource):
 @ns.doc(params = {'rule_id':"id of the rule", 'alerters':"alerters", 'name': "name of the rule", 'description':"description of the rule", 'conditions':"conditions", 'recon_queries':"recon_queries", 'severity':"severity", 'status':"status"})
 class ModifyRuleById(Resource):
     '''modifies the rule data for the passed rule_id'''
-    parser = requestparse(['alerters', 'name', 'description', 'conditions', 'recon_queries', 'severity', 'status', 'type', 'tactics', 'technique_id'],[list, str, str, dict, list, str, str, str, str, str],["alerters", "name of the rule", "description of the rule", "conditions", "recon_queries","severity", 'status', 'type', 'tactics', 'technique_id'], [False, True, True, True, False, False, False, False, False, False])
+    parser = requestparse(['alerters', 'name', 'description', 'conditions', 'recon_queries', 'severity', 'status', 'type', 'tactics', 'technique_id'],[str, str, str, dict, list, str, str, str, str, str],["alerters", "name of the rule", "description of the rule", "conditions", "recon_queries","severity", 'status', 'type', 'tactics', 'technique_id'], [False, True, True, True, False, False, False, False, False, False])
 
     @ns.expect(parser)
     def post(self, rule_id):
         args = self.parser.parse_args()  # need to exists for input payload validation
-        args = get_body_data(request)
-        args_ip = ['alerters', 'name', 'description', 'conditions', 'recon_queries', 'severity', 'status', 'type', 'tactics', 'technique_id']
-        args = debug_body_args(args, args_ip)
+
         if rule_id:
             rule = dao.get_rule_by_id(rule_id)
             if rule:
-                alerters = args['alerters']
+                alerters = args['alerters'].split(',')
                 name = args['name']
                 description = args['description']
                 conditions = args['conditions']
@@ -112,20 +110,22 @@ class ModifyRuleById(Resource):
 @ns.doc(params = {'alerters':"alerters", 'name': "name of the rule", 'description':"description of the rule", 'conditions':"conditions", 'recon_queries':"recon_queries", 'severity':"severity", 'status':"status",'type':"type",'tactics':"tactics",'technique_id':"technique_id"})
 class AddRule(Resource):
     '''adds and returns the API response if there is any existed data for the passed rule_id'''
-    parser = requestparse(['alerters', 'name', 'description', 'conditions', 'recon_queries', 'severity', 'status', 'type', 'tactics', 'technique_id'],[list, str, str, dict, list, str, str, str, str, str],["alerters", "name of the rule", "description of the rule", "conditions", "recon_queries", "severity", 'status', 'type', 'tactics', 'technique_id'], [False, True, True, True, False, False, False, False, False, False])
+    parser = requestparse(['alerters', 'name', 'description', 'conditions', 'recon_queries', 'severity', 'status', 'type', 'tactics', 'technique_id'],[str, str, str, dict, list, str, str, str, str, str],["alerters", "name of the rule", "description of the rule", "conditions", "recon_queries", "severity", 'status', 'type', 'tactics', 'technique_id'], [False, True, True, True, False, False, False, False, False, False])
 
     @ns.expect(parser)
     def post(self):
+        from polylogyx.models import Rule
         args = self.parser.parse_args()  # need to exists for input payload validation
-        request_args = get_body_data(request)
-        args_ip = ['alerters', 'name', 'description', 'conditions', 'recon_queries', 'severity', 'status', 'type', 'tactics', 'technique_id']
-        args = debug_body_args(request_args, args_ip)
-        alerters = args['alerters']
+
+        alerters = args['alerters'].split(',')
         name = args['name']
         description = args['description']
         conditions = args['conditions']
         recon_queries = args['recon_queries']
         severity = args['severity']
+
+        if not severity: severity=Rule.INFO
+
         type_ip = args['type']
         tactics = args['tactics']
         if tactics: tactics = tactics.split(',')

@@ -19,9 +19,9 @@ _SECRET_FREEBSD=/usr/local/etc/secret.txt
 _FLAGS_FREEBSD=/usr/local/etc/osquery.flags
 _CERT_FREEBSD=/usr/local/etc/certificate.crt
 
-_OSQUERY_PKG="https://pkg.osquery.io/darwin/osquery-4.0.2.pkg"
-_OSQUERY_DEB="https://pkg.osquery.io/deb/osquery_4.0.2_1.linux.amd64.deb"
-_OSQUERY_RPM="https://pkg.osquery.io/rpm/osquery-4.0.2-1.linux.x86_64.rpm"
+_OSQUERY_PKG="darwin/osquery-4.0.2.pkg"
+_OSQUERY_DEB="linux/osquery_4.0.2_1.linux.amd64.deb"
+_OSQUERY_RPM="linux/osquery-4.0.2-1.linux.x86_64.rpm"
 
 _OSQUERY_SERVICE_LINUX="osqueryd"
 _OSQUERY_SERVICE_OSX="com.facebook.osqueryd"
@@ -33,6 +33,8 @@ _CERT=""
 _SERVICE=""
 _ACTION=""
 _LINUX_FLAVOUR=""
+_BASE_URL=""
+
 parseCLArgs(){
   port="9000"
   while [ $# -gt 0 ]
@@ -105,28 +107,28 @@ whatOS() {
 }
 
 downloadDependents() {
-  url="https://$ip:$port"
-  url="$url"/downloads/
-  echo "$url"
+  _BASE_URL="https://$ip:$port"
+  _BASE_URL="$_BASE_URL"/downloads/
+  echo "$_BASE_URL"
 
   echo "Downloading flags file, secret file, cert file for $OS os"
   if [ "$OS" = "linux" ]; then
     mkdir -p /etc/osquery
-    curl -o /etc/osquery/osquery.flags  "$url"linux/osquery.flags -k || wget -O /etc/osquery/osquery.flags "$url"linux/osquery.flags --no-check-certificate
-    curl -o /etc/osquery/secret.txt   "$url"secret.txt -k || wget -O /etc/osquery/secret.txt "$url"secret.txt --no-check-certificate
-    curl -o /etc/osquery/certificate.crt  "$url"certificate.crt -k || wget  -O /etc/osquery/certificate.crt "$url"certificate.crt --no-check-certificate 
+    curl -o /etc/osquery/osquery.flags  "$_BASE_URL"linux/osquery.flags -k || wget -O /etc/osquery/osquery.flags "$_BASE_URL"linux/osquery.flags --no-check-certificate
+    curl -o /etc/osquery/secret.txt   "$_BASE_URL"secret.txt -k || wget -O /etc/osquery/secret.txt "$_BASE_URL"secret.txt --no-check-certificate
+    curl -o /etc/osquery/certificate.crt  "$_BASE_URL"certificate.crt -k || wget  -O /etc/osquery/certificate.crt "$_BASE_URL"certificate.crt --no-check-certificate 
   fi
   if [ "$OS" = "darwin" ]; then
     mkdir -p /private/var/osquery
-    curl -o /private/var/osquery/osquery.flags  "$url"darwin/osquery.flags -k || wget -O /private/var/osquery/osquery.flags "$url"darwin/osquery.flags --no-check-certificate
-    curl -o /private/var/osquery/secret.txt  "$url"secret.txt -k|| wget -O /private/var/osquery/secret.txt "$url"secret.txt --no-check-certificate
-    curl -o /private/var/osquery/certificate.crt  "$url"certificate.crt -k || wget  -O /private/var/osquery/certificate.crt "$url"certificate.crt --no-check-certificate
+    curl -o /private/var/osquery/osquery.flags  "$_BASE_URL"darwin/osquery.flags -k || wget -O /private/var/osquery/osquery.flags "$_BASE_URL"darwin/osquery.flags --no-check-certificate
+    curl -o /private/var/osquery/secret.txt  "$_BASE_URL"secret.txt -k|| wget -O /private/var/osquery/secret.txt "$_BASE_URL"secret.txt --no-check-certificate
+    curl -o /private/var/osquery/certificate.crt  "$_BASE_URL"certificate.crt -k || wget  -O /private/var/osquery/certificate.crt "$_BASE_URL"certificate.crt --no-check-certificate
   fi
   if [ "$OS" = "freebsd" ]; then
     mkdir -p /usr/local/etc
-    curl -o /usr/local/etc/osquery.flags  "$url"freebsd/osquery.flags -k || wget -O /usr/local/etc/osquery.flags "$url"freebsd/osquery.flags --no-check-certificate
-    curl -o /usr/local/etc/secret.txt   "$url"secret.txt -k || wget -O /usr/local/etc/secret.txt "$url"secret.txt --no-check-certificate
-    curl -o /usr/local/etc/certificate.crt  "$url"certificate.crt -k || wget  -O /usr/local/etc/certificate.crt "$url"certificate.crt --no-check-certificate
+    curl -o /usr/local/etc/osquery.flags  "$_BASE_URL"freebsd/osquery.flags -k || wget -O /usr/local/etc/osquery.flags "$_BASE_URL"freebsd/osquery.flags --no-check-certificate
+    curl -o /usr/local/etc/secret.txt   "$_BASE_URL"secret.txt -k || wget -O /usr/local/etc/secret.txt "$_BASE_URL"secret.txt --no-check-certificate
+    curl -o /usr/local/etc/certificate.crt  "$_BASE_URL"certificate.crt -k || wget  -O /usr/local/etc/certificate.crt "$_BASE_URL"certificate.crt --no-check-certificate
   fi
 }
 
@@ -141,21 +143,25 @@ log() {
 }
 
 installOsquery() {
+  _OSQUERY_RPM="$_BASE_URL$_OSQUERY_RPM"
+  _OSQUERY_DEB="$_BASE_URL$_OSQUERY_DEB"
+  _OSQUERY_PKG="$_BASE_URL$_OSQUERY_PKG"
+  echo $_OSQUERY_PKG
   log "Installing osquery for $OS"
   if [ "$OS" = "linux" ]; then
     if [ $_LINUX_FLAVOUR = "rpm" ]; then
-      _RPM="$(echo $_OSQUERY_RPM | cut -d"/" -f5)"
-      sudo curl -# "$_OSQUERY_RPM" -o "/tmp/$_RPM"
+      _RPM="$(echo $_OSQUERY_RPM | cut -d"/" -f6)"
+      sudo curl -# "$_OSQUERY_RPM" -o "/tmp/$_RPM" -k
       sudo rpm -ivh "/tmp/$_RPM"
     else
-      _DEB="$(echo $_OSQUERY_DEB | cut -d"/" -f5)"
-      sudo curl -# "$_OSQUERY_DEB" -o "/tmp/$_DEB"
+      _DEB="$(echo $_OSQUERY_DEB | cut -d"/" -f6)"
+      sudo curl -# "$_OSQUERY_DEB" -o "/tmp/$_DEB" -k
       sudo dpkg -i "/tmp/$_DEB"
     fi
   fi
   if [ "$OS" = "darwin" ]; then
-    _PKG="$(echo $_OSQUERY_PKG | cut -d"/" -f5)"
-    sudo curl -# "$_OSQUERY_PKG" -o "/tmp/$_PKG"
+    _PKG="$(echo $_OSQUERY_PKG | cut -d"/" -f6)"
+    sudo curl -# "$_OSQUERY_PKG" -o "/tmp/$_PKG" -k
     sudo installer -pkg "/tmp/$_PKG" -target /
   fi
   if [ "$OS" = "freebsd" ]; then
@@ -343,6 +349,4 @@ whatOS
 set -e
 parseCLArgs "$@"
 
-
 # EOF
-

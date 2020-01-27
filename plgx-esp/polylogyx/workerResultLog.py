@@ -7,7 +7,7 @@ import threading
 
 app = create_app(config=CurrentConfig)
 
-thread_count = 2
+thread_count = 1
 for i in range(thread_count):
     t = threading.Thread(target=pull_and_match_with_rules)
     t.start()

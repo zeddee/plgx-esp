@@ -39,11 +39,9 @@ PolyLogyx - Hunt
       </div>
       <div class="kt-portlet__head-toolbar">
         <div class="kt-portlet__head-wrapper">
-          <div class="">
-            <a href="javascript:void(0);" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
-              <i class="fas fa-chevron-left"></i>
-              Back
-            </a>
+          <div style="cursor: pointer;" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+            <i class="fas fa-chevron-left"></i>
+            Back
           </div>
         </div>
       </div>
@@ -72,10 +70,10 @@ PolyLogyx - Hunt
 
             <div class="form-group row">
               <div class="col-5 col-form-label">
-                <h6>Upload indicators using file separated by newline:</h6>
+                <h6>Upload indicators using file, separated by newline to search across the entire collected endpoint data:</h6>
               </div>
               <div class="col-5 col-form-label">
-                <input type="file" class="custom-input-file" name="indicator_file" id="">
+                <input type="file" class="custom-input-file" name="indicator_file" id="indicator_file_{{ key }}">
               </div>
               <div class="col-2">
                 <button type="submit" class="btn btn-primary submit"  >
@@ -118,14 +116,21 @@ PolyLogyx - Hunt
     function isEmpty(str) {
         return (!str || 0 === str.length);
     }
+    var indicators={};
 
-    var list_indicators = [];
+
     $.fn.dataTable.ext.errMode = 'none';
     $(document).ready(function () {
 
         $(function () {
             if (window.FileReader) {
                 $("input[name*='indicator_file']").on('change', function (fileLoadedEvent) {
+                     var list_indicators = [];
+                    var indicator_name =fileLoadedEvent.target.id.split('indicator_file_')[1];
+                    console.log(indicator_name);
+                    if(indicator_name in indicators){
+                            indicators[indicator_name].splice(0,indicators[indicator_name].length);
+                    }
                     var file = fileLoadedEvent.target.files[0];
                     var reader = new FileReader();
                     reader.onload = function (fileLoadedEvent) {
@@ -134,14 +139,16 @@ PolyLogyx - Hunt
                         if (textFromFileLoaded.match(/[^\u0000-\u007f]/)) {
                             alert('ERROR: non-ASCII file "' + file.name + '"');
                         } else {
-                            var lines = textFromFileLoaded.split('\n');
+                            var lines = textFromFileLoaded.split(/\r?\n/);
                             for (var line = 0; line < lines.length; line++) {
                                 if (!isEmpty(lines[line])) {
-                                    list_indicators.push(lines[line]);
+                                    list_indicators.push(lines[line].trim());
                                 }
                             }
+                            indicators[indicator_name]=list_indicators;
                         }
                     }
+
                     reader.readAsText(file);
                 });
             } else {
@@ -152,19 +159,22 @@ PolyLogyx - Hunt
 
 
         $(".submit").click(function (event) {
-
             event.preventDefault();
 
             var submit_btn = $(event.target);
             var form_id = submit_btn.parents('form').prop('id');
             var search_column = document.getElementById(form_id).elements["search_column"].value;
-
+            var list_indicators=[];
+            if (search_column in indicators){
+                list_indicators=indicators[search_column];
+            }
             var form = $('#' + form_id)[0];
 
 
             var form_data = new FormData(form);
             form_data.append('csrf_token', '{{csrf_token()}}');
             form_data.append('indicators', list_indicators);
+            console.log(list_indicators);
             if (list_indicators.length == 0) {
                 alert('No valid indicators provided')
                 return

@@ -5,6 +5,27 @@ PolyLogyx - Carves
 
 {% block content %}
 
+<style type="text/css">
+  .info-icon {
+    padding: 5px;
+  }
+  .badge-light {
+    color: #212529;
+    background-color: #f8f9fa;
+  }
+  .badge-light:focus, .badge-light:hover {
+    color: #518c24;
+    text-decoration: none;
+    background-color: #dae0e5;
+  }
+  .txt-clr{
+    color: indianred;
+    text-align: center;
+    /* margin-bottom: 0px; */
+    font-weight: 400;
+  }
+</style>
+
 <!-- begin:: Content -->
 <div class="kt-content  kt-grid__item kt-grid__item--fluid" id="kt_content">
   <div class="row">
@@ -20,13 +41,20 @@ PolyLogyx - Carves
             <h3 class="kt-portlet__head-title">
               Carves
             </h3>
+            <!--begin::Info/Section-->
+            <div class="info-icon">
+              <a href="javascript:void(0);" tabindex="0" class="popover-dismiss" role="button" data-toggle="popover" data-trigger="focus" title="" data-content="Send a live query for a file acquisition from endpoint. Eg: select * from carves where path like '/some/path/%' and carve=1;">
+                <span class="badge badge-pill badge-light fa fa-info" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="info"> </span>
+              </a>
+            </div>
+            <!--end::Info/Section-->
           </div>
           <div class="kt-portlet__head-toolbar">
             <div class="kt-portlet__head-wrapper">
-              <a href="javascript:void(0);" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+              <div style="cursor: pointer;" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
                 <i class="fas fa-chevron-left"></i>
                 Back
-              </a>
+              </div>
             </div>
           </div>
         </div>
@@ -41,7 +69,7 @@ PolyLogyx - Carves
               <div class="col-xl-10">
                 <div class="kt-section kt-section--first">
                   <div class="kt-section__body">
-                    <p>No files acquired. Please send a live query for file acquisition from endpoint. Eg: <b>select * from carves where path like '/some/path/%' and carve=1;</b></p>
+                    <p class="txt-clr">No files acquired.</p>
 
                   </div>
                 </div>
@@ -59,11 +87,16 @@ PolyLogyx - Carves
   </div>
 </div>
 <!-- end:: Content -->
+
 <script type="text/javascript">
-    var divs = document.querySelectorAll('ul');
-for (var i = 0; i < divs.length; i++) {
-    divs[i].classList.add('justify-content-center');
-}
+  var divs = document.querySelectorAll('ul');
+    for (var i = 0; i < divs.length; i++) {
+        divs[i].classList.add('justify-content-center');
+    }
+
+    $('.popover-dismiss').popover({
+      trigger: 'focus'
+    })
 
 </script>
 {% endblock %}

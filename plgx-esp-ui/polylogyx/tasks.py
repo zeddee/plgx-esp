@@ -8,7 +8,7 @@ from flask import current_app, json
 from kombu import Exchange,Queue
 
 from polylogyx.models import Settings, AlertEmail, \
-    Node, EmailRecipient, ResultLog
+    Node, EmailRecipient, ResultLog,StatusLog
 
 celery = Celery(__name__)
 default_exchange = Exchange('default', type='direct')
@@ -172,6 +172,8 @@ def purge_old_data():
         if delete_setting and int(delete_setting.setting) > 0:
             since = dt.datetime.now() - dt.timedelta(hours=24 * int(delete_setting.setting))
             ResultLog.query.filter(ResultLog.timestamp < since).delete()
+            StatusLog.query.filter(StatusLog.created < since).delete()
+
             db.session.commit()
             current_app.logger.info("Deleting data old more than : " + delete_setting.setting)
         else:

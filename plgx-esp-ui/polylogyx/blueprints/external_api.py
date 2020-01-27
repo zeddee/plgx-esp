@@ -6,7 +6,7 @@ from flask.json import jsonify
 from flask_restplus import Api
 
 from polylogyx.models import User, HandlingToken
-from polylogyx.blueprints import (nodes,distributed,tags,alerts,packs,queries,schema,rules,carves,yara,iocs,common,email)
+from polylogyx.blueprints import (nodes,distributed,configs,tags,alerts,packs,queries,schema,rules,carves,yara,iocs,common,email)
 from polylogyx.utils import require_api_key
 from .utils import *
 
@@ -25,6 +25,7 @@ api = Api(blueprint,
 #adds namespaces to the api
 api.add_namespace(nodes.ns)
 api.add_namespace(tags.ns)
+api.add_namespace(configs.ns)
 api.add_namespace(alerts.ns)
 api.add_namespace(packs.ns)
 api.add_namespace(queries.ns)

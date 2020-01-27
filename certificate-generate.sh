@@ -1,32 +1,26 @@
-touch "$(dirname "$(pwd)")"/.rnd
+#!/bin/bash
+if [ "$(whoami &2>/dev/null)" != "root" ] && [ "$(id -un &2>/dev/null)" != "root" ]
+    then
+    path="$(dirname "$(pwd)")"/.rnd
+else
+    root_path="/root/.rnd"
+    path="$(dirname "$(pwd)")"/.rnd
+fi
+
+touch $path $root_path
 a=$1
 echo $a
 if [ -e nginx/private.key ]
 then
     echo "Certificate already exists. Please remove the existing certificates and then try again"
 else
-        openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout nginx/private.key -out nginx/certificate.crt -subj '/CN='$a'/O=PolyLogyx LLC./C=US'
+    openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout nginx/private.key -out nginx/certificate.crt -subj '/CN='$a'/O=PolyLogyx LLC./C=US'
 fi
+# Setting tls_hostname as the provided ip address while generating certs
 
-sed  's/tls_hostname=.*/tls_hostname='"$a"':9000/g' resources/osquery.flags > resources/osquery.flags1
-sed  's/tls_hostname=.*/tls_hostname='"$a"':9000/g' resources/osquery_linux.flags > resources/osquery_linux.flags1
-sed  's/tls_hostname=.*/tls_hostname='"$a"':9000/g' resources/linux/osquery.flags > resources/linux/osquery.flags1
-sed  's/tls_hostname=.*/tls_hostname='"$a"':9000/g' resources/freebsd/osquery.flags > resources/freebsd/osquery.flags1
-sed  's/tls_hostname=.*/tls_hostname='"$a"':9000/g' resources/darwin/osquery.flags > resources/darwin/osquery.flags1
-
-rm -rf resources/osquery.flags
-mv resources/osquery.flags1 resources/osquery.flags
-
-rm -rf resources/osquery_linux.flags
-mv resources/osquery_linux.flags1 resources/osquery_linux.flags
-
-rm -rf resources/linux/osquery.flags
-mv resources/linux/osquery.flags1 resources/linux/osquery.flags
-
-rm -rf resources/darwin/osquery.flags
-mv resources/darwin/osquery.flags1 resources/darwin/osquery.flags
-
-rm -rf resources/freebsd/osquery.flags
-mv resources/freebsd/osquery.flags1 resources/freebsd/osquery.flags
-
-rm -rf "$(dirname "$(pwd)")"/.rnd
+for i in $(find $PWD -type  f -name \*.flags); do # Not recommended, will break on whitespace
+    sed  's/tls_hostname=.*/tls_hostname='"$a"':9000/g' $i > "${1}_copy"
+    rm -rf $i
+    mv "${1}_copy" $i
+done
+rm -rf $path $root_path

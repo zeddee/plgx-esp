@@ -8,10 +8,8 @@ import threading
 from os.path import abspath, dirname, join
 
 import pika
-import werkzeug.serving
 
-import sqlalchemy
-from flask import current_app, json
+from flask import current_app
 from flask_assets import ManageAssets
 from flask_migrate import MigrateCommand
 from flask_script import Command, Manager, Server, Shell
@@ -21,19 +19,14 @@ from flask_sockets import Sockets
 
 from polylogyx import create_app, db
 from polylogyx.assets import assets
-from polylogyx.models import Settings, ThreatIntelCredentials
+from polylogyx.models import  ThreatIntelCredentials
 from polylogyx.settings import CurrentConfig, RABBITMQ_HOST
-from polylogyx.constants import websockets, clients
-
-
 import time
+
 import socketio
 
 from polylogyx.utils import validate_osquery_query
-# import gevent.monkey
-# gevent.monkey.patch_all()
-# from urllib3.util.ssl_ import create_urllib3_context
-# create_urllib3_context()
+
 constant_file_event = 'win_file_events'
 constant_process_event = 'win_process_events'
 
@@ -161,22 +154,15 @@ def add_api_key(IBMxForceKey, IBMxForcePass, VT_API_KEY):
 def echo_socket(ws):
     while not ws.closed:
         message = str(ws.receive())
-        if ws.closed:
-            try:
-                close_queue(websockets[ws])
-            except:
-                print('redis channel is not opened yet')
-        else:
-            websockets[ws] = message
-            declare_queue(message)
+        if not  ws.closed:
+            declare_queue(message,ws,None)
             ws.send('Fetching results for query with query id : ' + message)
 
 
 @sio.on('message', namespace='/test')
 def message(sid, message):
     print(' mapping query ' + str(message) + ' to session ' + str(sid))
-    clients[int(message)] = sid
-    declare_queue(message)
+    declare_queue(message,None,sid)
 
 
 @sio.on('disconnect request', namespace='/test')
@@ -192,9 +178,9 @@ def test_connect(sid, environ):
 @sio.on('disconnect', namespace='/test')
 def test_disconnect(sidDisconnected):
     room = sidDisconnected
-    for dqid, sid in clients.items():
-        if sid == room:
-            close_queue(dqid)
+    # for dqid, sid in clients.items():
+    #     if sid == room:
+    #         close_queue(dqid)
     with app.app_context():
         try:
             leave_room(room)
@@ -203,52 +189,59 @@ def test_disconnect(sidDisconnected):
         print('Client disconnected')
 
 
-def get_key_by_value(list, queryIdStr):
-    for ws, queryId in list.items():
-        if str(queryIdStr) == queryId:
-            return ws
-    return None
-
-
-def push_results_to_websocket(resultstr, queryId):
-    from polylogyx.constants import clients
-
+def push_results_to_websocket(resultstr, queryId,ws,sid):
     with app.app_context():
 
         try:
             results = ast.literal_eval(str(resultstr.decode("utf-8")))
-            try:
+            if ws:
                 try:
-                    ws = get_key_by_value(websockets, str(queryId))
                     ws.send(resultstr)
+                except:
+                    current_app.logger.info('Websocket connection closed.')
+            elif sid:
+                try:
+                    sio.emit('message', results, room=sid,
+                             namespace='/test')
                 except:
                     current_app.logger.info('Websocket connection closed. Sending over ui')
 
-                sio.emit('message', results, room=clients[int(queryId)],
-                         namespace='/test')
+
                 current_app.logger.info('sending message to session ' + ' for distributed query ' + str(
                     queryId))
-            except:
-                current_app.logger.warn("Socket closed for query id : " + str(queryId))
-
         except:
             current_app.logger.error('Error parsing results')
 
 
-def declare_queue(distributedQueryId):
-    client = ConsumerThread( int(distributedQueryId))
-    client.start()
+def declare_queue(distributedQueryId,ws,sid):
 
+    client = ConsumerThread( int(distributedQueryId),ws,sid)
+    try:
+        client.start()
+    except Exception as e:
+        current_app.logger.error(e)
 
 class ConsumerThread(threading.Thread):
-    def __init__(self,query_id, *args, **kwargs):
+    def __init__(self,query_id,ws,sid, *args, **kwargs):
         super(ConsumerThread, self).__init__(*args, **kwargs)
+        self._is_interrupted = False
 
         self._query_id = str(query_id)
+        self.ws = ws
+        self.sid = sid
+        self.max_wait_time=60*10
+        self.inactivity_timeout=30
+        self.current_time_elapsed=0
+
+
+        self.query_string="live_query_"+str(self._query_id)
+
+    def stop(self):
+        self._is_interrupted = True
 
     # Not necessarily a method.
     def callback_func(self, channel, method, properties, body):
-        push_results_to_websocket(body, self._query_id)
+        push_results_to_websocket(body, self._query_id,self.ws,self.sid)
 
         print("{} received '{}'".format(self._query_id, body))
 
@@ -258,19 +251,39 @@ class ConsumerThread(threading.Thread):
         connection = pika.BlockingConnection(pika.ConnectionParameters(
             host=RABBITMQ_HOST, credentials=credentials))
         channel = connection.channel()
-        channel.exchange_declare(exchange=self._query_id)
+        channel.exchange_declare(exchange=self.query_string)
 
-        result = channel.queue_declare(queue=self._query_id, exclusive=True, arguments={'x-message-ttl': 1000000,'x-expires':300000})
+        result = channel.queue_declare(queue=self.query_string, exclusive=True,
+                                       arguments={'x-message-ttl': self.max_wait_time * 1000,
+                                                  'x-expires': self.max_wait_time * 1000})
         queue_name = result.method.queue
 
-        channel.queue_bind(exchange=self._query_id, queue=queue_name)
+        channel.queue_bind(exchange=self.query_string, queue=queue_name)
 
+        try:
+            for message in channel.consume(self.query_string, inactivity_timeout=self.inactivity_timeout):
 
-        channel.basic_consume(self.callback_func,
-                              result.method.queue,
-                              no_ack=True)
+                method, properties, body = message
+                if not body:
+                    self.current_time_elapsed += self.inactivity_timeout
+                    if self.current_time_elapsed >= self.max_wait_time:
+                        channel.stop_consuming()
+                        connection.close()
+                    continue
 
-        channel.start_consuming()
+                self.callback_func(channel, method, properties, body)
+                print(body)
+        except pika.exceptions.ConnectionClosed as e:
+            channel.stop_consuming()
+            connection.close()
+
+            print('Connection already closed {0}'.format(self.query_string))
+        except pika.exceptions.ChannelClosed as e:
+            channel.stop_consuming()
+            connection.close()
+
+            print('Channel already closed {0}'.format(self.query_string))
+        print('Exiting thread for query id : {}'.format(self._query_id))
 
 
 def close_queue(distributedQueryId):
@@ -284,34 +297,4 @@ def close_queue(distributedQueryId):
 
 if __name__ == '__main__':
     manager.run()
-
-# class Listener(threading.Thread):
-#     def __init__(self, r, channel):
-#         threading.Thread.__init__(self, name=channel)
-#         self.redis = r
-#         self.channel = channel
-#         self.pubsub = self.redis.pubsub(ignore_subscribe_messages=True)
-#         self.pubsub.subscribe(channel)
-#
-#     def send_over_socket(self, results):
-#         push_results_to_websocket(results, self.channel)
-#         print (self.channel, ":", 'Received data')
-#
-#     def run(self):
-#         current_pull=0
-#         self.pop_and_push(time.time() + 60 * 10,current_pull)
-#
-#     def pop_and_push(self, timeout,current_pull):
-#         if time.time() > timeout:
-#             return ''
-#         message = r.lpop(self.channel)
-#         current_pull=current_pull+1
-#         if message and current_pull<=50:
-#             self.send_over_socket(message)
-#             self.pop_and_push(timeout,current_pull)
-#         else:
-#             time.sleep(5)
-#             current_pull=0
-#             self.pop_and_push(timeout,current_pull)
-
 

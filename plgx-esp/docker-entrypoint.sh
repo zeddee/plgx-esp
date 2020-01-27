@@ -59,8 +59,8 @@ exec `tmux new-session -d -s flower`
 CORES="$(nproc --all)"
 echo "CPU cores are $CORES"
 WORKERS=$(( 2*CORES  ))
-WORKERS_CELERY=$(( 8*CORES  ))
-WORKERS_REDIS=$(( 2*CORES  ))
+WORKERS_CELERY=$(( 2*CORES  ))
+
 
 echo "Creating DB schema..."
 python manage.py db upgrade
@@ -73,16 +73,18 @@ exec `tmux send -t plgx_celery 'python manage.py add_default_config default_conf
 exec `tmux send -t plgx_celery 'python manage.py add_default_config default_config_linux --filepath default_data/default_configs/default_config_linux.conf --platform linux' ENTER`
 exec `tmux send -t plgx_celery 'python manage.py add_default_config default_config_freebsd --filepath default_data/default_configs/default_config_freebsd.conf --platform freebsd' ENTER`
 exec `tmux send -t plgx_celery 'python manage.py add_default_options' ENTER`
-echo "Adding default filters..."
 
+echo "Adding default filters..."
 exec `tmux send -t plgx_celery 'python manage.py add_default_filters --filepath default_data/default_filters/default_filter_linux.conf --platform linux' ENTER`
 exec `tmux send -t plgx_celery 'python manage.py add_default_filters --filepath default_data/default_filters/default_filter_macos.conf --platform darwin' ENTER`
 exec `tmux send -t plgx_celery 'python manage.py add_default_filters --filepath default_data/default_filters/default_filter_windows.conf --platform windows' ENTER`
-echo "Adding default queries..."
+exec `tmux send -t plgx_celery 'python manage.py add_default_filters --filepath default_data/default_filters/default_filter_windows_x86.conf --platform windows --arch x86' ENTER`
 
+echo "Adding default queries..."
 exec `tmux send -t plgx_celery 'python manage.py add_default_queries --filepath default_data/default_queries/default_queries_linux.conf --platform linux' ENTER`
 exec `tmux send -t plgx_celery 'python manage.py add_default_queries --filepath default_data/default_queries/default_queries_macos.conf --platform darwin' ENTER`
 exec `tmux send -t plgx_celery 'python manage.py add_default_queries --filepath default_data/default_queries/default_queries_windows.conf --platform windows' ENTER`
+exec `tmux send -t plgx_celery 'python manage.py add_default_queries --filepath default_data/default_queries/default_queries_windows_x86.conf --arch x86 --platform windows' ENTER`
 
 
 echo "Adding default mitre rules..."
@@ -119,7 +121,7 @@ else
   echo "Setting auto database purge duration..."
   exec `tmux send -t plgx_celery 'python manage.py delete_historical_data --purge_data_duration '"$PURGE_DATA_DURATION" ENTER`
 fi
-exec `tmux send -t plgx_celery "celery worker -A polylogyx.worker:celery --concurrency=$WORKERS_CELERY -Q default_queue_tasks --max-memory-per-child=250000 -l INFO &" ENTER`
+exec `tmux send -t plgx_celery "celery worker -A polylogyx.worker:celery --concurrency=$WORKERS_CELERY -Q default_queue_tasks -l INFO &" ENTER`
 
 echo "Sever is up and running.."
 exec `tmux send -t flower "flower -A polylogyx.worker:celery --address=0.0.0.0  --broker_api=http://guest:guest@$RABBITMQ_URL:5672/api --basic_auth=$POLYLOGYX_USER:$POLYLOGYX_PASSWORD" ENTER`

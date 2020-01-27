@@ -2,8 +2,10 @@
     <thead>
     <th>Host</th>
     <th>Session</th>
+    <th>Carve Size</th>
+
     <th>File</th>
-        <th>Blocks Acquired</th>
+    <th>Blocks Acquired</th>
 
     <th>Status</th>
     <th>Created At</th>
@@ -19,6 +21,8 @@
         <td>
             <code>{{ carve.session_id }}</code>
 
+        </td>
+        <td>{{ carve.carve_size }}
         </td>
         <td>
            {% if carve.archive  %}

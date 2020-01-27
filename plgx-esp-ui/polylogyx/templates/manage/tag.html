@@ -4,6 +4,67 @@ PolyLogyx - Tag
 {% endblock %}
 
 {% block content %}
+<style>
+ .right-content-conf {
+   border-left: 0px dotted lightgray;
+ }
+  .txt-clr{
+    color: indianred;
+    text-align: center;
+    /* margin-bottom: 0px; */
+    font-weight: 400;
+  }
+  .kt-notification .conf-div .active {
+    background-color: #f7f8fa;
+  }
+  .no-mar-botom{
+    margin-bottom: 0px;
+  }
+  .desc-background-query {
+    font-size: 100%;
+    color: #e83e8c;
+    word-break: break-word;
+    font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  }
+  .head-table {
+    font-weight: 600 !important;
+  }
+  .portlet-body_align {
+    height: 680px;
+    margin-bottom:0px;
+    border: 15px solid #ebedf2;
+    padding: 10px;
+  }
+  .portlet-body_align__table {
+    margin-bottom:0px;
+    border: 15px solid #ebedf2;
+  }
+  .style-accordion-background {
+    height: 50px;
+    padding: 15px;
+    cursor: pointer;
+    background-image: linear-gradient(to right, #b8bccc , #ffffff)!important;
+    color: #282829;
+    font-size: 15px;
+    font-family: monospace;
+  }
+  .desc-background_packs {
+    font-size: 100%;
+    color: #e83e8c;
+    word-break: break-word;
+    font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  }
+  .right-conf {
+    display: none;
+  }
+  .right-conf-query {
+    display: none;
+  }
+  .show {
+    display: block;
+  }
+
+</style>
 <!-- begin:: Content -->
 <div class="kt-content  kt-grid__item kt-grid__item--fluid" id="kt_content">
 
@@ -19,74 +80,330 @@ PolyLogyx - Tag
       </div>
       <div class="kt-portlet__head-toolbar">
         <div class="kt-portlet__head-wrapper">
-          <a href="javascript:void(0);" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+          <div style="cursor: pointer;" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
             <i class="fas fa-chevron-left"></i>
             Back
-          </a>
+          </div>
         </div>
       </div>
     </div>
-    <div class="">
+    <div class="kt-portlet__body">
 
       <!--begin: Tag -->
       {% if tag is defined %}
-      <div class="kt-portlet__body">
-      <h2>Nodes Tagged <strong>{{ tag.value }}</strong></h2>
+      <div class="kt-portlet">
+        <div class="kt-portlet__body">
+        <h2>Hosts Tagged <strong>{{ tag.value }}</strong></h2>
 
-      {% set nodes = tag.nodes %}
-      {% if nodes %}
-      {% include "tables/tagged_nodes.html" %}
-      {% else %}
-      <p>No nodes.</p>
-      {% endif %}
+        {% set nodes = tag.nodes %}
+        {% if nodes %}
+        {% include "tables/tagged_nodes.html" %}
+        {% else %}
+        <p class="txt-clr">No hosts.</p>
+        {% endif %}
+        </div>
       </div>
-      <div class="kt-portlet__body">
-      <h2>Packs Tagged <strong>{{ tag.value }}</strong></h2>
-
+      <div class="">
       {% set packs = tag.packs %}
-      {% if packs %}
-      {% include "tables/packs.html" %}
-      {% else %}
-      <p>No packs.</p>
-      {% endif %}
+      <!--begin:: Packs -->
+      <div class="kt-portlet">
+        <div class="kt-portlet__body">
+          <h2>Packs Tagged <strong>{{ tag.value }}</strong></h2>
+          {% if packs %}
+         <!--Begin:: Content/Packs -->
+         <div class="row">
+           <div class="col-md-4">
+           <!--begin::Portlet-->
+           <div class="kt-portlet no-mar-botom portlet-body_align">
+             <div class="kt-portlet__body" style="padding: 0px;">
+               <!--begin: Search Table -->
+               <div class="">
+                 <div class="kt-input-icon kt-input-icon--left" style="margin-bottom: 10px;">
+                   <input type="text" class="form-control" placeholder="Search Packs here..." id="search_pack_query_name">
+                   <span class="kt-input-icon__icon kt-input-icon__icon--left">
+                     <span><i class="la la-search"></i></span>
+                   </span>
+                 </div>
+               </div>
+               <!--end: Search Table -->
+               <div class="" style="height: 565px; overflow-x: scroll;margin-bottom:25px;">
+                 {% for grouper, results in packs | groupby('category') %}
+                   <div class="">
+                     <h3>{{grouper}}</h3>
+                     <!--begin::Notifications-->
+                       {% for pack in results | sort (attribute='name') %}
+                       <div class="kt-notification conf-div" id="search_query-name-list" style="cursor:pointer;" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="{{pack.name}}">
+                         <a data-target="{{pack.name}}" class="kt-notification__item conf-link">
+                           <!-- <div class="kt-notification__item-icon">
+                             <i class="fa conf-icon {{pack.pack_icon()}}"></i>
+                           </div> -->
+                           <div class="kt-notification__item-details">
+                             <div class="kt-notification__item-title">
+                               {{ pack.name }}
+                             </div>
+                           </div>
+                         </a>
+                       </div>
+                       {% endfor %}
+                     <!--End::Notifications-->
+                   </div>
+                 {% endfor %}
+               </div>
+
+             </div>
+           </div>
+           <!--end::Portlet-->
+           </div>
+           <!-- <div class="kt-separator"></div> -->
+           <div class="col-md-8 right-content-conf">
+             <!--begin::Portlet-->
+             {% if packs %}
+             {% for pack in packs | sort (attribute='name') %}
+             <div class="right-conf kt-portlet no-mar-botom portlet-body_align__table" id="{{pack.name}}">
+               <div class="kt-portlet__head">
+                 <div class="kt-portlet__head-label">
+                   <span class="kt-portlet__head-icon">
+
+                   </span>
+                   <h3 class="kt-portlet__head-title">
+                     {{pack.name}}
+                   </h3>
+                 </div>
+               </div>
+               <div class="kt-portlet__body" style="padding:10px;">
+                 <input class="bootstrap-tagsinput" placeholder="Add tags here..." value="{{ pack.tags | map(attribute='value') | sort | join(',') }}" data-uri="{{ url_for('manage.tag_pack', pack_name=pack.name) }}">
+               </div>
+               <div class="kt-portlet__body" style="height: 528px; overflow-x:scroll; padding:1.25rem; margin-bottom:20px;">
+                 <div class="accordion accordion-solid" id="accordion-{{pack.id}}">
+                   {% for query in pack.queries | sort(attribute='name') %}
+                   {% include "_pack_query.html" %}
+                   {% endfor %}
+                 </div>
+               </div>
+             </div>
+             {% endfor %}
+             {% endif %}
+             <!--end::Portlet-->
+           </div>
+         </div>
+         <!--end:: Content/Packs -->
+          {% else %}
+          <p class="txt-clr">No packs currently associated with this Tag. Use the tag functionality to associate hosts with packs.</p>
+          {% endif %}
+        </div>
       </div>
-      <div class="kt-portlet__body">
-      <h2>Queries Tagged <strong>{{ tag.value }}</strong></h2>
+      <!--End:: Packs -->
+      </div>
+      <div class="">
 
       {% set queries = tag.queries %}
-      {% if queries %}
-      {% include "tables/queries.html" %}
-      {% else %}
-      <p>No queries.</p>
-      {% endif %}
+      <!--Begin:: Query -->
+      <div class="kt-portlet">
+        <div class="kt-portlet__body">
+          <h2>Queries Tagged <strong>{{ tag.value }}</strong></h2>
+          {% if queries %}
+           <!--Begin:: Content/Queries -->
+           <div class="kt-content">
+             <div class="row">
+               <div class="col-md-4">
+                 <!--begin::Portlet-->
+                 <div class="kt-portlet no-mar-botom portlet-body_align">
+                   <div class="kt-portlet__body" style="padding: 0px;">
+                     <!--begin: Search Table -->
+                     <div class="">
+                       <div class="kt-input-icon kt-input-icon--left" style="margin-bottom: 10px;">
+                         <input type="text" class="form-control" placeholder="Search Queries here..." id="search_pack_query_name">
+                         <span class="kt-input-icon__icon kt-input-icon__icon--left">
+                           <span><i class="la la-search"></i></span>
+                         </span>
+                       </div>
+                     </div>
+                     <!--end: Search Table -->
+
+                     <!--begin::Notifications-->
+                     <div class=""  style="height: 565px; overflow-x:scroll; margin-bottom:25px;">
+                       {% for query in queries | sort (attribute='name') %}
+                         <div class="kt-notification conf-div" id="search_query-name-list" style="cursor:pointer; " data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="{{query.name}}">
+                           <a data-target="{{query.id}}" class="kt-notification__item conf-link-query">
+                             <div class="kt-notification__item-icon">
+                               <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                                 <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                   <rect id="bound" x="0" y="0" width="24" height="24" />
+                                   <path
+                                     d="M10.5,5 L20.5,5 C21.3284271,5 22,5.67157288 22,6.5 L22,9.5 C22,10.3284271 21.3284271,11 20.5,11 L10.5,11 C9.67157288,11 9,10.3284271 9,9.5 L9,6.5 C9,5.67157288 9.67157288,5 10.5,5 Z M10.5,13 L20.5,13 C21.3284271,13 22,13.6715729 22,14.5 L22,17.5 C22,18.3284271 21.3284271,19 20.5,19 L10.5,19 C9.67157288,19 9,18.3284271 9,17.5 L9,14.5 C9,13.6715729 9.67157288,13 10.5,13 Z"
+                                     id="Combined-Shape" fill="#000000" />
+                                   <rect id="Rectangle-7-Copy-2" fill="#000000" opacity="0.3" x="2" y="5" width="5" height="14" rx="1" />
+                                 </g>
+                               </svg>
+                             </div>
+                             <div class="kt-notification__item-details">
+                               <div class="kt-notification__item-title">
+                                 {{query.name}}
+                               </div>
+                             </div>
+                           </a>
+                         </div>
+                       {% endfor %}
+                     </div>
+                     <!--End::Notifications-->
+
+                   </div>
+                 </div>
+                 <!--end::Portlet-->
+               </div>
+               <div class="col-md-8">
+                 <!--begin::Portlet-->
+                 {% for query in queries %}
+                   <div  class="right-conf-query kt-portlet no-mar-botom portlet-body_align__table" id="{{query.id}}">
+                     <div class="kt-portlet__head">
+                      <div class="kt-portlet__head-label">
+                        <span class="kt-portlet__head-icon">
+                           <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
+                             <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                               <rect id="bound" x="0" y="0" width="24" height="24" />
+                               <path
+                                 d="M10.5,5 L20.5,5 C21.3284271,5 22,5.67157288 22,6.5 L22,9.5 C22,10.3284271 21.3284271,11 20.5,11 L10.5,11 C9.67157288,11 9,10.3284271 9,9.5 L9,6.5 C9,5.67157288 9.67157288,5 10.5,5 Z M10.5,13 L20.5,13 C21.3284271,13 22,13.6715729 22,14.5 L22,17.5 C22,18.3284271 21.3284271,19 20.5,19 L10.5,19 C9.67157288,19 9,18.3284271 9,17.5 L9,14.5 C9,13.6715729 9.67157288,13 10.5,13 Z"
+                                 id="Combined-Shape" fill="#000000" />
+                               <rect id="Rectangle-7-Copy-2" fill="#000000" opacity="0.3" x="2" y="5" width="5" height="14" rx="1" />
+                             </g>
+                           </svg>
+                        </span>
+                         <h3 class="kt-portlet__head-title">
+                           {{query.name}}
+                         </h3>
+                      </div>
+                      <div class="kt-portlet__head-toolbar">
+                        <div class="kt-portlet__head-actions">
+                          <a href="{{ url_for('manage.query', query_id=query.id) }}" class="btn btn-clean btn-sm btn-icon btn-icon-md" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Edit Query">
+                            <i class="far fa-edit"></i>
+                          </a>
+                          <!-- <a href="#" class="btn btn-clean btn-sm btn-icon btn-icon-md" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Delete Query">
+                            <i class="far fa-trash-alt"></i>
+                          </a> -->
+                          <!-- <a href="#" class="btn btn-clean btn-sm btn-icon btn-icon-md">
+                            <i class="flaticon-more-1"></i>
+                          </a> -->
+                        </div>
+                      </div>
+                    </div>
+                     <div class="right-conf-card kt-portlet__body" style="height: 565px; overflow-x:scroll; margin-bottom:25px; padding: 1.25rem;">
+                       <div id="query-{{query.id}}">
+                         <div class="">
+                           <table class="table table-striped- table-bordered table-hover table-checkable">
+                             <tbody>
+                               <tr>
+                                 <td class="head-table">Query</td>
+                                 <td class="conf-table-val">
+                                   <div class="sql hljs desc-background-query">
+                                       <span class="hljs-keyword">{{query.sql}}</span>
+                                   </div>
+                                 </td>
+                               </tr>
+                               <tr>
+                                 <td class="head-table">Interval</td>
+                                 <td class="conf-table-val">
+                                   <div class="desc-background-query">{{query.interval}}</div>
+                                 </td>
+                               </tr>
+                               <tr>
+                                 <td class="head-table">Platform</td>
+                                 <td class="conf-table-val">
+                                   <div class="desc-background-query">{{ query.platform or 'all' }}
+                                   <!-- <span class="col-md-1"></span> -->
+                                   <button class="btn btn-success btn-sm" onclick="runAdHoc({{ query.id }})">Run Live</button>
+                                   </div>
+                                 </td>
+                               </tr>
+                               <tr>
+                                 <td class="head-table">Description</td>
+                                 <td class="conf-table-val">
+                                   <span class="desc-background-query truncate_query">{{query.description}}</span>
+                                 </td>
+                               </tr>
+                               {% if query.version %}
+                               <tr>
+                                 <td class="head-table">Version</td>
+                                 <td>{{ query.version or '' }}</td>
+                               </tr>
+                               {% endif %}
+                               {% if query.value %}
+                               <tr>
+                                 <td class="head-table">Value</td>
+                                 <td>{{ query.value or '' }}</td>
+                               </tr>
+                               {% endif %}
+                               <tr>
+                                 <td class="head-table">Packs</td>
+                                 <td>
+                                   {% for _pack in query.packs %}
+                                   <span class="label">
+                                     <a href="{{ url_for('manage.packs') }}#{{ _pack.name }}">{{ _pack.name }}</a>
+                                   </span>
+                                   {% endfor %}
+                                 </td>
+                               </tr>
+                               {% if not hide_query_tags %}
+                               <tr>
+                                 <td class="head-table">Tags</td>
+                                 <td>
+                                   <input multiple class="form-control bootstrap-tagsinput active" data-role="tagsinput" placeholder="Add tags to schedule this query" value="{{ query.tags | map(attribute='value') | sort | join(',') }}" data-uri="{{ url_for('manage.tag_query', query_id=query.id) }}" >
+                                 </td>
+                               </tr>
+                               {% endif %}
+                               <tr>
+                                 <td class="head-table">Snapshot</td>
+                                 {% if query.snapshot %}
+                                   <td>{{ query.snapshot }}</td>
+                                 {% else %}
+                                   <td>False</td>
+                                 {% endif %}
+                               </tr>
+                             </tbody>
+                           </table>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 {% endfor %}
+                 <!--end::Portlet-->
+               </div>
+             </div>
+           </div>
+           <!--end:: Content/Queries -->
+          {% else %}
+          <p class="txt-clr">No Queries currently associated with this Tag. Use the tag functionality to associate hosts with Queries.</p>
+          {% endif %}
+        </div>
       </div>
-      <div class="kt-portlet__body">
-      <h2>File Paths Tagged <strong>{{ tag.value }}</strong></h2>
-
-      {% set file_paths = tag.file_paths %}
-      {% if file_paths %}
-      {% for file_path in file_paths %}
-      <h2>
-          <a href="{{ url_for('manage.file_path', file_path_id=file_path.id) }}">{{ file_path.category }}</a>
-      </h2>
-
-      <ul>
-          {% for path in file_path.get_paths() %}
-          <li>{{ path }}</li>
-          {% endfor %}
-      </ul>
-      {% endfor %}
-      {% else %}
-      <p>No files monitored.</p>
-      {% endif %}
-
-      {% else %}
-
-      <div class="">
-          {% include "forms/tag.html" %}
-
+      <!--End:: Query -->
       </div>
-      {% endif %}
+      <div class="kt-portlet">
+
+        <div class="kt-portlet__body">
+        <h2>File Paths Tagged <strong>{{ tag.value }}</strong></h2>
+
+        {% set file_paths = tag.file_paths %}
+        {% if file_paths %}
+        {% for file_path in file_paths %}
+        <h2>
+            <a href="{{ url_for('manage.file_path', file_path_id=file_path.id) }}">{{ file_path.category }}</a>
+        </h2>
+
+        <ul>
+            {% for path in file_path.get_paths() %}
+            <li>{{ path }}</li>
+            {% endfor %}
+        </ul>
+        {% endfor %}
+        {% else %}
+        <p class="txt-clr">No files monitored.</p>
+        {% endif %}
+        {% else %}
+        <div class="">
+            {% include "forms/tag.html" %}
+        </div>
+        {% endif %}
+        </div>
       </div>
       <!--end: Tag -->
     </div>
@@ -95,4 +412,37 @@ PolyLogyx - Tag
 
 <!-- end:: Content -->
 
+<script type="text/javascript">
+  $('.conf-link').on('click', function() {
+    var div_id = "#" + $(this).data('target');
+    $('.right-conf').removeClass('show');
+    $('div.conf-box').removeClass('show');
+    $(div_id).addClass('show');
+    $('.conf-box').removeClass('box-clicked');
+    $(this).find("div.conf-box").addClass('show').addClass('box-clicked');
+ });
+   $('.conf-link-query').on('click', function() {
+    var div_id = "#" + $(this).data('target');
+    $('.right-conf-query').removeClass('show');
+    $('div.conf-box').removeClass('show');
+    $(div_id).addClass('show');
+    $('.conf-box').removeClass('box-clicked');
+    $(this).find("div.conf-box").addClass('show').addClass('box-clicked');
+ });
+   $(document).ready(function() {
+
+    $(".right-conf").first().addClass('show');
+    $('.conf-box').first().addClass('box-clicked');
+    $(".right-conf-query").first().addClass('show');
+
+   });
+  $(document).ready(function(){
+    $("#search_pack_query_name").on("keyup", function() {
+      var value = $(this).val().toLowerCase();
+      $("#search_query-name-list *").filter(function() {
+        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+      });
+    });
+  });
+</script>
 {% endblock %}

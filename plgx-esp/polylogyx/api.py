@@ -62,10 +62,14 @@ def node_required(f):
             return jsonify(node_invalid=True)
 
         if not node.node_is_active():
+            current_app.logger.info(
+                "%s - Node %s came back from the dead!",
+                request.remote_addr, node_key
+            )
             send_checkin_queries(node)
             current_app.logger.info(
-                "[Checkin] Last checkin time for node : str(node.id) is  :: " + str(node.last_checkin))
-            return jsonify(node_invalid=True)
+                "[Checkin] Last checkin time for node :"+ str(node.id)+" is  :: "+ str(node.last_checkin))
+            # return jsonify(node_invalid=False)
 
         node.update(
             last_checkin=dt.datetime.utcnow(),
@@ -324,7 +328,7 @@ def logger(node=None):
             current_app.logger.error(e)
             return jsonify(node_invalid=True)
         # handle_result.delay(data, node.host_identifier, node.to_dict())
-        log_tee.handle_result(data, host_identifier=node.host_identifier)
+        log_tee.handle_result(data, host_identifier=node.host_identifier,node=node.to_dict())
         db.session.add(node)
         db.session.commit()
 
@@ -484,10 +488,10 @@ def push_live_query_results_to_websocket(results, queryId):
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         host=RABBITMQ_HOST, credentials=credentials))
     channel = connection.channel()
-
+    query_string="live_query_"+queryId
     try:
-        channel.basic_publish(exchange=queryId,
-                              routing_key=queryId,
+        channel.basic_publish(exchange=query_string,
+                              routing_key=query_string,
                               body=json.dumps(results))
     except Exception as e:
         current_app.logger.error(e)

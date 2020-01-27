@@ -9,5 +9,5 @@ def get_pack_by_id(pack_id):
 def get_pack_by_name(name):
     return Pack.query.filter(Pack.name == name).first()
 
-def add_pack(name, **data):
-    return Pack.create(name=name,category=None, **data)
+def add_pack(**data):
+    return Pack.create(**data)

@@ -14,48 +14,20 @@ PolyLogyx - Live Queries
     <div class="kt-portlet__body" style="">
       <div>
         <div style="display: none" class="alert alert-danger" id="error-alert">
-            <!-- <button type="button" class="close" data-dismiss="alert">x</button> -->
             <strong id="error_message">Error! </strong>
 
         </div>
         <div class="">
             {% include "forms/distributed_row.html" %}
         </div>
-        <!-- <div id="" class="" style="display:none; ">
-            <div class="cube-folding">
-                <span class="leaf1"></span>
-                <span class="leaf2"></span>
-                <span class="leaf3"></span>
-                <span class="leaf4"></span>
-            </div>
-            <span class="loading" id="loading_text" data-name="Loading">Getting Data..</span>
-        </div> -->
+
         <div class="kt-portlet__body" style="padding: 0px !important;">
             <div class="">
                 <h3><span id="query_name" class="badge badge-info"></span></h3>
             </div>
         </div>
         <div class="kt-portlet__body" style="padding: 0px !important;">
-          <!-- <div class="container" id="loader1">
-              <div class="row">
-                  <div class="col-md-12">
-                      <div class="loader">
-                          <div class="loader-inner">
-                              <div class="loading one"></div>
-                          </div>
-                          <div class="loader-inner">
-                              <div class="loading two"></div>
-                          </div>
-                          <div class="loader-inner">
-                              <div class="loading three"></div>
-                          </div>
-                          <div class="loader-inner">
-                              <div class="loading four"></div>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </div> -->
+
           <div class="" id="body">
             <div id="results" style=""></div>
           </div>
@@ -367,7 +339,6 @@ PolyLogyx - Live Queries
         s = Utf8Encode(s);
 
         return 'https://www.virustotal.com/#/url/' + binb2hex(core_sha256(str2binb(s), s.length * chrsz)) + '/detection';
-        // return binb2hex(core_sha256(str2binb(s), s.length * chrsz));
 
 
     }
@@ -390,27 +361,44 @@ PolyLogyx - Live Queries
 <script type="text/javascript" src="/static/assets/vendors/general/bootstrap-select/dist/js/bootstrap-select.js"></script>
 
 <script>
-   var intervalCount = 0;
-   var interval;
-   var sql='{{ sql | escapejs }}';
 
-    function change() {
-        $('#loading_text').html('Taking a little longer');
-        intervalCount++;
-        if (intervalCount == 2) {
-            clearInterval(interval);
-            $('#loader').hide();
-        }
-    }
+   var sql='{{ sql | escapejs }}';
+    var last_interval_id;
+
+    var socket;
+    var intervalID;
+   function setIntervalX(callback, delay, repetitions) {
+    var x = 0;
+     intervalID = window.setInterval(function () {
+       callback();
+
+       if (++x === repetitions) {
+           window.clearInterval(intervalID);
+           last_interval_id=intervalID
+           $('#loader').hide();
+
+       }
+    }, delay);
+}
+
+
 
     function startWebsocketConnection(queryId, totalOnlineNodes) {
-        $('#loading_text').html('Getting Data... ');
+       if( socket!=undefined){
+           socket.disconnect();
 
-        intervalCount = 0;
-        interval = setInterval(change, 30000);
-        var socket = io('/test');
+       }
+        if( intervalID!=undefined) {
+            window.clearInterval(intervalID);
+        }
+        var interval = setIntervalX(function () {
+        }, 30000, 2);
+        socket = io('/test');
         socket.on('connect', function () {
             socket.send(queryId);
+            if (socket.connected){
+                console.log("connected");
+            }
             console.log('connected and query id is ' + queryId);
         });
 

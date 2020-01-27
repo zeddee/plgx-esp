@@ -15,6 +15,9 @@ PolyLogyx - Tag
   .table-outer-remove tbody tr:hover .table-inner-remove{
       visibility:visible;
   }
+  .label {
+    padding: 0!important;
+  }
 
 </style>
 
@@ -93,11 +96,11 @@ PolyLogyx - Tag
 
       {% if tags %}
 
-      <table class="table table-hover table-checkable table-outer-remove" id="node_table">
+      <table class="table table-hover table-checkable table-bordered table-outer-remove" id="node_table">
         <thead>
           <tr>
-            <th>Tag</th>
             <th>Tags</th>
+            <th>Hosts</th>
             <th>Packs</th>
             <th>Queries</th>
             <th>Files</th>
@@ -118,7 +121,7 @@ PolyLogyx - Tag
             <td>{{ t.packs | default(0) }}</td>
             <td>{{ t.queries | default(0) }}</td>
             <td>{{ t.file_paths | default(0) }}</td>
-            <td>
+            <td style="text-align: center;">
 
               <button id="{{ tag }}"  type="button" class="btn btn-link" aria-label="Delete Tag" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Delete">
                 <span class="glyphicon glyphicon-trash fa fa-trash" aria-hidden="true" ></span>

@@ -32,21 +32,14 @@ def getResultLogsOffsetLimit(node, timestamp, action, query_name, start, limit):
                                                         ResultLog.action != action,
                                                         ResultLog.name == query_name).offset(start).limit(limit)
 
-def extendNodesByNodeKeyList(nodes, nodeKeyList):
-    return nodes.extend(
-                    Node.query.filter(or_(
-                        Node.node_key.in_(nodeKeyList), Node.host_identifier.in_(nodeKeyList))
-                    ).all()
-                )
+def extendNodesByNodeKeyList(nodeKeyList):
+    return Node.query.filter(or_(
+                        Node.node_key.in_(nodeKeyList), Node.host_identifier.in_(nodeKeyList))).all()
 
-def extendNodesByTag(nodes, tags):
-    return nodes.extend(
-                    Node.query.filter(
+def extendNodesByTag(tags):
+    return Node.query.filter(
                         Node.tags.any(
-                            Tag.value.in_(tags)
-                        )
-                    ).all()
-                )
+                            Tag.value.in_(tags))).all()
 
 def getResultLogsByHostId(node, timestamp, query_name):
     return node.result_logs.filter(ResultLog.timestamp > timestamp, ResultLog.action != 'removed', ResultLog.name == query_name)

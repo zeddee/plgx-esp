@@ -16,6 +16,7 @@ ns = Namespace('queries', description='queries related operations')
 parser = reqparse.RequestParser()
 nodes_post = parser.copy()
 
+
 @require_api_key
 @ns.route('/', endpoint = "list_queries")
 @ns.doc(params={})
@@ -29,10 +30,29 @@ class QueriesList(Resource):
         data = marshal(queryset,wrapper.query_wrapper)
         for i in range(len(data)):
             data[i]['tags'] = [tag.to_dict() for tag in queryset[i].tags]
-            data[i]['packs'] = [pack.name for pack in queryset[i].packs]
         message = "successfully fetched the queries info"
         if not data: message = "there is no data to show"
         return respcls(message,"success",data)
+
+
+@require_api_key
+@ns.route('/packs', endpoint = "list_packed_queries")
+@ns.doc(params={})
+class PackedQueriesList(Resource):
+    '''List all packed queries of the Nodes'''
+
+    @ns.marshal_with(parentwrapper.common_response_wrapper)
+    def get(self):
+        '''returns API response of list of packed queries info'''
+        queryset = dao.get_all_packed_queries()
+        data = marshal(queryset,wrapper.query_wrapper)
+        for i in range(len(data)):
+            data[i]['tags'] = [tag.to_dict() for tag in queryset[i].tags]
+            data[i]['packs'] = [pack.name for pack in queryset[i].packs]
+        message = "successfully fetched the packed queries info"
+        if not data: message = "there is no data to show"
+        return respcls(message,"success",data)
+
 
 
 @require_api_key
@@ -82,23 +102,19 @@ class AddQuery(Resource):
     '''add queries'''
     parser = requestparse(
         ['name', 'query', 'interval', 'tags', 'platform', 'version', 'description', 'value', 'snapshot'],
-        [str, str, int, list, str, str, str, str, bool],
-        ["name of the query", "query", "interval of the query", "tags of the query to add", "platform", "version",
+        [str, str, int, str, str, str, str, str, bool],
+        ["name of the query", "query", "interval of the query", "list of comma separated tags of the query to add", "platform", "version",
          "description", "value", "snapshot"],
         [True, True, True, False, False, False, False, False, False])
 
     @ns.expect(parser)
     def post(self):
         args = self.parser.parse_args()  # need to exists for input payload validation
-        args = get_body_data(request)
-
-        args_ip = ['name', 'query', 'interval', 'tags', 'platform', 'version', 'description', 'value', 'snapshot']
-        args = debug_body_args(args, args_ip)
 
         name = args['name']
         sql = args['query']
         interval = args['interval']
-        tags = args['tags']
+        tags = args['tags'].split(',')
 
         query = dao.get_query_by_name(name)
         if query:
@@ -119,23 +135,19 @@ class AddQuery(Resource):
 @ns.route('/tag/edit', endpoint = "add_tag_to_query")
 @ns.doc(params={'query_id': 'id of the query','add_tags':"tags to add", 'remove_tags':"tags to remove"})
 class AddTagToQuery(Resource):
-    parser = requestparse(['query_id', 'add_tags', 'remove_tags'], [int, list, list],
-                          ["id of the query", "tags to add", "tags to remove"], [True, False, False])
+    parser = requestparse(['query_id', 'add_tags', 'remove_tags'], [int, str, str],
+                          ["id of the query", "list of comma separated tags to add", "list of comma separated tags to remove"], [True, False, False])
 
     @ns.expect(parser)
     def post(self):
         args = self.parser.parse_args()  # need to exists for input payload validation
-        args = get_body_data(request)
-
-        args_ip = ['query_id', 'add_tags', 'remove_tags']
-        args = debug_body_args(args, args_ip)
 
         query_id = args['query_id']
         status = 'failure'
         message = None
 
-        add_tags = args['add_tags']
-        remove_tags = args['remove_tags']
+        add_tags = args['add_tags'].split(',')
+        remove_tags = args['remove_tags'].split(',')
         if not (add_tags or remove_tags):
             message = 'Please provide tags'
         else:
@@ -159,12 +171,13 @@ class AddTagToQuery(Resource):
                 message = 'Successfully modified the tag(s)'
         return marshal(respcls(message,status), parentwrapper.common_response_wrapper, skip_none=True)
 
+
 @require_api_key
 @ns.route('/<int:query_id>/tags', endpoint='query_tags_list')
 @ns.doc(params={'query_id': 'query id', 'tags': "tags to create to the query"})
 class ListTagsOfQuery(Resource):
     '''list tags of a query by its query id'''
-    parser = requestparse(['tags'], [list], ["list of tags to be created to the query"])
+    parser = requestparse(['tags'], [str], ["list of comma separated tags to be created to the query"])
 
     def get(self, query_id):
         status = 'failure'
@@ -181,10 +194,9 @@ class ListTagsOfQuery(Resource):
     @ns.expect(parser)
     def post(self, query_id):
         args = self.parser.parse_args()  # need to exists for input payload validation
-        tags = get_body_data(request)['tags']
+        tags = args['tags'].split(',')
         query = dao.get_query_by_id(query_id)
         obj_list = get_tags_list_to_add(tags)
-        print(obj_list)
         query.tags.extend(obj_list)
         query.save()
         return marshal(respcls('Successfully created the tag(s) to queries', 'success'),

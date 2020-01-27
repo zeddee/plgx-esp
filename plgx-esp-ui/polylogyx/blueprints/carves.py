@@ -104,3 +104,39 @@ class CarveSessionByQueryId(Resource):
                         message="query id provided is invalid"
 
         return marshal(respcls(message,status), parentwrapper.common_response_wrapper, skip_none=True)
+
+
+@require_api_key
+@ns.route('/query', endpoint='get_carves_by_query_id_post')
+@ns.doc(params={'query_id': 'query id','host_identifier': 'host identifier'})
+class CarveSessionByPostQueryId(Resource):
+    '''downloads carves through session id'''
+    parser = requestparse(['query_id', 'host_identifier'], [str, str], ["query id", "host_identifier"], [True, True])
+
+    @ns.expect(parser)
+    def post(self):
+        status = 'failure'
+
+        args = self.parser.parse_args()
+        host_identifier = args['host_identifier']
+        query_id = args['query_id']
+
+        node = nodedao.get_node_by_host_identifier(host_identifier)
+        if not node:
+            message = 'Node with this identifier does not exist'
+        else:
+            dqt = db.session.query(DistributedQueryTask).filter(DistributedQueryTask.distributed_query_id == query_id).filter(DistributedQueryTask.node_id==node.id).first()
+            if dqt:
+                carve_session = db.session.query(CarveSession).filter(CarveSession.request_id == dqt.guid).first()
+                carve_session = marshal(carve_session, wrapper.carves_wrapper)
+
+                if carve_session:
+                    status = "success"
+                    message = "Successfully fetched the carve"
+                    return marshal(respcls(message, status, carve_session), parentwrapper.common_response_wrapper)
+                else:
+                    message = "carve not started"
+            else:
+                message = "query id provided is invalid"
+
+        return marshal(respcls(message, status), parentwrapper.common_response_wrapper, skip_none=True)

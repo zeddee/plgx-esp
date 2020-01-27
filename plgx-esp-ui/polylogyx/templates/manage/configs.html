@@ -4,7 +4,7 @@ PolyLogyx - Config
 {% endblock %}
 
 {% block content %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script>
+<script src="/static/js/ace.js"></script>
 
 <link href="/static/css/jsoneditor/jsoneditor.min.css" rel="stylesheet" type="text/css">
 <script src="/static/js/jsoneditor/jsoneditor-minimalist.min.js"></script>
@@ -67,11 +67,18 @@ PolyLogyx - Config
 
 							<ul class="nav nav-pills nav-fill nav-background" role="tablist">
 								<li class="nav-item">
-									<div class="nav-link active cursor-tab" data-toggle="tab" onclick="showDataAsPerPlatformSelection(this.id)" id="Windows" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Windows Platforms">
+									<div class="nav-link active cursor-tab" data-toggle="tab" onclick="showDataAsPerPlatformSelection(this.id)" id="Windows" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Windows(x64) Platforms">
 										<i class="fab fa-2x fa-windows" style=""></i>
-										Windows
+										Windows(x64)
 									</div>
 								</li>
+								<li class="nav-item">
+									<div class="nav-link  cursor-tab" data-toggle="tab" onclick="showDataAsPerPlatformSelection(this.id)" id="Windows_x86" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Windows(x86) Platforms">
+										<i class="fab fa-2x fa-windows" style=""></i>
+										Windows(x86)
+									</div>
+								</li>
+
 								<li class="nav-item">
 									<div class="nav-link cursor-tab" data-toggle="tab" onclick="showDataAsPerPlatformSelection(this.id)" id="Linux" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Linux Platforms">
 										<i class="fab fa-2x fa-linux" style=""></i>
@@ -81,7 +88,7 @@ PolyLogyx - Config
 								<li class="nav-item">
 									<div class="nav-link cursor-tab" data-toggle="tab" onclick="showDataAsPerPlatformSelection(this.id)" id="Darwin" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Apple Platforms">
 										<i class="fab fa-2x fa-apple" style=""></i>
-										Apple
+										macOS
 									</div>
 								</li>
 							</ul>
@@ -153,10 +160,14 @@ let requireTypeArray = [];
 let config_json = {{ configs | safe }};
 let apple_schedule = {};
 let windows_schedule = {};
+let windows_x86_schedule = {};
+
 let linux_schedule = {};
 
 let apple_filter = {};
 let windows_filter = {};
+let windows_x86_filter = {};
+
 let linux_filter = {};
 
 let filterOject = {};
@@ -178,6 +189,10 @@ for (let [key, value] of Object.entries(config_json)) {
 		windows_schedule = valueAsJson.queries;
 		windows_filter = valueAsJson.filters;
 	}
+	if(key === 'windows_x86') {
+		windows_x86_schedule = valueAsJson.queries;
+		windows_x86_filter = valueAsJson.filters;
+	}
 	if(key === 'linux') {
 		linux_schedule = valueAsJson.queries;
 		linux_filter = valueAsJson.filters;
@@ -187,13 +202,21 @@ for (let [key, value] of Object.entries(config_json)) {
 }
 
 let selectedPlatformName;
+let selectedArch;
 var editor, options, json, container;
 
 function showDataAsPerPlatformSelection(id) {
     // $(".platform").css("background-color", "white");
     //     $("#"+id).css("background-color", "#DCDCDC");
+		var platform_arch=id.split("_");
+		if(platform_arch.length>0){
+			selectedPlatformName=platform_arch[0];
+		}
+		console.log(platform_arch.length);
+		 if (platform_arch.length==2){
+			selectedArch=platform_arch[1];
+		}else{selectedArch=undefined;}
 
-		selectedPlatformName = id;
     var tb_old = document.getElementById("tbody");
 		// tb_old.setAttribute("style", "max-height:400px ; overflow-x: scroll;");
     while (tb_old.firstChild) tb_old.removeChild(tb_old.firstChild);
@@ -220,6 +243,10 @@ function showDataAsPerPlatformSelection(id) {
 		if(id === 'Windows') {
 			requireTypeArray = windows_schedule;
 			filterOject = windows_filter;
+		}
+		if(id === 'Windows_x86') {
+			requireTypeArray = windows_x86_schedule;
+			filterOject = windows_x86_filter;
 		}
 
 		for(let [name, interval] of Object.entries(requireTypeArray)) {
@@ -307,11 +334,13 @@ let configinputArray = [];
 let inputArray = [];
 let platform = '';
 var updatedObject = {};
+let arch='x86_64';
 
 // var container = document.getElementById('jsoneditor');
 // var editor = new JSONEditor(container, options, json);
 function updateConfig() {
 	platform = selectedPlatformName;
+	arch=selectedArch;
 	checkboxArray = document.querySelectorAll(".checkboxClass");
 	configinputArray = document.querySelectorAll(".configinputClass");
 	inputArray = document.querySelectorAll(".inputClass");
@@ -323,6 +352,8 @@ function updateConfig() {
 		}
 		updatedObject["queries"][configinputArray[i].value] = innerJson;
 		updatedObject.platform = platform;
+		updatedObject.arch = arch;
+
 		var filterJson = editor.get();
 		updatedObject.filters = filterJson;
 	}

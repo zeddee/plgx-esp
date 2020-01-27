@@ -1,172 +1,190 @@
-<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script> -->
 
 <link href="/static/css/query-builder.default.css" rel="stylesheet" type="text/css">
 
-<!-- <link href="/static/css/jsoneditor/jsoneditor.min.css" rel="stylesheet" type="text/css">
-
-<link href="/static/css/jsoneditor/jsoneditor.min.css" rel="stylesheet" type="text/css">
-<script src="/static/js/jsoneditor/jsoneditor-minimalist.min.js"></script>
-<script src="/static/js/filereader.js"></script> -->
 <style>
-
+  .mandary {
+    margin-top: -10px;
+    margin-left: 0px;
+  }
+  .required label:after {
+    color: #e32;
+    content: ' *';
+    display:inline;
+  }
+  .description_ex {
+    color: #9da2bf;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 11px;
+    font-family: system-ui;
+  }
+  .form-group {
+    margin-bottom: 1.3rem !important;
+  }
   .rule-actions {
     margin: 4px;
+  }
+  .hide_field {
+    display: none;
   }
 
 </style>
 <!--begin::Portlet-->
 <div class="kt-portlet kt-portlet--last kt-portlet--responsive-mobile" id="kt_page_portlet">
-    <div class="kt-portlet__head kt-portlet__head--lg">
-        <div class="kt-portlet__head-label">
-            <h3 class="kt-portlet__head-title">
-                {% if rule is defined %}
-                <i class="kt-font-brand fas fa-pen-square"></i>
-                Update Rule
-                {% else %}
-                <i class="kt-font-brand fas fa-plus-square"></i>
-                Add Rule
-                {% endif %}
-            </h3>
-            &nbsp;
-            {% if rule is defined %}
-            <h4 class="kt-portlet__head-title">{{ rule.name }}</h4>
-            {% endif %}
-        </div>
-        <div class="kt-portlet__head-toolbar">
-            <div class="kt-portlet__head-wrapper">
-              <a href="javascript:void(0);" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
-                <i class="fas fa-chevron-left"></i>
-                Back
-              </a>
-            </div>
-        </div>
+  <div class="kt-portlet__head kt-portlet__head--lg">
+    <div class="kt-portlet__head-label">
+      <h3 class="kt-portlet__head-title">
+        {% if rule is defined %}
+        <i class="kt-font-brand fas fa-pen-square"></i>
+          Update Rule
+        {% else %}
+        <i class="kt-font-brand fas fa-plus-square"></i>
+          Add Rule
+        {% endif %}
+      </h3>
+      &nbsp;
+      {% if rule is defined %}
+      <h4 class="kt-portlet__head-title">{{ rule.name }}</h4>
+      {% endif %}
     </div>
-    <div class="kt-portlet__body">
-        <form class="kt-form" id="kt_form" method="post">
-          <div class="row">
-              <div class="col-xl-2"></div>
-              <div class="col-xl-8">
-                  <div class="kt-section kt-section--first">
-                      <div class="kt-section__body">
-                          {{ form.csrf_token() }}
-                          <div class="kt-section__body">
-                              <div class="form-group row">
-                                  <label class="col-2 col-form-label">Rule Name </label>
-                                  <div class="col-10">
-                                      {{ form.name(class_="form-control") }}
-                                  </div>
-                              </div>
-                              <div class="form-group row">
-                                  <label class="col-2 col-form-label">Description</label>
-                                  <div class="col-10">
-                                      {{ form.description(class_="form-control") }}
-                                      <h6 style="margin-top: 10px;"><span style="color: #cc1313;">Note:</span> Rule names and descriptions may
-                                          be treated as
-                                          <a target="_blank"
-                                              href="https://docs.python.org/dev/library/string.html#template-strings">Template
-                                              strings</a>
-                                          for some alerters.
-                                          Valid placeholders may include column keys returned in query results and/or
-                                          host attributes(i.e., host_identifier, enrolled_on).
-                                          A missing placeholder will result in the original placeholder to appear in
-                                          the resulting string intact.
-                                      </h6>
-                                  </div>
-                              </div>
-                              <div class="form-group row">
-                                  <label class="col-2 col-form-label">Alerters</label>
-                                  <div class="col-10">
-                                      {{ form.alerters(class_="form-control kt-selectpicker") }}
-
-                                  </div>
-                              </div>
-                              <div class="form-group row">
-                                  <label class="col-2 col-form-label">Conditions</label>
-                                  <div class="col-10">
-                                    <div id='query-builder'></div>
-                                      {{ form.conditions(id='rules-hidden') }}
-                                  </div>
-                              </div>
-                              <div class="form-group row">
-                                  <label class="col-2 col-form-label">Status</label>
-                                  <div class="col-10">
-                                      {{ form.status(class="form-control kt-selectpicker") }}
-
-                                  </div>
-                              </div>
-                              <div class="form-group row">
-                                  <label class="col-2 col-form-label">Severity</label>
-                                  <div class="col-10">
-                                      {{ form.severity(class="form-control kt-selectpicker") }}
-
-                                  </div>
-                              </div>
-                              <div class="form-group row">
-                                  <label class="col-2 col-form-label">Type</label>
-                                  <div class="col-10">
-                                      {{ form.type(**{"onchange":"showHideMitreFields();","id":"type","class":"form-control kt-selectpicker"}) }}
-
-                                  </div>
-                              </div>
-                              <div id="mitre">
-                                  <div class="form-group row">
-                                      <label class="col-2 col-form-label">Technique Id</label>
-                                      <div class="col-10" id="technique_id_loading">
-                                          {{ form.technique_id(**{"oninput":"getTechniqueDetails(this);","class":"form-control"}) }}
-
-                                      </div>
-                                  </div>
-
-
-                                  <div class="form-group row">
-                                      <label class="col-2 col-form-label">Tactics</label>
-                                      <div class="col-10">
-                                          {{ form.tactics(class="form-control kt-selectpicker") }}
-
-                                      </div>
-                                  </div>
-                              </div>
-
-                          </div>
-
-                          <div style="display: none">
-                              <div class="form-group">
-                                  <label class="col-sm-12 control-label">Recon Queries</label>
-                                  <div id="jsoneditor"></div>
-                              </div>
-                              <div class="form-group" style="display:none">
-
-                                  {{ form.recon_queries(id='recon_queries') }}
-                              </div>
-                          </div>
-                      </div>
-                      <!-- <div class="kt-separator kt-separator--border-dashed kt-separator--space-lg"></div> -->
-
-                      <div class="kt-portlet__foot">
-                          <div class="kt-form__actions kt-form__actions--center">
-                              <!-- <a href="{{ url_for('manage.rules') }}" class="btn btn-outline-success btn-sm">
-                            <i class="la la-long-arrow-left"></i>
-                            Back
-                        </a> -->
-                              <!-- <input class="btn btn-success" id="submit-button" type="submit" value="{% if rule is defined %}Update{% else %}Add{% endif %}"> -->
-                              <!-- <button type="reset" class="btn btn-success" style="margin-left: 1em;" value="{% if query is defined %}update{% else %}add{% endif %} query"></button> -->
-                              {% if rule is defined %}
-                              <button type="submit" id="submit-button" class="btn btn-success"><i
-                                      class="fa fa-sync-alt"></i>Update</button>
-                              {% else %}
-                              <button type="submit" id="submit-button" class="btn btn-success"><i
-                                      class="fa fa-plus"></i>Add</button>
-                              {% endif %}
-                              <button type="reset" class="btn btn-secondary">Clear</button>
-                          </div>
-                      </div>
+    <div class="kt-portlet__head-toolbar">
+      <div class="kt-portlet__head-wrapper">
+        <div style="cursor: pointer;" onclick="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+          <i class="fas fa-chevron-left"></i>
+          Back
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="kt-portlet__body">
+    <form class="kt-form" id="kt_form" method="post">
+      <div class="row">
+        <div class="col-xl-2"></div>
+        <div class="col-xl-8">
+          <div class="kt-section kt-section--first">
+            <div class="kt-section__body">
+              {{ form.csrf_token() }}
+              <div class="kt-section__body">
+                <div class="form-group row required">
+                  <label class="col-2 col-form-label">Rule Name </label>
+                  <div class="col-10">
+                    {{ form.name(class_="form-control") }}
                   </div>
-                  <div class="col-xl-2"></div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-2 col-form-label">Description</label>
+                  <div class="col-10">
+                    {{ form.description(class_="form-control") }}
+                    <h6 style="margin-top: 10px;"><span style="color: #cc1313;">Note:</span> Rule names and descriptions may
+                      be treated as
+                      <a target="_blank" href="https://docs.python.org/dev/library/string.html#template-strings">Template
+                        strings</a>
+                      for some alerters.
+                      Valid placeholders may include column keys returned in query results and/or
+                      host attributes(i.e., host_identifier, enrolled_on).
+                      A missing placeholder will result in the original placeholder to appear in
+                      the resulting string intact.
+                    </h6>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-2 col-form-label">Alerters</label>
+                  <div class="col-10">
+                    {{ form.alerters(class_="form-control kt-selectpicker") }}
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-2 col-form-label">Conditions<span class="" style="color: #e32;">&nbsp;*</span></label>
+                  <div class="col-10">
+                    <div id='query-builder'></div>
+                    {{ form.conditions(id='rules-hidden') }}
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-2 col-form-label">Status</label>
+                  <div class="col-10">
+                    {{ form.status(class="form-control kt-selectpicker") }}
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-2 col-form-label">Severity</label>
+                  <div class="col-10">
+                    {{ form.severity(class="form-control kt-selectpicker") }}
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-2 col-form-label">Type</label>
+                  <div class="col-10">
+                    {{ form.type(**{"onchange":"showHideMitreFields();","id":"type","class":"form-control kt-selectpicker"}) }}
+                  </div>
+                </div>
+                <!-- <div class="form-group row">
+                  {{ form.type.label(class_="col-2 col-form-label") }}
+                  <div class="col-10">
+                    <div class="kt-radio-inline">
+                      {% for subfield in form.type %}
+                      <label class="kt-radio" >
+                        {{ subfield(onchange="showHideMitreFields(this)") }}
+                        {{ subfield.label }}
+                        <span></span>
+                      </label>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div> -->
+                <div class="" id="mitre">
+                  <div class="form-group row ">
+                    <label class="col-2 col-form-label">Technique Id</label>
+                    <div class="col-10" id="technique_id_loading">
+                      {{ form.technique_id(**{"oninput":"getTechniqueDetails(this);","class":"form-control"}) }}
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label class="col-2 col-form-label">Tactics</label>
+                    <div class="col-10">
+                      {{ form.tactics(class="form-control kt-selectpicker") }}
+                    </div>
+                  </div>
+                </div>
               </div>
-          </div>
-        </form>
+              <div style="display: none">
+                <div class="form-group">
+                  <label class="col-sm-12 control-label">Recon Queries</label>
+                  <div id="jsoneditor"></div>
+                </div>
+                <div class="form-group" style="display:none">
+                  {{ form.recon_queries(id='recon_queries') }}
+                </div>
+              </div>
+            </div>
+            <!-- <div class="kt-separator kt-separator--border-dashed kt-separator--space-lg"></div> -->
 
-    </div>
+            <div class="kt-portlet__foot">
+              <div class="mandary">
+                <span class="" style="color: #e32;">*</span><span style="font-size: smaller;"> Mandatory Fields</span>
+              </div>
+              <div class="kt-form__actions kt-form__actions--center">
+                <!-- <a href="{{ url_for('manage.rules') }}" class="btn btn-outline-success btn-sm">
+                              <i class="la la-long-arrow-left"></i>
+                              Back
+                          </a> -->
+                <!-- <input class="btn btn-success" id="submit-button" type="submit" value="{% if rule is defined %}Update{% else %}Add{% endif %}"> -->
+                <!-- <button type="reset" class="btn btn-success" style="margin-left: 1em;" value="{% if query is defined %}update{% else %}add{% endif %} query"></button> -->
+                {% if rule is defined %}
+                <button type="submit" id="submit-button" class="btn btn-success"><i class="fa fa-sync-alt"></i>Update</button>
+                {% else %}
+                <button type="submit" id="submit-button" class="btn btn-success"><i class="fa fa-plus"></i>Add</button>
+                {% endif %}
+                <button type="reset" class="btn btn-secondary">Clear</button>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-2"></div>
+        </div>
+      </div>
+    </form>
+
+  </div>
 </div>
 <!--end::Portlet-->
 
@@ -296,7 +314,6 @@
         if (type === 'MITRE') {
             $("#mitre").show();
         } else {
-            console.log('hiding');
 
             $("#mitre").hide();
 
@@ -307,4 +324,13 @@
         showHideMitreFields();
 
     });
+
+    // function showHideMitreFields(elem){
+    //   if (elem.value == 'default') {
+    //            $("#type").addClass('hide_field');
+    //
+    //   }else if(elem.value == 'mitre'){
+    //            $("#type").removeClass('hide_field');
+    //   }
+    // }
 </script>
