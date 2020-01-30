@@ -274,13 +274,7 @@ class PolyReconPackData:
 class PolyLogyxConstants:
 
     DEFAULT_OPTIONS = {
-        "custom_plgx_EnableLogging": "true",
-        "custom_plgx_EnableSSL": "true",
-        "custom_plgx_LogFileName": "C:\\Program Files\\plgx_win_extension\\plgx-agent.log",
-        "custom_plgx_LogLevel": "1",
-        "custom_plgx_LogModeQuiet": "0",
-        "custom_plgx_ServerPort": "443",
-        "custom_plgx_enable_respserver": "true",
+        "custom_plgx_EnableSSL": "false",
         "schedule_splay_percent": 10,
     }
 class PolyLogyxServerDefaults:
