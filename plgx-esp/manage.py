@@ -13,7 +13,7 @@ from flask_script.commands import Clean, ShowUrls
 
 from polylogyx import create_app, db
 from polylogyx.extensions import bcrypt
-from polylogyx.models import Query, Rule, Options, Settings, DefaultFilters, DefaultQuery
+from polylogyx.models import Query, Rule, Options, Settings, DefaultFilters, DefaultQuery, Config
 from polylogyx.settings import CurrentConfig
 from polylogyx.constants import PolyLogyxServerDefaults, UtilQueries, PolyLogyxConstants
 from werkzeug.contrib.fixers import ProxyFix
@@ -81,44 +81,66 @@ def extract_ddl(specs_dir):
 @manager.option('--filepath')
 @manager.option('--platform')
 @manager.option('--arch', default=DefaultFilters.ARCH_x64)
-def add_default_filters( filepath, platform, arch):
-    if DefaultFilters.query.filter_by(platform=platform, arch=arch).first():
-        raise ValueError("Filter already exists!")
-    else:
-        print("Filter does not exist, adding new...")
+@manager.option('--type', default=Config.TYPE_DEFAULT)
+def add_default_filters( filepath, platform, arch,type):
+    is_active = False
+    type=int(type)
+    if type == 0 or type == 1:
+        is_active = True
+    config = db.session.query(Config).filter(Config.type == type).filter(Config.arch == arch).filter(
+        Config.platform == platform).first()
+    if not config:
+        config = Config.create(platform=platform, arch=arch, type=type,is_active=is_active)
+        config.save()
+    existing_filter=DefaultFilters.query.filter_by(platform=platform, arch=arch,config_id=config.id).first()
+
     try:
         jsonStr = open(filepath, 'r').read()
         filter=json.loads(jsonStr)
-        try:
-            DefaultFilters.create( filters=filter, platform=platform,created_at=dt.datetime.utcnow(), arch=arch)
-        except Exception as error:
-            print(str(error))
+        if existing_filter:
+            existing_filter.filters = filter
+            existing_filter.update(existing_filter)
+            print("Filter already exists updating...")
+        else:
+            print("Filter does not exist, adding new...")
+            DefaultFilters.create( filters=filter, platform=platform,created_at=dt.datetime.utcnow(), arch=arch,config_id=config.id)
     except Exception as error:
         print(str(error))
+
+@manager.command
+def delete_existing_unmapped_queries_filters():
+    db.session.query(DefaultQuery).filter(DefaultQuery.config_id==None).delete()
+    db.session.query(DefaultFilters).filter(DefaultFilters.config_id==None).delete()
+    db.session.commit()
 
 
 @manager.option('--filepath')
 @manager.option('--platform')
 @manager.option('--arch',   default=DefaultQuery.ARCH_x64)
-def add_default_queries( filepath, platform,arch):
+@manager.option('--type',   default=Config.TYPE_DEFAULT)
+def add_default_queries( filepath, platform,arch,type):
     try:
         sys.stderr.write('Adding queries for '+platform)
         jsonStr = open(filepath, 'r').read()
         query = json.loads(jsonStr)
         queries = query['schedule']
+        is_active = False
+        if int(type) == 0 or int(type) == 1:
+            is_active = True
+        config=db.session.query(Config).filter(Config.type==type).filter(Config.arch==arch).filter(Config.platform==platform).first()
+        if not config:
+            config=Config.create(platform=platform,arch=arch,type=type,is_active=is_active)
         for query_key in queries.keys():
-            query_filter=DefaultQuery.query.filter_by(platform=platform).filter_by(name=query_key)
+            query_filter=DefaultQuery.query.filter_by(platform=platform).filter_by(name=query_key).filter_by(config_id=config.id)
             if arch==DefaultQuery.ARCH_x86:
-                query_filter=query_filter.filter_by(platform=DefaultQuery.ARCH_x86)
+                query_filter=query_filter.filter_by(arch=DefaultQuery.ARCH_x86)
             query=query_filter.first()
-            description=queries[query_key]['query']
             try:
                 if query:
                     sys.stderr.write("Query name " + query_key + " already exists, updating..!")
-
                     query.sql = queries[query_key]['query']
                     query.interval = queries[query_key]['interval']
-
+                    query.status=queries[query_key]['status']
                     query.update(query)
                 else:
                     sys.stderr.write(query_key+" does not exist, adding new...")
@@ -126,7 +148,7 @@ def add_default_queries( filepath, platform,arch):
                     if "status" in queries[query_key]:
                         status=queries[query_key]['status']
 
-                    DefaultQuery.create(name=query_key, sql=queries[query_key]['query'],arch=arch,
+                    DefaultQuery.create(name=query_key, sql=queries[query_key]['query'],arch=arch,config_id=config.id,
                                             interval=queries[query_key]['interval'], status=status, platform=platform,
                                             description=queries[query_key].get('description'))
             except Exception as error:

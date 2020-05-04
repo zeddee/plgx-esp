@@ -28,7 +28,7 @@ from polylogyx.database import db
 from polylogyx.models import (
     DistributedQuery, DistributedQueryTask,
     Node, Pack, Query, ResultLog, querypacks,
-    Options, Tag, DefaultQuery, DefaultFilters, StatusLog)
+    Options, Tag, DefaultQuery, DefaultFilters, StatusLog, Config)
 
 Field = namedtuple('Field', ['name', 'action', 'columns', 'timestamp', 'uuid'])
 
@@ -50,8 +50,7 @@ def assemble_configuration(node):
     if node.node_info and 'cpu_type' in node.node_info and node.node_info['cpu_type'] == DefaultFilters.ARCH_x86:
         is_x86 = True
 
-    query = DefaultFilters.query.filter(DefaultFilters.platform == platform)
-
+    query = DefaultFilters.query.filter(DefaultFilters.platform == platform).join(Config).filter(Config.is_active==True)
     if is_x86:
         platform_filter = query.filter(DefaultFilters.arch == DefaultFilters.ARCH_x86).first()
     else:
@@ -104,8 +103,8 @@ def assemble_schedule(node):
     if node.node_info and 'cpu_type' in node.node_info and node.node_info['cpu_type'] == DefaultQuery.ARCH_x86:
         is_x86 = True
 
-    query = DefaultQuery.query.filter(DefaultQuery.status == True).filter(
-        DefaultQuery.platform == platform)
+    query = db.session.query(DefaultQuery).join(Config).filter(Config.is_active == True).filter(
+        DefaultQuery.platform == platform).filter(DefaultQuery.status == True)
     if is_x86:
         queries = query.filter(DefaultQuery.arch == DefaultQuery.ARCH_x86).all()
     else:

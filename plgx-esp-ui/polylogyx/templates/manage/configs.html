@@ -4,15 +4,37 @@ PolyLogyx - Config
 {% endblock %}
 
 {% block content %}
-<script src="/static/js/ace.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js"></script>
 
 <link href="/static/css/jsoneditor/jsoneditor.min.css" rel="stylesheet" type="text/css">
+
 <script src="/static/js/jsoneditor/jsoneditor-minimalist.min.js"></script>
 <script src="/static/js/filereader.js"></script>
 <style>
+  .slow .toggle-group { transition: left 0.7s; -webkit-transition: left 0.7s; }
+  .fast .toggle-group { transition: left 0.1s; -webkit-transition: left 0.1s; }
+  .quick .toggle-group { transition: none; -webkit-transition: none; }
+</style>
+<style>
+.active{
+color: green;
+}
+
+.inactive{
+color: red;
+}
+
+
+
+
+
 	.inputClass {
 		border: 0px;
 	}
+    .enabled{
+        background-color: #184ba1;
+    }
+
 	.configinputClass {
 		border: 0px;
 		width: 100%;
@@ -47,6 +69,7 @@ PolyLogyx - Config
 .cursor-tab{
 	cursor: pointer;
 }
+
 </style>
 
 
@@ -64,35 +87,33 @@ PolyLogyx - Config
       <div class="kt-portlet__head-toolbar">
         <div class="kt-portlet__head-wrapper">
           <div class="kt-portlet__head-actions">
+			  <ul class="nav nav-pills nav-fill nav-background" role="tablist">
+				<li class="nav-item">
+					<div class="nav-link active cursor-tab" data-toggle="tab" onclick="showDataAsPerPlatformSelection('windows','x86_64', 1)"  id="Windows" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Windows(x64) Platforms">
+						<i class="fab fa-2x fa-windows" style=""></i>
+						Windows(x64)
+					</div>
+				</li>
+				<li class="nav-item">
+					<div class="nav-link  cursor-tab" data-toggle="tab" onclick="showDataAsPerPlatformSelection('windows','x86', 0)"  id="Windows_x86" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Windows(x86) Platforms">
+						<i class="fab fa-2x fa-windows" style=""></i>
+						Windows(x86)
+					</div>
+				</li>
 
-							<ul class="nav nav-pills nav-fill nav-background" role="tablist">
-								<li class="nav-item">
-									<div class="nav-link active cursor-tab" data-toggle="tab" onclick="showDataAsPerPlatformSelection(this.id)" id="Windows" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Windows(x64) Platforms">
-										<i class="fab fa-2x fa-windows" style=""></i>
-										Windows(x64)
-									</div>
-								</li>
-								<li class="nav-item">
-									<div class="nav-link  cursor-tab" data-toggle="tab" onclick="showDataAsPerPlatformSelection(this.id)" id="Windows_x86" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Windows(x86) Platforms">
-										<i class="fab fa-2x fa-windows" style=""></i>
-										Windows(x86)
-									</div>
-								</li>
-
-								<li class="nav-item">
-									<div class="nav-link cursor-tab" data-toggle="tab" onclick="showDataAsPerPlatformSelection(this.id)" id="Linux" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Linux Platforms">
-										<i class="fab fa-2x fa-linux" style=""></i>
-										Linux
-									</div>
-								</li>
-								<li class="nav-item">
-									<div class="nav-link cursor-tab" data-toggle="tab" onclick="showDataAsPerPlatformSelection(this.id)" id="Darwin" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Apple Platforms">
-										<i class="fab fa-2x fa-apple" style=""></i>
-										macOS
-									</div>
-								</li>
-							</ul>
-
+				<li class="nav-item">
+					<div class="nav-link cursor-tab" data-toggle="tab" onclick="showDataAsPerPlatformSelection('linux','x86_64', 0)" id="Linux" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Linux Platforms">
+						<i class="fab fa-2x fa-linux" style=""></i>
+						Linux
+					</div>
+				</li>
+				<li class="nav-item">
+					<div class="nav-link cursor-tab" data-toggle="tab" onclick="showDataAsPerPlatformSelection('darwin','x86_64', 0)" id="Darwin" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Apple Platforms">
+						<i class="fab fa-2x fa-apple" style=""></i>
+						macOS
+					</div>
+				</li>
+			  </ul>
           </div>
         </div>
       </div>
@@ -103,11 +124,41 @@ PolyLogyx - Config
 
 			<!-- begin:: Table -->
 			<div class="kt-portlet kt-portlet--mobile">
-				<div class="kt-portlet__head">
-					<div class="kt-portlet__head-label">
+				<div class="kt-portlet__head row">
+					<div class="kt-portlet__head-label col-md-3">
 						<h3 class="kt-portlet__head-title">Queries</h3>
 					</div>
-					<div class="kt-portlet__head-toolbar">
+					<div class="col-md-9" style="margin:auto">
+					<div id="shallow_deep" class=" row" style="margin: auto;">
+
+						<div class="col-md-8 float-right" >
+						</div>
+
+						<div class="col-md-2 float-right" >
+
+							<button type="submit" id="win_shallow" class="btn enabled"
+									onclick="showDataAsPerPlatformSelection('windows','x86_64', 1)">
+								<i id="shallow_check" class="fa fa-sm fa-circle active"></i><span id="text_shallow" style="color:white"> Shallow</span>
+
+							</button>
+
+						</div>
+						<div class="col-md-2 float-right">
+							<button type="submit" id="win_deep" class="btn"
+									onclick="showDataAsPerPlatformSelection('windows','x86_64', 2)">
+								<i id="deep_check" class="fa fa-sm fa-circle inactive"></i><span id="text_deep" style="color:black">Deep</span>
+							</button>
+
+						</div>
+
+
+
+
+
+
+					</div>
+					</div>
+
 		        <div class="kt-portlet__head-wrapper">
 		          <div class="kt-portlet__head-actions">
 
@@ -122,12 +173,12 @@ PolyLogyx - Config
                   <th>Select</th>
                   <th>Name</th>
                   <th>Interval</th>
+					<th id="shallow_deep_head"><input  id="shallow_deep_check" onclick="update_shallow_deep();" type="checkbox" checked="checked" disabled /> <label id="shallow_deep_check_label" for="shallow_deep_check">Active</label> </th>
                 </tr>
               </thead>
               <tbody id="tbody" style=""></tbody>
             </table>
 				</div>
-
 			</div>
 
 			<div class="kt-portlet kt-portlet--mobile displayNone" id="display">
@@ -153,69 +204,149 @@ PolyLogyx - Config
 </div>
 <script>
 
+$(document).ready(function(){
+	$(".cursor-tab").on("click", function(e){
+	var id_val = $(this).attr("id");
+		if(id_val == "Windows"){
+			$("#shallow_deep").show();
+		}else{
+			$("#shallow_deep").hide();
+		}
+	})
+});
 
 
-let platform_list = [];
 let requireTypeArray = [];
 let config_json = {{ configs | safe }};
 let apple_schedule = {};
-let windows_schedule = {};
 let windows_x86_schedule = {};
+let windows_schedule = {};
+let windows_schedule_deep = {};
+let windows_schedule_shallow = {};
 
 let linux_schedule = {};
 
 let apple_filter = {};
 let windows_filter = {};
 let windows_x86_filter = {};
+let windows_filter_shallow = {};
+let windows_filter_deep = {};
 
 let linux_filter = {};
 
 let filterOject = {};
 
 var temp = {};
+var is_default_shallow=true;
 
-for (let [key, value] of Object.entries(config_json)) {
-	platform_list.push(key);
-	let valueAsJson = value;
-    console.log(key);
-    console.log(valueAsJson.queries);
-        console.log(valueAsJson.filters);
 
-	if(key === 'darwin') {
-		apple_schedule = valueAsJson.queries;
-		apple_filter = valueAsJson.filters;
-	}
-	if(key === 'windows') {
-		windows_schedule = valueAsJson.queries;
-		windows_filter = valueAsJson.filters;
-	}
-	if(key === 'windows_x86') {
-		windows_x86_schedule = valueAsJson.queries;
-		windows_x86_filter = valueAsJson.filters;
-	}
-	if(key === 'linux') {
-		linux_schedule = valueAsJson.queries;
-		linux_filter = valueAsJson.filters;
-	}
-	if(key = 'freebsd') {
-	}
+for (let [platform, value] of Object.entries(config_json)) {
+
+    for (let arch in value) {
+
+        for (let type in value[arch]) {
+            let queries=value[arch][type].queries;
+            let filters=value[arch][type].filters
+            if (platform === 'darwin') {
+                apple_schedule = queries;
+                apple_filter = filters;
+            }
+            if (platform === 'windows') {
+                if (arch === 'x86') {
+                    windows_x86_schedule = queries;
+                    windows_x86_filter = filters;
+
+                } else {
+                    if (type==0) {
+                        windows_schedule = queries;
+                        windows_filter = filters;
+
+                    }else if (type==1) {
+                        windows_schedule_shallow = queries;
+                        windows_filter_shallow = filters;
+                        is_default_shallow=value[arch][type]['status'];
+
+
+                    }else if (type==2) {
+
+
+                        windows_schedule_deep = queries;
+                        windows_filter_deep = filters;
+
+
+                    }
+
+                }
+            }
+
+            if (platform === 'linux') {
+                linux_schedule = queries;
+                linux_filter = filters;
+            }
+            if (key = 'freebsd') {
+            }
+        }
+    }
 }
+
 
 let selectedPlatformName;
 let selectedArch;
+let selectedType;
 var editor, options, json, container;
 
-function showDataAsPerPlatformSelection(id) {
-    // $(".platform").css("background-color", "white");
-    //     $("#"+id).css("background-color", "#DCDCDC");
-		var platform_arch=id.split("_");
-		if(platform_arch.length>0){
-			selectedPlatformName=platform_arch[0];
-		}
-		console.log(platform_arch.length);
-		 if (platform_arch.length==2){
-			selectedArch=platform_arch[1];
-		}else{selectedArch=undefined;}
+
+
+function showDataAsPerPlatformSelection(platform, arch, type) {
+		$('#shallow_deep_head').hide();
+
+        if(arch=='x86_64' && platform=='windows' ){
+        		$('#shallow_deep_head').show();
+
+            if (type==1){
+           $("#win_shallow").addClass("enabled");
+            $("#win_deep").removeClass("enabled");
+			if(is_default_shallow){
+				$('#shallow_deep_check_label').text("Active");
+				$('#shallow_deep_check').prop( "checked", true );
+				$('#shallow_deep_check').prop( "disabled", true );
+
+			}else{
+				$('#shallow_deep_check_label').text("Make It active");
+				$('#shallow_deep_check').prop( "checked", false );
+				$('#shallow_deep_check').prop( "disabled", false );
+			}
+
+
+          $('#text_shallow').css('color', 'white');
+		 $('#text_deep').css('color', 'black');
+
+
+            }else{
+              $("#win_deep").addClass("enabled");
+            $("#win_shallow").removeClass("enabled");
+
+               $('#text_shallow').css('color', 'black');
+		  		$('#text_deep').css('color', 'white');
+
+
+
+		  		if(!is_default_shallow){
+				$('#shallow_deep_check_label').text("Active");
+				$('#shallow_deep_check').prop( "checked", true );
+				$('#shallow_deep_check').prop( "disabled", true );
+
+			}else{
+				$('#shallow_deep_check_label').text("Make it active");
+				$('#shallow_deep_check').prop( "checked", false );
+				$('#shallow_deep_check').prop( "disabled", false );
+			}
+
+            }
+        }
+		selectedPlatformName=platform;
+		selectedArch=arch;
+	  selectedType=type;
 
     var tb_old = document.getElementById("tbody");
 		// tb_old.setAttribute("style", "max-height:400px ; overflow-x: scroll;");
@@ -231,27 +362,36 @@ function showDataAsPerPlatformSelection(id) {
 		var buttonvisible = document.getElementById('buttonvisible');
 		buttonvisible.classList.add("displayFlex");
 		buttonvisible.classList.remove("displayNone");
-
-		if(id === 'Linux') {
+		if(platform === 'linux') {
 			requireTypeArray = linux_schedule;
 			filterOject = linux_filter;
 		}
-		if(id === 'Darwin') {
+		if(platform === 'darwin') {
 			requireTypeArray = apple_schedule;
 			filterOject = apple_filter;
 		}
-		if(id === 'Windows') {
-			requireTypeArray = windows_schedule;
-			filterOject = windows_filter;
-		}
-		if(id === 'Windows_x86') {
-			requireTypeArray = windows_x86_schedule;
-			filterOject = windows_x86_filter;
+		if(platform === 'windows' ) {
+
+			if(arch==='x86_64'){
+				if (type == 0){
+					requireTypeArray = windows_schedule;
+					filterOject = windows_filter;
+				}else if (type == 1) {
+					requireTypeArray = windows_schedule_shallow;
+					filterOject = windows_filter_shallow;
+				}else if (type == 2) {
+					requireTypeArray = windows_schedule_deep;
+					filterOject = windows_filter_deep;
+				}
+			}else{
+				requireTypeArray = windows_x86_schedule;
+				filterOject = windows_x86_filter;
+			}
 		}
 
 		for(let [name, interval] of Object.entries(requireTypeArray)) {
-			  var row = document.createElement("tr");
-        var cell1 = document.createElement("td");
+			var row = document.createElement("tr");
+        var cell1 = document.createElement("td");
         var cell2 = document.createElement("td");
         var cell3 = document.createElement("td");
         var firstCellText = document.createElement("INPUT");
@@ -336,11 +476,12 @@ let platform = '';
 var updatedObject = {};
 let arch='x86_64';
 
-// var container = document.getElementById('jsoneditor');
-// var editor = new JSONEditor(container, options, json);
+
 function updateConfig() {
 	platform = selectedPlatformName;
 	arch=selectedArch;
+	type=selectedType;
+
 	checkboxArray = document.querySelectorAll(".checkboxClass");
 	configinputArray = document.querySelectorAll(".configinputClass");
 	inputArray = document.querySelectorAll(".inputClass");
@@ -353,10 +494,11 @@ function updateConfig() {
 		updatedObject["queries"][configinputArray[i].value] = innerJson;
 		updatedObject.platform = platform;
 		updatedObject.arch = arch;
+		updatedObject.type = type;
 
 		var filterJson = editor.get();
 		updatedObject.filters = filterJson;
-	}
+ 	}
 
 		$.ajax({
 						url: '/manage/ajax/config/update',
@@ -386,23 +528,7 @@ function updateConfig() {
 													})
 											}
 									});
-								if (data['errors'] != null && data['errors']['sql'] != null) {
-										// console.log(data.errors.sql);
-										// $("#error_message").html(data['errors']['sql']);
-										// $("#error-alert").fadeTo(1000, 500).slideUp(2000, function () {
-										// 		$("#error-alert").slideUp('close');
-										// });
-										// $("#loader").hide()
 
-								} else {
-										// $('#query_progress').width('0%');
-										//
-										// $('#query_progress').show();
-										// $('#query_progress_div').show();
-										// $('#query_name').html(data['sql']);
-										// startWebsocketConnection(data['id'], totalOnlineNodes);
-								}
-								// document.getElementsByName('sql')[0].value = '';
 						}
 				});
 }
@@ -426,10 +552,75 @@ function updateConfig() {
 
 
   $(document).ready(function() {
-      showDataAsPerPlatformSelection('Windows');
+
+      if (is_default_shallow==true){
+
+
+         $('#text_shallow').css('color', 'white');
+		$('#text_deep').css('color', 'black');
+		make_shallow_active();
+
+      }else{
+		make_deep_active();
+      }
+      showDataAsPerPlatformSelection('windows','x86_64', 1);
 
 
   });
+
+
+ function update_shallow_deep(){
+var type=1;
+if(is_default_shallow){
+type=2;
+}
+
+	console.log('changing..');
+
+     var request_data={
+		 "arch":"x86_64",
+		 "platform":"windows",
+		 "type":type,
+     }
+    	$.ajax({
+						url: '/manage/ajax/config/makedefault',
+						type: "POST",
+            			dataType: 'json',
+            			contentType: 'application/json',
+            			data: JSON.stringify(request_data),
+						success: function (data) {
+						if(type==1){
+						make_shallow_active();
+						}else{
+						make_deep_active();
+
+						}
+						$('#shallow_deep_check_label').text("Active");
+						$('#shallow_deep_check').prop( "checked", true );
+						$('#shallow_deep_check').prop( "disabled", true );
+
+						}
+				});
+
+
+
+
+
+}
+
+function make_shallow_active(){
+    is_default_shallow=true;
+	$("#shallow_check").removeClass("inactive").addClass("active");
+	$("#deep_check").removeClass("active").addClass("inactive");
+
+
+}
+function make_deep_active(){
+    is_default_shallow=false;
+  	$("#deep_check").removeClass("inactive").addClass("active");
+    $("#shallow_check").removeClass("active").addClass("inactive");
+
+}
 </script>
 
 {% endblock %}
