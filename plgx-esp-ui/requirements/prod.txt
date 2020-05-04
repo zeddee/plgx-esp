@@ -35,7 +35,7 @@ Flask-HTTPAuth==3.3.0
 Flask-Mail==0.9.1
 Flask-SSLify==0.1.5
 Flask-SQLAlchemy==2.3.2
-
+gevent==1.4.0
 gevent-websocket==0.10.1
 gunicorn==19.9.0
 itsdangerous==1.1.0        # via flask

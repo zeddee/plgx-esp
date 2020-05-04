@@ -24,7 +24,7 @@ CORES=1
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
         CORES="$(nproc --all)"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-        CORES="$(sysctl -n hw.ncpu)"         
+        CORES="$(sysctl -n hw.ncpu)"
 elif [[ "$OSTYPE" == "cygwin" ]]; then
 		echo "Os is cygwin.."
         # POSIX compatibility layer and Linux environment emulation for Windows
@@ -35,7 +35,7 @@ elif [[ "$OSTYPE" == "win32" ]]; then
 		CORES=echo %NUMBER_OF_PROCESSORS%
         # I'm not sure this can happen.
 elif [[ "$OSTYPE" == "freebsd"* ]]; then
-        CORES="$(sysctl -n hw.ncpu)"         
+        CORES="$(sysctl -n hw.ncpu)"
  else
 		echo "Os is unknown.."
 fi
@@ -68,22 +68,32 @@ python manage.py db upgrade
 echo "Creating default user..."
 exec `tmux send -t plgx_celery 'python manage.py add_user  "$POLYLOGYX_USER" --password  "$POLYLOGYX_PASSWORD"' ENTER`
 echo "Adding default configs..."
-exec `tmux send -t plgx_celery 'python manage.py add_default_config default_config_windows --filepath default_data/default_configs/default_config_windows.conf --platform windows' ENTER`
+exec `tmux send -t plgx_celery 'python manage.py add_default_config default_config_windows --filepath default_data/default_configs/default_config_windows_shallow.conf --platform windows' ENTER`
+exec `tmux send -t plgx_celery 'python manage.py add_default_config default_config_windows --filepath default_data/default_configs/default_config_windows_deep.conf --platform windows' ENTER`
+
 exec `tmux send -t plgx_celery 'python manage.py add_default_config default_config_macos --filepath default_data/default_configs/default_config_macos.conf --platform darwin' ENTER`
 exec `tmux send -t plgx_celery 'python manage.py add_default_config default_config_linux --filepath default_data/default_configs/default_config_linux.conf --platform linux' ENTER`
 exec `tmux send -t plgx_celery 'python manage.py add_default_config default_config_freebsd --filepath default_data/default_configs/default_config_freebsd.conf --platform freebsd' ENTER`
 exec `tmux send -t plgx_celery 'python manage.py add_default_options' ENTER`
 
+
+exec `tmux send -t plgx_celery 'python manage.py delete_existing_unmapped_queries_filters' ENTER`
+
+
 echo "Adding default filters..."
 exec `tmux send -t plgx_celery 'python manage.py add_default_filters --filepath default_data/default_filters/default_filter_linux.conf --platform linux' ENTER`
 exec `tmux send -t plgx_celery 'python manage.py add_default_filters --filepath default_data/default_filters/default_filter_macos.conf --platform darwin' ENTER`
-exec `tmux send -t plgx_celery 'python manage.py add_default_filters --filepath default_data/default_filters/default_filter_windows.conf --platform windows' ENTER`
+exec `tmux send -t plgx_celery 'python manage.py add_default_filters --filepath default_data/default_filters/default_filter_windows_shallow.conf --platform windows --type 1' ENTER`
+exec `tmux send -t plgx_celery 'python manage.py add_default_filters --filepath default_data/default_filters/default_filter_windows_deep.conf --platform windows --type 2' ENTER`
+
 exec `tmux send -t plgx_celery 'python manage.py add_default_filters --filepath default_data/default_filters/default_filter_windows_x86.conf --platform windows --arch x86' ENTER`
 
 echo "Adding default queries..."
 exec `tmux send -t plgx_celery 'python manage.py add_default_queries --filepath default_data/default_queries/default_queries_linux.conf --platform linux' ENTER`
 exec `tmux send -t plgx_celery 'python manage.py add_default_queries --filepath default_data/default_queries/default_queries_macos.conf --platform darwin' ENTER`
-exec `tmux send -t plgx_celery 'python manage.py add_default_queries --filepath default_data/default_queries/default_queries_windows.conf --platform windows' ENTER`
+exec `tmux send -t plgx_celery 'python manage.py add_default_queries --filepath default_data/default_queries/default_queries_windows_shallow.conf --platform windows --type 1' ENTER`
+exec `tmux send -t plgx_celery 'python manage.py add_default_queries --filepath default_data/default_queries/default_queries_windows_deep.conf --platform windows --type 2' ENTER`
+
 exec `tmux send -t plgx_celery 'python manage.py add_default_queries --filepath default_data/default_queries/default_queries_windows_x86.conf --arch x86 --platform windows' ENTER`
 
 

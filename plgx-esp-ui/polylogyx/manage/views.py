@@ -23,7 +23,7 @@ from polylogyx.models import (
     DistributedQuery, DistributedQueryTask, DistributedQueryResult,
     FilePath, Node, Pack, Query, Tag, Rule, ResultLog, StatusLog, EmailRecipient, CarveSession, NodeData,
     Alerts, Options, Settings, NodeReconData, DashboardData, User,
-    IOCIntel, ThreatIntelCredentials)
+    IOCIntel, ThreatIntelCredentials, Config)
 from polylogyx.search_rules import AndCondition, OPERATOR_MAP, BaseCondition, OrCondition
 
 from polylogyx.constants import PolyLogyxServerDefaults, DefaultInfoQueries
@@ -620,7 +620,7 @@ def node_activity(node_id):
 def get_queries_or_packs_of_node(node_id):
     return db.session.query(
         ResultLog.name, db.func.count(ResultLog.name)). \
-        filter(ResultLog.node_id == (node_id)).group_by(ResultLog.name). \
+        filter(ResultLog.node_id == node_id).filter(ResultLog.action!='removed').group_by(ResultLog.name). \
         all()
 
 
@@ -1078,40 +1078,69 @@ def clear_node_config():
     return jsonify(response)
 
 
-@blueprint.route('/configs', methods=['GET'])
+@blueprint.route('/configs', methods=['GET', 'POST'])
 @login_required
 def configs():
     from polylogyx.models import DefaultQuery, DefaultFilters
-
     platforms = ["windows", "linux", "darwin"]
     config_data = {}
-    for platform in platforms:
-        default_platform_queries = DefaultQuery.query.filter(DefaultQuery.platform == platform).all()
-        queries_data = {}
-        queries_data_x86 = {}
-        for default_query in default_platform_queries:
-            if default_query.arch == DefaultQuery.ARCH_x86:
-                queries_data_x86[default_query.name] = default_query.to_dict()
-            else:
-                queries_data[default_query.name] = default_query.to_dict()
+    default_queries = DefaultQuery.query.filter(DefaultQuery.platform.in_(platforms)) \
+        .filter(DefaultQuery.arch.in_([DefaultQuery.ARCH_x86, DefaultQuery.ARCH_x64])) \
+        .filter(Config.type.in_([Config.TYPE_DEEP, Config.TYPE_SHALLOW,
+                                       Config.TYPE_DEFAULT])).order_by(
+        DefaultQuery.name).all()
+
+    for query in default_queries:
+        type=query.config.type
+        if not query.platform in config_data:
+            config_data[query.platform] = {}
+        if not query.arch in config_data[query.platform]:
+            config_data[query.platform][query.arch] = {}
+        if not type in config_data[query.platform][query.arch]:
+            config_data[query.platform][query.arch][type] = {"queries": {}}
+        config_data[query.platform][query.arch][type]["queries"][query.name]=query.to_dict()
+        config_data[query.platform][query.arch][type]['status'] = query.config.is_active
 
 
-        #default_filter_obj = DefaultFilters.query.filter(DefaultFilters.platform == platform).first()
-        filters_data_x86_64 = DefaultFilters.query.filter(DefaultFilters.platform == platform).filter(
-                DefaultFilters.arch != DefaultFilters.ARCH_x86).first()
-        filters_data_x86 = DefaultFilters.query.filter(DefaultFilters.platform == platform).filter(
-                DefaultFilters.arch == DefaultFilters.ARCH_x86).first()
+    default_filters = DefaultFilters.query.filter(DefaultFilters.platform.in_(platforms))\
+        .filter(DefaultFilters.arch.in_([DefaultFilters.ARCH_x86, DefaultFilters.ARCH_x64]))\
+        .filter(Config.type.in_([Config.TYPE_DEEP, Config.TYPE_SHALLOW,
+                                         Config.TYPE_DEFAULT])).all()
 
-        # if default_filter_obj:
-        #     default_filter = default_filter_obj.filters
-        config_data[platform] = {"queries": queries_data,
-                                 "filters": filters_data_x86_64.filters}
-        if queries_data_x86:
-            config_data[platform + "_x86"] = {"queries": queries_data_x86,
-                                              "filters": filters_data_x86.filters}
+    for filter in default_filters:
+        type=filter.config.type
+        if not filter.platform in config_data:
+            config_data[filter.platform] = {}
+        if not filter.arch in config_data[filter.platform]:
+            config_data[filter.platform][filter.arch] = {}
+        if not type in config_data[filter.platform][filter.arch]:
+            config_data[filter.platform][filter.arch][type] = {"filters": {}}
+        config_data[filter.platform][filter.arch][type]["filters"] = filter.filters
+        config_data[filter.platform][filter.arch][type]['status']=filter.config.is_active
+
+
 
     return render_template('configs.html', configs=json.dumps(config_data))
 
+
+@blueprint.route('/ajax/config/makedefault', methods=['POST'])
+@login_required
+def set_default_config():
+    from polylogyx.blueprints import utils
+    form_data = utils.get_body_data(request)
+    platform = form_data.get('platform')
+    arch = form_data.get('arch')
+    type = form_data.get('type')
+    db.session.query(Config).filter(Config.arch == arch).filter(Config.platform == platform).update(
+        {Config.is_active: False})
+    db.session.query(Config).filter(Config.arch == arch).filter(Config.platform == platform).filter(
+        Config.type == type).update({Config.is_active: True})
+
+    db.session.commit()
+    response = {}
+    response['status'] = 'success'
+
+    return jsonify(response)
 
 @blueprint.route('/ajax/config/update', methods=['POST'])
 @login_required
@@ -1125,14 +1154,17 @@ def update_platform_filter_query():
     queries_data = form_data.get('queries')
     filters = form_data.get('filters')
     arch = form_data.get('arch')
+    type = form_data.get('type')
+
+    config=db.session.query(Config).filter(Config.arch==arch).filter(Config.platform==platform).filter(Config.type==type).first()
 
     # fetching the filters data to insert to the config dict
     if arch and arch == DefaultFilters.ARCH_x86:
         default_filters_obj = DefaultFilters.query.filter(DefaultFilters.platform == platform.lower()).filter(
-                DefaultFilters.arch == DefaultFilters.ARCH_x86).first()
+                DefaultFilters.arch == DefaultFilters.ARCH_x86).filter(DefaultFilters.config_id==config.id).first()
     else:
         default_filters_obj = DefaultFilters.query.filter(DefaultFilters.platform == platform.lower()).filter(
-                DefaultFilters.arch != DefaultFilters.ARCH_x86).first()
+                DefaultFilters.arch != DefaultFilters.ARCH_x86).filter(DefaultFilters.config_id==config.id).first()
     if default_filters_obj:
         default_filters_obj.update(filters=filters)
 
@@ -1140,20 +1172,16 @@ def update_platform_filter_query():
         if arch and arch == DefaultQuery.ARCH_x86:
             query = DefaultQuery.query.filter(DefaultQuery.name == key).filter(
                 DefaultQuery.arch == DefaultQuery.ARCH_x86).filter(
-                DefaultQuery.platform == platform.lower()).first()
+                DefaultQuery.platform == platform.lower()).filter(DefaultQuery.config_id==config.id).first()
         else:
             query = DefaultQuery.query.filter(DefaultQuery.name == key).filter(
                 DefaultQuery.arch != DefaultQuery.ARCH_x86).filter(
-                DefaultQuery.platform == platform.lower()).first()
+                DefaultQuery.platform == platform.lower()).filter(DefaultQuery.config_id==config.id).first()
 
-        if query:
-            query = query.update(status=queries_data[key]['status'],
+        query = query.update(status=queries_data[key]['status'],
                              interval=queries_data[key]['interval'])
-            result_queries[key] = query
-        else:
-            current_app.logger.error("error for updating query : "+key+" on platform "+platform+" "+arch)
+        result_queries[key] = query
 
-    # formatting the dict of final config
     response = {}
     response['status'] = 'success'
 
