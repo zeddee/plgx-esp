@@ -82,7 +82,7 @@ server. Please ensure that the following commands are executed from a root/admin
         .
         Server is up and running```
 
-### Upgrade from an existin Installation
+### Upgrade from an existing Installation
 
 After you install Docker and Docker Compose, you can install the PolyLogyx
 server. Please ensure that the following commands are executed from a root/administrator privileged terminal.
