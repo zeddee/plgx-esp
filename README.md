@@ -10,6 +10,9 @@ PolyLogyx ESP leverages the [Osquery](https://osquery.io/) tool, with [PolyLogx 
 
 ## Build and deploy
 
+
+### Fresh Installation
+
 After you install Docker and Docker Compose, you can install the PolyLogyx
 server. Please ensure that the following commands are executed from a root/administrator privileged terminal.
 
@@ -78,6 +81,68 @@ server. Please ensure that the following commands are executed from a root/admin
         .
         .
         Server is up and running```
+
+### Upgrade from an existin Installation
+
+After you install Docker and Docker Compose, you can install the PolyLogyx
+server. Please ensure that the following commands are executed from a root/administrator privileged terminal.
+
+1.  Clone this repository into a new directory.
+
+    ```~/Downloads$ git clone https://github.com/polylogyx/plgx-esp.git```
+     ```<snip>
+    Cloning into 'plgx-esp'...
+   
+2.  Switch to the folder where the repository is cloned.
+
+    ```~/Downloads\$ cd plgx-esp/```
+3.  Execute the command to copy existing certs setting up the flags for osquery.
+
+    sudo bash upgrade_script.sh --path <Path to the old installation directory>
+
+4.  Modify and save the .env file.
+
+    1.  Edit the following configuration parameters in the file. In the syntax, replace the values in angle brackets with required values.
+    ```
+    ENROLL_SECRET=<secret value>
+    POLYLOGYX_USER=<user login name> 
+    POLYLOGYX_PASSWORD=<login password> 
+    RSYSLOG_FORWARDING=true
+    VT_API_KEY=<VirusTotal Api Key> 
+    IBMxForceKey=<IBMxForce Key> 
+    IBMxForcePass=<IBMxForce Pass>
+    PURGE_DATA_DURATION=<number of days>  
+    THREAT_INTEL_LOOKUP_FREQUENCY=<number of minutes>
+     ```   
+| Parameter | Description                                                                                                                                                                                  |
+|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ENROLL_SECRET | Specifies the enrollment shared secret that is used for authentication.                                                                                                                              |
+| POLYLOGYX_USER       | Refers to the user login name for the PolyLogyx server.                                                                                                         |
+| POLYLOGYX_PASSWORD       | Indicates to the password for the PolyLogyx server user.                                                                                                              |
+| RSYSLOG_FORWARDING       | Set to true to enable forwarding of osquery and PolyLogyx logs to the syslog receiver by using rsyslog. |                                                                         |  
+| VT_API_KEY       | Represents the VirusTotal API key.                                                                            | 
+| IBMxForceKey       | Represents the IBMxForce key.                                                                            | 
+| IBMxForcePass       | Specifies the IBMxForce pass.                                                                            | 
+| PURGE_DATA_DURATION       | Specifies the frequency (in number of days) for purging the data.                                                                            | 
+| THREAT_INTEL_LOOKUP_FREQUENCY       | Specifies the frequency (in minutes) for fetching threat intelligence data.                                                                            |   
+    2. Save the file.
+    
+
+
+6.  Run the following command to start Docker compose.
+
+    ```docker-compose -p 'plgx-esp' up --build -d```
+    
+    Typically, this takes approximately 10-15 minutes. The following lines appear on
+    the screen when Docker starts:
+    ````Starting plgx-esp_rabbit1_1  ... done
+        Starting plgx-esp_postgres_1 ... done
+        Starting plgx-esp_plgx-esp_1     ... done
+        Attaching to plgx-esp_rabbit1_1, plgx-esp_postgres_1, plgx-esp_plgx-esp_1
+        .
+        .
+        .
+        Server is up and running```
         
 7.  Log on to server using following URL using the latest version of Chrome or
     Firefox browser.
@@ -93,6 +158,8 @@ server. Please ensure that the following commands are executed from a root/admin
 
 10.  Provision the clients. For more information, see [Provisioning the PolyLogyx
     Client for Endpoints](https://github.com/polylogyx/platform-docs/tree/master/03_Provisioning_Polylogyx_Client).
+
+
 
 ## Uninstalling the Server 
 ------------------------
