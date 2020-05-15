@@ -86,7 +86,7 @@
     </form>
   </div>
   <script type="text/javascript">
-    var ranOnNodes = 0;
+    var ranOnNodes = 0,totalOnlineNodes=0;
     $(document).ready(function () {
       setTimeout(function() {
         if (sql != '' && sql != 'None') {
@@ -119,7 +119,7 @@
           url: url,
           data: request_data,
           success: function (data) {
-              var totalOnlineNodes = data['onlineNodes'];
+               totalOnlineNodes = data['onlineNodes'];
 
               if (data['errors'] != null && data['errors']['sql'] != null) {
                   $("#error_message").html(data['errors']['sql']);

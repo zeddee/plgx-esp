@@ -287,6 +287,8 @@ PolyLogyx - Alerts
 </style>
 
 <!-- begin:: Content -->
+ <div id="container" style="display:none;"></div>
+
 <div class="kt-content  kt-grid__item kt-grid__item--fluid" id="kt_content">
   <div class="row">
     <div class="col-lg-12">
@@ -346,14 +348,35 @@ PolyLogyx - Alerts
                   <div id="{{ alert_source[index] }}_div">
 
   									<!--begin: Search Table -->
-										<div class="col-md-3 kt-margin-b-20-tablet-and-mobile pull-right">
-											<div class="kt-input-icon kt-input-icon--left">
-												<input type="text" class="form-control" placeholder="Search..." id="generalSearch_{{ alert_source[index] }}">
-												<span class="kt-input-icon__icon kt-input-icon__icon--left">
+								        <div class="kt-subheader   kt-grid__item" id="kt_subheader">
+                                            <div class="kt-container ">
+                                                <div class="kt-subheader__toolbar">
+                                                    <div class="kt-subheader__wrapper">
+                                                        <div class="dropdown dropdown-inline" data-toggle="kt-tooltip"
+                                                             title="Quick actions" data-placement="top">
+                                                            <div class="kt-input-icon kt-input-icon--left">
+                                                                <input type="text" class="form-control"
+                                                                       placeholder="Search..."
+                                                                       id="generalSearch_{{ alert_source[index] }}">
+                                                                <span class="kt-input-icon__icon kt-input-icon__icon--left">
 													<span><i class="la la-search"></i></span>
 												</span>
-											</div>
-										</div>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                    <div class="dropdown dropdown-inline" data-toggle="kt-tooltip"
+                                                         title="Quick actions" data-placement="top">
+                                                        <a href="#" onclick="exportAlerts('{{ alert_source[index] }}' )"
+                                                           class="btn btn btn-label btn-label-brand btn-bold"
+                                                           data-toggle="dropdown" data-offset="0 0" aria-haspopup="true"
+                                                           aria-expanded="false">
+                                                            Export
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
   									<!--end: Search Table -->
 
                     <table id="alert_{{ alert_source[index] }}" style="text-align: center;" onload="addSelectAllButton()" class="delete-row table-outer-delete table table-hover table-checkable {{ alert_source[index] }}  alert_source"></table>
@@ -366,14 +389,35 @@ PolyLogyx - Alerts
                   <div id="{{ alert_source[index] }}_div">
 
                     <!--begin: Search Table -->
-										<div class="col-md-3 kt-margin-b-20-tablet-and-mobile pull-right">
-											<div class="kt-input-icon kt-input-icon--left">
-												<input type="text" class="form-control" placeholder="Search..." id="generalSearch_{{ alert_source[index] }}">
-												<span class="kt-input-icon__icon kt-input-icon__icon--left">
+						        <div class="kt-subheader   kt-grid__item" id="kt_subheader">
+                                            <div class="kt-container ">
+                                                <div class="kt-subheader__toolbar">
+                                                    <div class="kt-subheader__wrapper">
+                                                        <div class="dropdown dropdown-inline" data-toggle="kt-tooltip"
+                                                             title="Quick actions" data-placement="top">
+                                                            <div class="kt-input-icon kt-input-icon--left">
+                                                                <input type="text" class="form-control"
+                                                                       placeholder="Search..."
+                                                                       id="generalSearch_{{ alert_source[index] }}">
+                                                                <span class="kt-input-icon__icon kt-input-icon__icon--left">
 													<span><i class="la la-search"></i></span>
 												</span>
-											</div>
-										</div>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                    <div class="dropdown dropdown-inline" data-toggle="kt-tooltip"
+                                                         title="Quick actions" data-placement="top">
+                                                        <a href="#" onclick="exportAlerts('{{ alert_source[index] }}' )"
+                                                           class="btn btn btn-label btn-label-brand btn-bold"
+                                                           data-toggle="dropdown" data-offset="0 0" aria-haspopup="true"
+                                                           aria-expanded="false">
+                                                            Export
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
   									<!--end: Search Table -->
 
                     <table id="alert_{{ alert_source[index] }}" style="text-align: center;" onload="addSelectAllButton()" class="table table-outer-delete table-hover table-checkable {{ alert_source[index] }}  alert_source"></table>
@@ -523,7 +567,6 @@ PolyLogyx - Alerts
         columns_array.push({
 					field: 'Alert Id',
 					title: '#',
-					sortable: false,
 					width: 20,
 					type: 'number',
 					selector: {class: 'kt-checkbox--solid'},
@@ -532,11 +575,21 @@ PolyLogyx - Alerts
 				keys.forEach(function (key) {
 
 
-					columns_array.push({"field":key.data,"title":key.data,template: function(row){
+                    if (key.data=='Severity' || key.data=='Created At')	{
 
-						return getRenderingHtmlBasedOnColumnName(key.data,row);
-	         }
-        })
+
+                      columns_array.push({"field":key.data,"sortable":true,"title":key.data,template: function(row){
+
+                          return getRenderingHtmlBasedOnColumnName(key.data,row);
+                        }
+                      })
+                    }else{
+                           columns_array.push({"field":key.data,"sortable":false,"title":key.data,template: function(row){
+
+                          return getRenderingHtmlBasedOnColumnName(key.data,row);
+                        }
+                      })
+                     }
 
 				});
 				var table_id=id.replace(/ /g,  '\\ ');
@@ -592,7 +645,7 @@ PolyLogyx - Alerts
           footer: false,
           height: _docHeight-215,
         },
-        sortable: false,
+        sortable: true,
 
         pagination: true,
 
@@ -871,6 +924,34 @@ function resolvedAllSelected() {
         clearInterval(moveRightMouseDownTimer);
         return false;
     });
+
+        function exportAlerts(source){
+    var csrf_token= '{{ csrf_token() }}';
+var request_params={};
+                    var currentDate = new Date();
+
+                    request_params['source'] = source;
+                    request_params['csrf_token'] = csrf_token;
+
+       $.ajax({
+                      "url": "/manage/ajax/alerts/export",
+                      "type": 'POST',
+                      "data": request_params,
+                      "success": function (res, status, xhr) {
+                          var csvData = new Blob([res], {type: 'text/csv;charset=utf-8;'});
+                          var csvURL = window.URL.createObjectURL(csvData);
+                          var tempLink = document.createElement('a');
+                          tempLink.href = csvURL;
+                          tempLink.setAttribute('download',  source+ '_alerts_' + currentDate.getTime());
+                          document.getElementById('container').appendChild(tempLink);
+                          tempLink.click();
+                        }
+                      });
+
+
+
+    }
+
  </script>
 
 {% endblock %}

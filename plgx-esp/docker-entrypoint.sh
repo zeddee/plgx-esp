@@ -3,7 +3,11 @@ echo "Starting docker entry point script..."
 
 
 echo "Waiting for PostgreSQL to start..."
-while ! nc -z "$POSTGRES_ADDRESS" "$POSTGRES_PORT"; do sleep 7; done
+
+until PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_ADDRESS -U $POSTGRES_USER -d $POSTGRES_DB_NAME -c "select 1" > /dev/null 2>&1 ; do
+  sleep 5
+done
+
 
 file="/tmp/celerybeat.pid"
 

@@ -14,6 +14,7 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.8/main" >> /etc/apk/repositori
               libffi-dev \
               musl \
               runit \
+              postgresql-client \
               postgresql-dev \
               tmux \
   && pip install --upgrade pip 

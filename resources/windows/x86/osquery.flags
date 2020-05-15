@@ -22,10 +22,9 @@
 --tls_server_certs=C:\Program Files\plgx_osquery\certificate.crt
 --database_path=C:\Program Files\plgx_osquery\osquery.db
 --pidfile=C:\Program Files\plgx_osquery\osquery.pid
---disable_watchdog=true
+--disable_watchdog=false
 --windows_event_channels=Microsoft-Windows-Windows Defender/Operational,Security,microsoft-windows-powershell/operational
 --allow_unsafe
-
 --database_dump=false
 --disable_events=false
 --schedule_default_interval=30
@@ -35,6 +34,6 @@
 --carver_start_endpoint=/start_uploads
 --carver_continue_endpoint=/upload_blocks
 --carver_disable_function=false
---watchdog_level=-1
+--watchdog_level=0
 --events_max=1500
 --utc

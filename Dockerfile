@@ -1,6 +1,6 @@
 FROM nickgryg/alpine-pandas:3.7.0
 
-RUN apk add --update tmux runit libpq libffi-dev
+RUN apk add --update tmux runit libpq libffi-dev postgresql-client
 RUN pip install --upgrade pip 
 COPY ./plgx-esp/requirements/prod.txt /tmp/requirements.txt
 RUN \

@@ -127,7 +127,8 @@ class Config(object):
         'CREATE TABLE win_suspicious_process_dump(pid BIGINT, process_name TEXT,process_dumps_location TEXT);',
         'CREATE TABLE win_suspicious_process_scan(pid BIGINT, process_name TEXT, modules_scanned BIGINT,modules_suspicious BIGINT,modules_replaced BIGINT,modules_detached BIGINT,modules_hooked BIGINT,modules_implanted BIGINT,modules_skipped BIGINT,modules_errors BIGINT);',
         'CREATE TABLE win_yara( target_path TEXT,matches TEXT,count BIGINT,sig_group TEXT,sigfile TEXT);',
-
+        'CREATE TABLE win_event_log_data(time BIGINT,datetime TEXT,source TEXT,provider_name TEXT,provider_guid TEXT,eventid BIGINT,task BIGINT,level BIGINT,keywords BIGINT,data TEXT,eid TEXT );',
+        'CREATE TABLE win_event_log_channels(source TEXT );',
     ]
 
     USE_X_FORWARDED_HOST = True
