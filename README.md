@@ -160,13 +160,12 @@ server. Please ensure that the following commands are executed from a root/admin
     Client for Endpoints](https://github.com/polylogyx/platform-docs/tree/master/03_Provisioning_Polylogyx_Client).
 
 
-### Upgrade agent
+### Upgrading the agent
 
 Download the latest CPT (v 1.0.40.1) and choose from the below upgrade options.
 
 1. Shallow Upgrade : plgx_cpt.exe -g s ( Updates extension and binary and keeps the existing data).
 2. Deep Upgrade : plgx_cpt.exe -g d ( Updates extension and binary and cleans the existing data)
-
 
 
 ## Uninstalling the Server 
