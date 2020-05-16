@@ -15,8 +15,10 @@ from flask import (
     request, send_file, url_for)
 from flask_login import login_required, current_user
 from flask_paginate import Pagination
-from sqlalchemy import or_, func, desc, cast,asc
+from sqlalchemy import or_, func, desc, cast, asc, column, String
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy.sql.elements import Grouping
+from sqlalchemy.sql.functions import GenericFunction
 
 from polylogyx.database import db
 from polylogyx.models import (
@@ -252,6 +254,7 @@ def export_node_csv():
     )
 
     return response
+
 
 
 
@@ -2349,6 +2352,52 @@ def get_query_results(node_id):
         nameResult[name[0]] = get_results_by_query(startPage, perPageRecords, node_id, name[0])
     return nameResult
 
+@blueprint.route('/ajax/alerts/export', methods=['POST'])
+@login_required
+def export_alerts():
+    source=request.form.get('source')
+    record_query = Alerts.query.filter(Alerts.source==source).filter(Alerts.status!=Alerts.RESOLVED).order_by(desc(Alerts.id)).all()
+    results = []
+    for value in record_query:
+        res = {}
+        res['Host Identifier'] = value.node.display_name
+        res['Node Id']=value.node_id
+        if value.rule:
+            res['Rule Id']=value.rule_id
+            res['Rule Name'] = value.rule.name
+
+        res['Severity']=value.severity
+        res['Type']=value.type
+        res['Source Data'] = value.source_data
+        res['Created At '] = value.created_at
+
+        results.append(res)
+
+    firstRecord = results[0]
+    headers = []
+    for key in firstRecord.keys():
+        headers.append(key)
+
+    bio = BytesIO()
+    writer = csv.writer(bio)
+    writer.writerow(headers)
+
+    for data in results:
+        row = []
+        row.extend([data.get(column, '') for column in headers])
+        writer.writerow(row)
+
+    bio.seek(0)
+
+    response = send_file(
+        bio,
+        mimetype='text/csv',
+        as_attachment=True,
+        attachment_filename='query_results.csv'
+    )
+
+    return response
+
 
 @blueprint.route('/alerts')
 @login_required
@@ -2394,6 +2443,13 @@ def update_alert_status():
     response['status'] = 'failure'
     return jsonify(response)
 
+class JSONB_EACH_RECORD(GenericFunction):
+    def __init__(self, *args, **kwargs):
+        super(JSONB_EACH_RECORD, self).__init__(*args, **kwargs)
+        self.name = 'jsonb_each_text'
+
+    def __getitem__(self, item):
+        return Grouping(self).op('.')(column(item, String))
 
 def get_results_by_alert_source(startPage, perPageRecords, source):
     filter_non_resolved_alerts = or_(Alerts.status == None, Alerts.status != Alerts.RESOLVED)
@@ -2409,8 +2465,17 @@ def get_results_by_alert_source(startPage, perPageRecords, source):
         col_names['3'] = 'Rule.name'
 
     try:
-        col_name = col_names[request.values['order[0][column]']]
-        col_order = request.values['order[0][dir]']
+        if request.values['sort[field]'].lower()=='created at':
+            col_name='Alerts.created_at'
+        elif request.values['sort[field]'].lower()=='rule name':
+            col_name='Alerts.rule.name'
+        else:
+            col_name = 'Alerts.'+request.values['sort[field]'].lower()
+
+        col_order = request.values['sort[sort]']
+        current_app.logger.info(col_name)
+
+        print(col_name)
     except Exception as e:
         col_name = 'Alerts.id'
         col_order = 'desc'
@@ -2423,8 +2488,10 @@ def get_results_by_alert_source(startPage, perPageRecords, source):
             searchTerm = (request.values[search_field_name])
         if (request.values['columns[0][data]']):
             columnsDefined = True
+        print(searchTerm)
+    except Exception as e:
+        print(e)
 
-    except:
         pass
     if startPage > 0:
         startPage = startPage - 1
@@ -2434,25 +2501,39 @@ def get_results_by_alert_source(startPage, perPageRecords, source):
     countFiltered = count
 
     if searchTerm:
-        countFiltered = db.session.query(Alerts, Rule, Node).filter(Alerts.source == source
-                                                                    ).filter(filter_non_resolved_alerts).filter(or_(
-            Alerts.severity.ilike('%' + searchTerm + '%'),
-            Node.node_info['computer_name'].astext.ilike('%' + searchTerm + '%'),
-            Rule.name.ilike('%' + searchTerm + '%'),
-            cast(Alerts.created_at, sqlalchemy.String).ilike('%' + searchTerm + '%')
-        )
-        ).join(Rule, Alerts.rule_id == Rule.id).join(Node, Alerts.node_id == Node.id).count()
+        subquery=func.jsonb_each_text(Alerts.message)
+        if source=='rule':
+            base_query=db.session.query(Alerts, Rule, Node,
+                                             cast(JSONB_EACH_RECORD(Alerts.message)['value'],String).label(
+                                                 'value'), ).filter(Alerts.source == source).filter(filter_non_resolved_alerts).filter(or_(
+                Alerts.severity.ilike('%' + searchTerm + '%'),
+                Node.node_info['computer_name'].astext.ilike('%' + searchTerm + '%'),
 
-        record_query = db.session.query(Alerts, Rule, Node).filter(filter_non_resolved_alerts).filter(
-            Alerts.source == source
-        ).filter(or_(
-            Alerts.severity.ilike('%' + searchTerm + '%'),
-            Node.node_info['computer_name'].astext.ilike('%' + searchTerm + '%'),
-            Rule.name.ilike('%' + searchTerm + '%'),
-            cast(Alerts.created_at, sqlalchemy.String).ilike('%' + searchTerm + '%')
-        )
-        ).join(Rule, Alerts.rule_id == Rule.id).join(Node, Alerts.node_id == Node.id).order_by(
-            desc(Alerts.id)).offset(startPage * perPageRecords).limit(perPageRecords).all()
+                Rule.name.ilike('%' + searchTerm + '%'),
+                cast(Alerts.created_at, sqlalchemy.String).ilike('%' + searchTerm + '%'),
+                "value like '%" + searchTerm + "%'"
+            )
+            ).join(Rule, Alerts.rule_id == Rule.id).join(Node, Alerts.node_id == Node.id).join(subquery, sqlalchemy.true()).distinct(Alerts.id)
+        else:
+            base_query = db.session.query(Alerts, Node,
+                                          cast(JSONB_EACH_RECORD(Alerts.message)['value'], String).label(
+                                              'value'),
+
+                                          ).filter(Alerts.source == source
+                                                   ).filter(filter_non_resolved_alerts).filter(or_(
+                Alerts.severity.ilike('%' + searchTerm + '%'),
+                Node.node_info['computer_name'].astext.ilike('%' + searchTerm + '%'),
+
+                cast(Alerts.created_at, sqlalchemy.String).ilike('%' + searchTerm + '%'),
+                "value like '%" + searchTerm + "%'"
+            )
+            ).join(Node, Alerts.node_id == Node.id).join(subquery,sqlalchemy.true()).distinct(Alerts.id)
+
+        countFiltered = base_query.distinct(Alerts.id).count()
+        if col_order == 'desc':
+            record_query = base_query.distinct(Alerts.id).offset(startPage * perPageRecords).limit(perPageRecords).all()
+        else:
+            record_query = base_query.distinct(Alerts.id).offset(startPage * perPageRecords).limit(perPageRecords).all()
 
         for value in record_query:
             res = {}

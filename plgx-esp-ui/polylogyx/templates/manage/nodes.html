@@ -365,8 +365,9 @@ PolyLogyx - Live Queries
    var sql='{{ sql | escapejs }}';
     var last_interval_id;
 
-    var socket;
     var intervalID;
+    var interval;
+
    function setIntervalX(callback, delay, repetitions) {
     var x = 0;
      intervalID = window.setInterval(function () {
@@ -381,40 +382,70 @@ PolyLogyx - Live Queries
     }, delay);
 }
 
-
-
     function startWebsocketConnection(queryId, totalOnlineNodes) {
-       if( socket!=undefined){
-           socket.disconnect();
 
-       }
-        if( intervalID!=undefined) {
-            window.clearInterval(intervalID);
+    connect(queryId);
+    }
+
+
+function connect(queryId) {
+      var loc = window.location, new_uri;
+        if (loc.protocol === "https:") {
+            new_uri = "wss:";
+        } else {
+            new_uri = "ws:";
         }
-        var interval = setIntervalX(function () {
-        }, 30000, 2);
-        socket = io('/test');
-        socket.on('connect', function () {
-            socket.send(queryId);
-            if (socket.connected){
-                console.log("connected");
-            }
-            console.log('connected and query id is ' + queryId);
-        });
+        new_uri += "//" + loc.host+ "/distributed/result";
 
-        socket.on('message', function (data) {
-            try {
-                populateTable();
-            } catch (err) {
-                console.log(err);
-            }
+    ws= new WebSocket(new_uri);
+  ws.onopen = function() {
+    // subscribe to some channels
+    ws.send(queryId);
+  };
 
-            function populateTable() {
+  ws.onmessage = function(e) {
+
+    try {
+          var data=e.data;
+          if ( data instanceof Blob){
+                var reader = new FileReader();
+                reader.addEventListener('loadend', (e) => {
+                    const text = e.srcElement.result;
+                    populateTable(text);
+                });
+                console.log(reader.readAsText(data));
+           }else{
+            console.log(data);
+           }
+        } catch (err) {
+            console.log(err);
+        }
+
+  };
+
+  ws.onclose = function(e) {
+    console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+    setTimeout(function() {
+      connect(queryId);
+    }, 1000);
+  };
+
+  ws.onerror = function(err) {
+    console.error('Socket encountered error: ', err.message, 'Closing socket');
+    ws.close();
+  };
+}
+
+
+
+  function populateTable(data) {
+                data=JSON.parse(data);
                 var nodeTitle = $('<h5/>');
                 nodeTitle.css("margin-top", "10px");
                 var span = $('<span/>');
                 span.addClass('badge badge-secondary');
                 var nodeName;
+                console.log(data);
                 if (data.node.name == '') {
                     nodeName = data.node.host_identifier;
                 } else {
@@ -556,15 +587,6 @@ PolyLogyx - Live Queries
 
 
             }
-
-        });
-        socket.on('disconnect', function () {
-            console.log('disconnected');
-
-        });
-
-    }
-
 
 </script>
 

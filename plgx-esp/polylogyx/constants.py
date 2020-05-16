@@ -275,8 +275,10 @@ class PolyLogyxConstants:
 
     DEFAULT_OPTIONS = {
         "custom_plgx_EnableSSL": "false",
+        "custom_plgx_EnableWatcher": "true",
         "schedule_splay_percent": 10,
     }
+
 class PolyLogyxServerDefaults:
     plgx_config_all_options = "plgx_config_all_options"
     plgx_config_all_settings = "plgx_config_all_settings"
@@ -289,7 +291,7 @@ class PolyLogyxServerDefaults:
 class QueryConstants:
     UNSIGNED_JSON = {"sign_info": "Unsigned"}
     PRODUCT_STATE_QUERY = '''SELECT product_type AS product_type,product_state AS product_state,SUM(sum__count) AS product_count
- FROM(SELECT product_type AS product_type, product_state AS product_state,sum(count) AS sum__count 
+ FROM(SELECT product_type AS product_type, product_state AS product_state,sum(count) AS sum__count
  FROM (SELECT jsonb_array_elements(data)->>'product_type' as product_type,jsonb_array_elements(data)->>'product_state' as product_state,COUNT(jsonb_array_elements(data)->>'product_state') as count FROM node_data where name='win_epp_table' and data::TEXT !='""'::TEXT and data::TEXT !='[]'::TEXT group by product_type,product_state order by count DESC) AS expr_qry GROUP BY product_type, product_state ORDER BY sum__count DESC LIMIT 10000) AS expr_qry GROUP BY product_type, product_state ORDER BY product_count DESC LIMIT 10000;'''
     PRODUCT_SIGNATURES_QUERY = '''SELECT product_type AS product_type,product_signatures AS product_signatures,SUM(sum__count) AS product_count FROM(SELECT product_type AS product_type, product_signatures AS product_signatures,sum(count) AS sum__count FROM (SELECT jsonb_array_elements(data)->>'product_type' as product_type,jsonb_array_elements(data)->>'product_signatures' as product_signatures,COUNT(jsonb_array_elements(data)->>'product_signatures') as count FROM node_data where name='win_epp_table' and data::TEXT !='""'::TEXT and data::TEXT !='[]'::TEXT group by product_type,product_signatures order by count DESC) AS expr_qry GROUP BY product_type, product_signatures ORDER BY sum__count DESC LIMIT 10000) AS expr_qry GROUP BY product_type, product_signatures ORDER BY product_count DESC LIMIT 10000;'''
 

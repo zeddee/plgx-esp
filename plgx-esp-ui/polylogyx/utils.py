@@ -291,6 +291,10 @@ def create_query_pack_from_upload(upload,category):
 
     if not pack:
         current_app.logger.debug("Creating pack %s", name)
+        if 'name' in data:
+            del data['name']
+        if 'category' in data:
+            del data['category']
         pack = Pack.create(name=name,category=category, **data)
 
     for query_name, query in data['queries'].items():

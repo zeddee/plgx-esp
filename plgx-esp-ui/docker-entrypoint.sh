@@ -4,8 +4,9 @@ cd /src/plgx-esp-ui
 echo "Creating enroll file..."
 exec `echo "$ENROLL_SECRET">resources/secret.txt`
 echo "Waiting for VASP to start..."
-while ! nc -z "plgx-esp" "6000"; do sleep 7; done
-
+until PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_ADDRESS -U $POSTGRES_USER -d $POSTGRES_DB_NAME -c "select 1" > /dev/null 2>&1 ; do
+  sleep 5
+done
 echo "Crating tmux sessions..."
 
 exec `tmux new-session -d -s plgx`
@@ -42,7 +43,7 @@ cd /src/plgx-esp-ui
 echo "Starting celery beat..."
 exec `tmux send -t plgx_celery_beat 'celery beat -A polylogyx.worker:celery --schedule=/tmp/celerybeat-schedule --loglevel=INFO --pidfile=/tmp/celerybeaet.pid' ENTER`
 echo "Starting PolyLogyx Vasp osquery fleet manager..."
-exec `tmux send -t plgx "gunicorn --workers=2 --threads=5  -k flask_sockets.worker --bind 0.0.0.0:5000 --certfile=resources/certificate.crt --keyfile=private.key  manage:app --reload" ENTER`
+exec `tmux send -t plgx "gunicorn --workers=2 --threads=5  -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --bind 0.0.0.0:5000 --certfile=resources/certificate.crt --keyfile=private.key  manage:app --reload" ENTER`
 echo "Starting celery workers..."
 exec `tmux send -t plgx_celery "celery worker -A polylogyx.worker:celery --concurrency=2 -l INFO &" ENTER`
 
