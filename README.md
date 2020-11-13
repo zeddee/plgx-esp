@@ -6,7 +6,7 @@ PolyLogyx ESP leverages the [Osquery](https://osquery.io/) tool, with [PolyLogx 
 - Internet connectivity
 - 5000 and 9000 ports should be available and accessible through firewall
 - Docker(18.03.1-CE or above) and [docker-compose (1.21.1 or above)](https://docs.docker.com/compose/install/#install-compose)
-
+- node and npm
 
 ## Build and deploy
 
@@ -65,9 +65,65 @@ server. Please ensure that the following commands are executed from a root/admin
 | THREAT_INTEL_LOOKUP_FREQUENCY       | Specifies the frequency (in minutes) for fetching threat intelligence data.                                                                            |   
     2. Save the file.
     
+5. Generating dist file using angular 8
 
+    a. Installation of Node.js and Npm:
 
-6.  Run the following command to start Docker compose.
+        Nodejs version required 10.3 and above
+        npm version required 6.1 and above
+  
+
+        ==> Installing node on Ubuntu or debian based system
+
+        Step 1: If curl is not installed on the system, run the following command to install it:
+		       
+		       sudo apt-get install curl
+		       
+        Step 2: Enabling nodesource repo:
+		    
+		        curl -sL https://deb.nodesource.com/setup_10.3 | sudo -E bash -
+		        
+        Note: Here,  node.js version 10.3 is being installed, if you want to install version 11, replace setup_10.x with setup_11.x.
+
+        Step 3: To Install Node.js and NPM to your Ubuntu machine, use the command given below:
+		      
+		        sudo apt-get install -y nodejs
+		       
+        Step 4: Once installed, verify it by checking the installed version using the following command:
+		      
+		        node -v or node -version
+		        npm -v or npm -version	
+				
+    b. Installing angular packages using npm
+	```
+        npm install -g @angular/cli@8.3.19 
+    ```
+
+    c. cd to the angular folder
+    ```
+        cp plgx-angular-ui
+    ```
+
+    d. Install project packages
+    ```
+       npm install
+    ```
+
+    e. Installing gzipper to  generate the compressed files
+    ```
+        npm i gzipper@3.7.0 -g
+    ```
+
+    f. Creating dist folder using gzipper 
+    ```
+        ng build --prod --stats-json && sudo gzipper --verbose ../dist
+    ```
+    g. cd to the extracted folder
+    ```
+       cd ../
+    ```
+        
+6.  Run the following command to start building containers using docker-compose.
 
     ```docker-compose -p 'plgx-esp' up -d```
     
@@ -98,7 +154,7 @@ server. Please ensure that the following commands are executed from a root/admin
     ```~/Downloads\$ cd plgx-esp/```
 3.  Execute the command to copy existing certs setting up the flags for osquery.
 
-    sudo bash upgrade_script.sh --path <Path to the old installation directory>
+    sudo bash upgrade_script.sh --path < Path to the existing installation directory >
 
 4.  Modify and save the .env file.
 
@@ -127,9 +183,65 @@ server. Please ensure that the following commands are executed from a root/admin
 | THREAT_INTEL_LOOKUP_FREQUENCY       | Specifies the frequency (in minutes) for fetching threat intelligence data.                                                                            |   
     2. Save the file.
     
+5. Generating dist file using angular 8
 
+    a. Installation of Node.js and Npm:
 
-6.  Run the following command to start Docker compose.
+        Nodejs version required 10.3 and above
+        npm version required 6.1 and above
+  
+
+        ==> Installing node on Ubuntu or debian based system
+
+        Step 1: If curl is not installed on the system, run the following command to install it:
+		       
+		       sudo apt-get install curl
+		       
+        Step 2: Enabling nodesource repo:
+		    
+		        curl -sL https://deb.nodesource.com/setup_10.3 | sudo -E bash -
+		        
+        Note: Here,  node.js version 10.3 is being installed, if you want to install version 11, replace setup_10.x with setup_11.x.
+
+        Step 3: To Install Node.js and NPM to your Ubuntu machine, use the command given below:
+		      
+		        sudo apt-get install -y nodejs
+		       
+        Step 4: Once installed, verify it by checking the installed version using the following command:
+		      
+		        node -v or node -version
+		        npm -v or npm -version	
+				
+    b. Installing angular packages using npm
+	```
+        npm install -g @angular/cli@8.3.19 
+    ```
+
+    c. cd to the angular folder
+    ```
+        cp plgx-angular-ui
+    ```
+
+    d. Install project packages
+    ```
+       npm install
+    ```
+
+    e. Installing gzipper to  generate the compressed files
+    ```
+        npm i gzipper@3.7.0 -g
+    ```
+
+    f. Creating dist folder using gzipper 
+    ```
+        ng build --prod --stats-json && sudo gzipper --verbose ../dist
+    ```
+    g. cd to the extracted folder
+    ```
+       cd ../
+    ```
+
+6.  Run the following command to start building containers using docker-compose.
 
     ```docker-compose -p 'plgx-esp' up --build -d```
     
@@ -162,7 +274,7 @@ server. Please ensure that the following commands are executed from a root/admin
 
 ### Upgrading the agent
 
-Download the latest CPT (v 1.0.40.1) and choose from the below upgrade options.
+Download the latest CPT (v 1.0.40.2) and choose from the below upgrade options.
 
 1. Shallow Upgrade : plgx_cpt.exe -g s ( Updates extension and binary and keeps the existing data).
 2. Deep Upgrade : plgx_cpt.exe -g d ( Updates extension and binary and cleans the existing data)
@@ -211,4 +323,3 @@ Please read the [LICENSE](LICENSE) file for details on the license.
 
 ## PolyLogyx ESP - Enterprise Edition
 PolyLogyx ESP comes with an enterprise flavor with advanced set of features and dedicated support. More about the enterprise edition of ESP can be learned [here](https://github.com/polylogyx/platform-docs)  or send an email to info@polylogyx.com
-
