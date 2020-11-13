@@ -1,0 +1,108 @@
+<!-- begin:: Content -->
+<div class="kt-grid kt-grid--hor kt-grid--root">
+  <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--ver kt-page">
+    <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--hor kt-wrapper" id="kt_wrapper">
+      <!--begin::Portlet-->
+      <div class="kt-portlet kt-portlet--mobile kt-portlet--responsive-mobile" style="max-width:100%;">
+          <div class="kt-portlet__head">
+          <div class="kt-portlet__head-label">
+            <h3 class="kt-portlet__head-title">
+              Configure VirusTotal Alerts
+            </h3>&nbsp;&nbsp;
+                <i  class="badge badge-pill badge-light fa fa-info" title="PolyLoygx ESP generates an alert on match of a file hash with VirusTotal engines when the 'Minimum Matching AV Engines' of engines return a match OR at least one of the following selected engines return a match." ></i>
+          </div>
+          <div class="kt-portlet__head-toolbar">
+            <div class="kt-portlet__head-wrapper">
+              <div class="">
+                <a href="javascript:void(0);" (click)="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+                  <i class="fas fa-chevron-left"></i>
+                  Back
+                </a>
+              </div>
+            </div>
+          </div>
+          </div>
+          <div class="kt-portlet__body" style="background:#fafafa80;">
+            <div class="kt-portlet kt-portlet--mobile">
+              <div class="kt-portlet__head">
+                <div class="row" >
+                  <span class="col-form-label" style="padding-top: 3%;">Minimum Matching AV Engines:</span>&nbsp;&nbsp;
+                <div class="col-form-label col-4" >
+                  <input type="number" min="1" class=form-control [(ngModel)]="av_engines_data['min_match_count']" >
+              </div>
+              </div>
+            </div>
+            <!-- begin:: placeholder-loader -->
+            <div class="hide_av_engines_data" >
+              <div class="ph-item">
+                <div class="ph-col-12">
+                <div class="ph-picture"></div>
+                <div class="ph-row">
+                  <div class="ph-col-4 big"></div>
+                  <div class="ph-col-8 empty big"></div>
+                  <div class="ph-col-6 big"></div>
+                  <div class="ph-col-6 empty big"></div>
+                  <div class="ph-col-2 big"></div>
+                  <div class="ph-col-10 empty big"></div>
+                  <div class="ph-col-6 big"></div>
+                  <div class="ph-col-6 empty big"></div>
+                  </div>
+                    <div class="ph-picture"></div>
+                  <div class="ph-row">
+                    <div class="ph-col-4 big"></div>
+                    <div class="ph-col-8 empty big"></div>
+                    <div class="ph-col-6 big"></div>
+                    <div class="ph-col-6 empty big"></div>
+                    <div class="ph-col-2 big"></div>
+                    <div class="ph-col-10 empty big"></div>
+                    <div class="ph-col-6 big"></div>
+                    <div class="ph-col-6 empty big"></div>
+                    </div>
+                    <div class="ph-row">
+                      <div class="ph-col-4 big"></div>
+                      <div class="ph-col-8 empty big"></div>
+                      <div class="ph-col-6 big"></div>
+                      <div class="ph-col-6 empty big"></div>
+                      <div class="ph-col-2 big"></div>
+                      <div class="ph-col-10 empty big"></div>
+                      <div class="ph-col-6 big"></div>
+                      <div class="ph-col-6 empty big"></div>
+                      </div>
+                    </div>
+                  </div>
+            </div>
+            <!-- End:: placeholder-loader -->
+            <!-- begin:: Table -->
+            <div >
+              <div class="kt-portlet__body" >
+                <table class="table table-hover table-checkable show_av_engines_data"  style="display: none;">
+                  <thead >
+                    <tr>
+                      <th>Select</th>
+                      <th>Antivirus Engines</th>
+                    </tr>
+                  </thead>
+                    <tbody  >
+                      <tr *ngFor="let engine of av_engines_data['av_engines'] |keyvalue;" >
+                        <td style="width:20%"><input id="status" class="checkboxClass"  name="status" type="checkbox" (ngModelChange)="get_changed_data(av_engines_data['av_engines'])" [ngModelOptions]="{standalone: true}" [(ngModel)]="engine.value.status"></td>
+                        <td><input class="av_engineinputClass" disabled="true" value={{engine.key}} ></td>
+                      </tr>
+                    </tbody>
+                </table>
+                <div class="no_data"></div>
+              </div>
+              <div class="kt-portlet__foot text-center">
+                <button type="submit" (click)="onSubmit()" class="btn btn-success" id="buttonvisible" ><i class="fa fa-sync-alt"></i>
+                  <span>Update</span>
+                </button>
+              </div>
+            </div>
+            <!-- End:: Table -->
+            </div>
+            </div>
+          </div>
+       <!--End::Portlet-->
+    </div>
+  </div>
+</div>
+<!-- End:: Content -->

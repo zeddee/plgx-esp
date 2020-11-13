@@ -14,6 +14,8 @@ from polylogyx.wrappers import node_wrappers as wrapper
 from polylogyx.wrappers import parent_wrappers as parentwrapper
 from polylogyx.wrappers import resultlog_wrappers as res_wrapper
 from polylogyx.wrappers import tag_wrappers as tag_wrapper
+from polylogyx.blueprints.v1.utils import SearchParser
+
 
 ns = Namespace('nodes', description='distributed query related operations')
 
@@ -30,7 +32,10 @@ class NodeList(Resource):
         '''returns list of all nodes information'''
         args = self.parser.parse_args()
         queryset = dao.filterNodesByStateActivity(args['platform'], args['state'])
-        data = [node.get_dict() for node in queryset]
+
+        data = marshal(queryset, wrapper.nodewrapper)
+        for i in range(len(data)):
+            data[i]['tags'] = [tag.to_dict() for tag in queryset[i].tags]
         message="nodes data fetched successfully"
         if not data: message = "There are no data to be shown and it is empty"
         return respcls(message,"success",data)
@@ -176,8 +181,6 @@ class EditTagToNode(Resource):
         return marshal(respcls(message,status), parentwrapper.common_response_wrapper, skip_none=True)
 
 
-
-
 @require_api_key
 @ns.route('/<string:host_identifier>/tags', endpoint='node_tags_list')
 @ns.doc(params={'host_identifier': 'Host identifier of the Node', 'tags': 'list of comma separated tags to careate'})
@@ -217,17 +220,15 @@ class ListTagsOfNode(Resource):
         return marshal(respcls(message,status), parentwrapper.common_response_wrapper, skip_none=True)
 
 
-
 @require_api_key
 @ns.route('/search/export', endpoint="nodes_search_export")
 @ns.doc(params={})
 class ExportNodeSearchQueryCSV(Resource):
     '''export node search query to csv'''
     parser = requestparse(['conditions', 'host_identifier'], [dict, str], ["conditions to search for", 'host_identifier of the node'], [True, False])
+
     @ns.expect(parser)
     def post(self):
-        from polylogyx.manage.views import parse_group
-        
         args = self.parser.parse_args()
         host_identifier = args['host_identifier']
         conditions = args['conditions']
@@ -237,7 +238,8 @@ class ExportNodeSearchQueryCSV(Resource):
             message = "no node found for the host_id given"
             return marshal(respcls(message, "failure"), parentwrapper.common_response_wrapper, skip_none=True)
         try:
-            root = parse_group(conditions)
+            search_rules=SearchParser()
+            root = search_rules.parse_group(conditions)
         except Exception as e:
             message=str(e)
             return marshal(respcls(message, "failure"), parentwrapper.common_response_wrapper, skip_none=True)
@@ -267,8 +269,8 @@ class ExportNodeSearchQueryCSV(Resource):
                 query_column_keys = output_dict_data[key][0].keys()
                 writer.writerow(query_column_keys)
                 for item in output_dict_data[key]:
-                    writer.writerow([item[query_column_key] for query_column_key in query_column_keys])
-                writer.writerow(["","",""])
+                    writer.writerow([item.get(query_column_key, '') for query_column_key in query_column_keys])
+                writer.writerow(["", "", ""])
 
             bio.seek(0)
 
@@ -283,7 +285,6 @@ class ExportNodeSearchQueryCSV(Resource):
         else:
             message = "there are no matching results for the payload given"
         return marshal(respcls(message, "failure"),parentwrapper.common_response_wrapper, skip_none = True)
-
 
 
 @require_api_key
@@ -338,13 +339,11 @@ class NodeActivity(Resource):
         node = dao.nodeActivityQuery(node_id)
         try:
             timestamp = dt.datetime.strptime(args['timestamp'], '%b %d %Y %I:%M%p')
-            #timestamp = dt.datetime.fromtimestamp(float(timestamp))
         except Exception:
             timestamp = dt.datetime.utcnow()
             timestamp -= dt.timedelta(days=30)
         queries_packs = get_queries_or_packs_of_node(node_id)
         queries_packs = [r for r, in queries_packs]
-        # recent = node.result_logs.filter(ResultLog.timestamp > timestamp, ResultLog.action != 'removed').all()
         data = {}
         data['node'] = marshal(node,wrapper.node_tag_wrapper)
         data['queries_packs'] = queries_packs

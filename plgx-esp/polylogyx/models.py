@@ -2,6 +2,8 @@
 import datetime as dt
 import string
 import uuid
+
+import sqlalchemy
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, SignatureExpired, BadSignature
 
 from flask import json, current_app
@@ -54,6 +56,7 @@ file_path_tags = Table(
     Column('tag.id', db.Integer, ForeignKey('tag.id')),
     Column('file_path.id', db.Integer, ForeignKey('file_path.id'), index=True)
 )
+
 
 class Tag(SurrogatePK, Model):
     value = Column(db.String, nullable=False, unique=True)
@@ -120,7 +123,7 @@ class Query(SurrogatePK, Model):
     version = Column(db.String)
     description = Column(db.String)
     value = Column(db.String)
-    removed = Column(db.Boolean, nullable=False, default=True)
+    removed = Column(db.Boolean, nullable=False, default=False)
     snapshot = Column(db.Boolean, nullable=False, default=False)
     shard = Column(db.Integer)
 
@@ -138,7 +141,7 @@ class Query(SurrogatePK, Model):
     )
 
     def __init__(self, name, query=None, sql=None, interval=3600, platform=None,
-                 version=None, description=None, value=None, removed=True,
+                 version=None, description=None, value=None, removed=False,
                  shard=None, snapshot=False, **kwargs):
         self.name = name
         self.sql = query or sql
@@ -170,10 +173,20 @@ class Query(SurrogatePK, Model):
         }
 
 
+class VirusTotalAvEngines(SurrogatePK, Model):
+    name = Column(db.String, nullable=False)
+    status = Column(db.Boolean, nullable=False,default=False)
+    description = Column(db.String, nullable=True)
+
+    def __init__(self,name,status,description=None):
+        self.name=name
+        self.status = status
+        self.description =description
+
+
 class DefaultQuery(SurrogatePK, Model):
     ARCH_x86="x86"
     ARCH_x64="x86_64"
-
 
     name = Column(db.String, nullable=False)
     sql = Column(db.String, nullable=False)
@@ -187,11 +200,12 @@ class DefaultQuery(SurrogatePK, Model):
     snapshot = Column(db.Boolean, nullable=False, default=False)
     shard = Column(db.Integer)
     status = Column(db.Boolean, nullable=False, default=False)
-    config_id = reference_col('config', nullable=False)
+    config_id = reference_col('config', nullable=True)
     config = relationship(
         'Config',
         backref=db.backref('default_query', lazy='dynamic')
     )
+
     def __init__(self, name, query=None, sql=None, interval=3600, platform=None,
                  version=None, description=None, value=None, removed=False,config_id=None,
                  shard=None,status=None, snapshot=False,arch=ARCH_x64, **kwargs):
@@ -349,7 +363,13 @@ class Pack(SurrogatePK, Model):
             'tags': [r.to_dict() for r in self.tags]
         }
 
+
 class Node(SurrogatePK, Model):
+
+    ACTIVE = 0
+    REMOVED = 1
+    DELETED = 2
+
     NA = 0
     DISABLE = 1
     ENABLE = 2
@@ -363,6 +383,8 @@ class Node(SurrogatePK, Model):
     os_info = Column(JSONB, default={}, nullable=False)
     network_info = Column(JSONB, default={}, nullable=False)
     host_details = Column(JSONB, default={}, nullable=False)
+    state = Column(db.Integer, default=ACTIVE, nullable=True)
+    updated_at = Column(db.DateTime, nullable=True, default=dt.datetime.now())
 
     last_status = Column(db.DateTime)
     last_result = Column(db.DateTime)
@@ -370,9 +392,8 @@ class Node(SurrogatePK, Model):
     last_query_read = Column(db.DateTime)
     last_query_write = Column(db.DateTime)
 
-    is_active = Column(db.Boolean, default=True, nullable=False)
+    is_active = Column(db.Boolean, default=False, nullable=False)
     last_ip = Column(INET, nullable=True)
-
 
     tags = relationship(
         'Tag',
@@ -383,8 +404,8 @@ class Node(SurrogatePK, Model):
 
     def __init__(self, host_identifier, node_key=None,
                  enroll_secret=None, enrolled_on=None, last_checkin=None,
-                 is_active=True, last_ip=None, last_status=None, network_info=None, os_info=None,
-                 node_info=None, last_result=None,last_config=None,last_query_read=None,last_query_write=None,
+                 is_active=False, last_ip=None, last_status=None, network_info=None, os_info=None,
+                 node_info=None, last_result=None,last_config=None,last_query_read=None,last_query_write=None,state=None,updated_at=None,
                  **kwargs):
         self.network_info = network_info
         self.node_info = node_info
@@ -401,6 +422,8 @@ class Node(SurrogatePK, Model):
         self.last_config = last_config
         self.last_query_read = last_query_read
         self.last_query_write = last_query_write
+        self.state = state
+        self.updated_at = updated_at
 
 
 
@@ -487,7 +510,8 @@ class Node(SurrogatePK, Model):
             'node_info': self.node_info.copy(),
             'network_info': self.network_info.copy(),
             'last_ip': self.last_ip,
-            'is_active': self.is_active
+            'is_active': self.is_active or self.node_is_active()
+
         }
 
     def as_dict(self):
@@ -536,8 +560,6 @@ class FilePath(SurrogatePK, Model):
         self.target_paths = '!!'.join(target_paths)
 
 
-
-
 class ResultLog(SurrogatePK, Model):
     NEW = 0
     PENDING = 1
@@ -549,7 +571,7 @@ class ResultLog(SurrogatePK, Model):
     node_id = reference_col('node', nullable=False)
     node = relationship(
         'Node',
-        backref=db.backref('result_logs', lazy='dynamic')
+        backref=db.backref('result_logs', cascade='all, delete-orphan', lazy='dynamic')
     )
     uuid = Column(db.String, nullable=True)
     status = Column(db.Integer, default=NEW, nullable=False)
@@ -578,9 +600,9 @@ class ResultLog(SurrogatePK, Model):
         dictionary = {}
         for c in self.__table__.columns:
             if not c.name == "timestamp":
-                dictionary[c.name] = getattr(self, c.name);
+                dictionary[c.name] = getattr(self, c.name)
             else:
-                dictionary[c.name] = getattr(self, c.name).strftime('%m/%d/%Y %H/%M/%S');
+                dictionary[c.name] = getattr(self, c.name).strftime('%m/%d/%Y %H/%M/%S')
         return dictionary
 
     @declared_attr
@@ -588,6 +610,73 @@ class ResultLog(SurrogatePK, Model):
         return (
             Index('idx_%s_node_id_timestamp_desc' % cls.__tablename__,
                   'node_id', cls.timestamp.desc()),
+            Index('idx_%s_name' % cls.__tablename__, 'name'),
+            Index('idx_%s_on_columns_md5' % cls.__tablename__,
+                  sqlalchemy.text("(columns->'md5')"), postgresql_using='btree'),
+
+            Index('idx_%s_on_columns_domain_name' % cls.__tablename__,
+                  sqlalchemy.text("(columns->'domain_name')"), postgresql_using='btree'),
+
+            Index('idx_%s_on_columns_ja3_md5' % cls.__tablename__,
+                  sqlalchemy.text("(columns->'ja3_md5')"), postgresql_using='btree'),
+
+            Index('idx_%s_on_columns_sha256' % cls.__tablename__,
+                  sqlalchemy.text("(columns->'sha256')"), postgresql_using='btree'),
+
+            Index('idx_%s_on_columns_process_guid' % cls.__tablename__,
+                  sqlalchemy.text("(columns->'process_guid')"), postgresql_using='btree'),
+
+            Index('idx_%s_on_columns_parent_process_guid' % cls.__tablename__,
+                  sqlalchemy.text("(columns->'parent_process_guid')"), postgresql_using='btree'),
+
+            Index('idx_%s_on_columns_time' % cls.__tablename__,
+                  sqlalchemy.text("(columns->'time')"), postgresql_using='btree'),
+
+            Index('idx_%s_on_columns_target_path' % cls.__tablename__,
+                  sqlalchemy.text("(columns->'target_path')"), postgresql_using='btree'),
+
+            Index('idx_%s_on_columns_target_name' % cls.__tablename__,
+                  sqlalchemy.text("(columns->'target_name')"), postgresql_using='btree'),
+
+            Index('idx_%s_on_columns_process_name' % cls.__tablename__,
+                  sqlalchemy.text("(columns->'process_name')"), postgresql_using='btree'),
+
+            Index('idx_%s_on_columns_remote_address' % cls.__tablename__,
+                  sqlalchemy.text("(columns->'remote_address')"), postgresql_using='btree'),
+
+        )
+
+
+class AlertLog(SurrogatePK, Model):
+    name = Column(db.String, nullable=False)
+    timestamp = Column(db.DateTime, default=dt.datetime.utcnow)
+    action = Column(db.String)
+    columns = Column(JSONB)
+    alert_id = db.Column(db.Integer, db.ForeignKey('alerts.id', ondelete='CASCADE'))
+    result_log_uuid = Column(db.String, nullable=True)
+
+    def __init__(self, name=None, action=None, columns=None, timestamp=None, alert_id=None, result_log_uuid=None):
+        self.name = name
+        self.action = action
+        self.columns = columns or {}
+        self.timestamp = timestamp
+        self.alert_id = alert_id
+        self.result_log_uuid = result_log_uuid
+
+    def to_dict(self):
+        dictionary = {}
+        for c in self.__table__.columns:
+            if not c.name == "timestamp":
+                dictionary[c.name] = getattr(self, c.name)
+            else:
+                dictionary[c.name] = getattr(self, c.name).strftime('%d-%m-%Y %H:%M:%S.%f')
+        return dictionary
+
+    @declared_attr
+    def __table_args__(cls):
+        return (
+            Index('idx_%s_name' % cls.__tablename__, 'name'),
+            Index('idx_%s_result_log_uuid' % cls.__tablename__, 'result_log_uuid'),
         )
 
 
@@ -602,7 +691,7 @@ class StatusLog(SurrogatePK, Model):
     node_id = reference_col('node', nullable=False)
     node = relationship(
         'Node',
-        backref=db.backref('status_logs', lazy='dynamic')
+        backref=db.backref('status_logs', cascade='all, delete-orphan', lazy='dynamic')
     )
 
     def __init__(self, line=None, message=None, severity=None,
@@ -685,10 +774,10 @@ class DistributedQueryTask(SurrogatePK, Model):
                            lazy='dynamic'),
     )
 
-    node_id = reference_col('node', nullable=False)
+    node_id = db.Column(db.Integer, db.ForeignKey('node.id', ondelete='CASCADE'))
     node = relationship(
         'Node',
-        backref=db.backref('distributed_queries', lazy='dynamic'),
+        backref=db.backref('distributed_queries', passive_deletes=True, lazy='dynamic')
     )
 
     def __init__(self, node=None, node_id=None,
@@ -889,31 +978,27 @@ class Alerts(SurrogatePK, Model):
     query_name = Column(db.String, nullable=False)
     message = Column(JSONB)
 
-    node_id = reference_col('node', nullable=False)
     rule_id = reference_col('rule', nullable=True)
     rule = relationship(
         'Rule',
         backref=db.backref('alerts', lazy='dynamic'),
     )
-    severity = Column(db.String, nullable=True)
-    type = Column(db.String, nullable=True)
 
+    node_id = reference_col('node', nullable=False)
     node = relationship(
         'Node',
-        backref=db.backref('alerts', lazy='dynamic'),
+        backref=db.backref('alerts', cascade='all, delete-orphan', lazy='dynamic'),
     )
 
-    created_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
-
-    severity = Column(db.String)
+    severity = Column(db.String, nullable=True)
+    type = Column(db.String, nullable=True)
     recon_queries = Column(JSONB)
     result_log_uid = Column(db.String)
-    type = Column(db.String)
     source = Column(db.String)
     source_data = Column(JSONB)
     status = Column(db.String, default=OPEN)
 
-
+    created_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
 
     def __init__(self, message, query_name, node_id, rule_id, recon_queries, result_log_uid, type, source, source_data,
                  severity):
@@ -922,13 +1007,11 @@ class Alerts(SurrogatePK, Model):
         self.recon_queries = recon_queries
         self.node_id = node_id
         self.rule_id = rule_id
-
         self.type = type
         self.source = source
         self.source_data = source_data
         self.result_log_uid = result_log_uid
         self.severity = severity
-        # self.node=node
 
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -937,10 +1020,19 @@ class Alerts(SurrogatePK, Model):
         dictionary = {}
         for c in self.__table__.columns:
             if not c.name == "created_at":
-                dictionary[c.name] = getattr(self, c.name);
+                dictionary[c.name] = getattr(self, c.name)
             else:
-                dictionary[c.name] = getattr(self, c.name).strftime('%m/%d/%Y %H/%M/%S');
+                dictionary[c.name] = getattr(self, c.name).strftime('%m/%d/%Y %H/%M/%S')
         return dictionary
+
+    @declared_attr
+    def __table_args__(cls):
+        return (
+            Index('idx_%s_created_at_desc' % cls.__tablename__,
+                  'created_at', cls.created_at.desc()),
+            Index('idx_%s_status' % cls.__tablename__,
+                  'status')
+        )
 
 
 class EmailRecipient(SurrogatePK, Model):
@@ -981,7 +1073,7 @@ class NodeData(SurrogatePK, Model):
     node_id = reference_col('node', nullable=False)
     node = relationship(
         'Node',
-        backref=db.backref('node_data', lazy='dynamic'),
+        backref=db.backref('node_data', cascade='all, delete-orphan', lazy='dynamic'),
     )
 
     created_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
@@ -1020,7 +1112,7 @@ class NodeReconData(SurrogatePK, Model):
     node_data_id = reference_col('node_data', nullable=False)
     node_data = relationship(
         'NodeData',
-        backref=db.backref('node_recon_data', lazy='dynamic'),
+        backref=db.backref('node_recon_data', cascade='all, delete-orphan', lazy='dynamic'),
     )
 
     created_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
@@ -1072,7 +1164,6 @@ class CarveSession(SurrogatePK, Model):
     #  StatusCompleted for carves that finalized
     StatusCompleted = "COMPLETED"
 
-    node_id = reference_col('node', nullable=False)
     session_id = Column(db.String, nullable=False)
     carve_guid = Column(db.String, nullable=False)
 
@@ -1085,12 +1176,14 @@ class CarveSession(SurrogatePK, Model):
     request_id = Column(db.String, nullable=False)
     status = Column(db.String, nullable=False)
 
-    created_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
-    updated_at = Column(db.DateTime, nullable=False)
+    node_id = db.Column(db.Integer, db.ForeignKey('node.id', ondelete='CASCADE'))
     node = relationship(
         'Node',
-        backref=db.backref('carve_session', lazy='dynamic')
+        backref=db.backref('carve_session', passive_deletes=True, lazy='dynamic')
     )
+
+    created_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
+    updated_at = Column(db.DateTime, nullable=False)
 
     def __init___(self, node_id, session_id=None, carve_guid=None, carve_size=0, block_size=0, block_count=0,
                   archive=None,request_id=None):
@@ -1136,21 +1229,21 @@ class CarvedBlock(SurrogatePK, Model):
         self.size = size
 
 
-
 class AlertEmail(SurrogatePK, Model):
-    alert_id = reference_col('alerts', nullable=False)
+    alert_id = db.Column(db.Integer, db.ForeignKey('alerts.id', ondelete='CASCADE'))
     alert = relationship(
         'Alerts',
-        backref=db.backref('alert_email', lazy='dynamic'),
+        backref=db.backref('alert_email', lazy='dynamic', passive_deletes=True),
     )
-    node = Column(db.String, nullable=False)
-    status = Column(db.String, nullable=True)
-    node_id = reference_col('node', nullable=False)
 
+    status = Column(db.String, nullable=True)
+
+    node_id = db.Column(db.Integer, db.ForeignKey('node.id', ondelete='CASCADE'))
     node = relationship(
         'Node',
-        backref=db.backref('alert_email', lazy='dynamic'),
+        backref=db.backref('alert_email', passive_deletes=True, lazy='dynamic')
     )
+
     body = Column(db.String, nullable=False)
 
     created_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
@@ -1240,6 +1333,7 @@ class ThreatIntelCredentials(SurrogatePK, Model):
         self.intel_name = intel_name
         self.credentials = credentials
 
+
 # Table to invalidate the token
 class HandlingToken(SurrogatePK, Model):
     token = Column(db.String, nullable=False)
@@ -1247,3 +1341,34 @@ class HandlingToken(SurrogatePK, Model):
     token_expired = Column(db.Boolean, nullable=False, default=False)
     logged_out_at = Column(db.DateTime, nullable=True)
     user = Column(db.String, nullable=False)
+
+
+class ReleasedAgentVersions(SurrogatePK, Model):
+    platform = Column(db.String, nullable=False)
+    platform_release = Column(db.String, nullable=True)
+    osquery_version = Column(db.String, nullable=True)
+    extension_version = Column(db.String, nullable=True)
+    extension_hash_md5 = Column(db.String, nullable=True)
+    created_at = Column(db.DateTime, nullable=True, default=dt.datetime.utcnow)
+
+    def __init__(self, platform=None, platform_release=None, osquery_version=None, extension_version=None,
+                 extension_hash_md5=None, **kwargs):
+        self.platform = platform
+        self.platform_release = platform_release
+        self.osquery_version = osquery_version
+        self.extension_version = extension_version
+        self.extension_hash_md5 = extension_hash_md5
+        self.created_at = dt.datetime.now()
+
+
+class OsquerySchema(SurrogatePK, Model):
+    name = Column(db.String, nullable=False)
+    platform = Column(ARRAY(db.String), nullable=False)
+    schema = Column(JSONB, default={}, nullable=False)
+    description = Column(db.String, nullable=True)
+
+    def __init__(self, name=None, platform=None, schema=None, description=None, **kwargs):
+        self.platform = platform
+        self.name = name
+        self.schema = schema
+        self.description = description

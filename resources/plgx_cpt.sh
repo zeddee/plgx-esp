@@ -4,10 +4,6 @@
 
 _PROJECT="POLYLOGYX"
 
-_SECRET_LINUX=/etc/osquery/secret.txt
-_FLAGS_LINUX=/etc/osquery/osquery.flags
-_CERT_LINUX=/etc/osquery/certificate.crt
-
 _SECRET_OSX=/private/var/osquery/secret.txt
 _FLAGS_OSX=/private/var/osquery/osquery.flags
 _CERT_OSX=/private/var/osquery/certificate.crt
@@ -19,11 +15,9 @@ _SECRET_FREEBSD=/usr/local/etc/secret.txt
 _FLAGS_FREEBSD=/usr/local/etc/osquery.flags
 _CERT_FREEBSD=/usr/local/etc/certificate.crt
 
-_OSQUERY_PKG="darwin/osquery-4.0.2.pkg"
-_OSQUERY_DEB="linux/osquery_4.0.2_1.linux.amd64.deb"
-_OSQUERY_RPM="linux/osquery-4.0.2-1.linux.x86_64.rpm"
+_OSQUERY_PKG="darwin/osquery-4.3.0.pkg"
 
-_OSQUERY_SERVICE_LINUX="osqueryd"
+
 _OSQUERY_SERVICE_OSX="com.facebook.osqueryd"
 _OSQUERY_SERVICE_FREEBSD="osqueryd"
 
@@ -94,16 +88,6 @@ parseCLArgs(){
 whatOS() {
   OS=$(echo `uname`|tr '[:upper:]' '[:lower:]')
   log "OS=$OS"
-  if [ "$OS" = "linux" ]; then
-    distro=$(/usr/bin/rpm -q -f /usr/bin/rpm >/dev/null 2>&1)
-    if [ "$?" = "0" ]; then
-      log "RPM based system detected"
-      _LINUX_FLAVOUR="rpm"
-	else
-      _LINUX_FLAVOUR="debian"	
-      log "Debian based system detected"
-    fi
-  fi   
 }
 
 downloadDependents() {
@@ -112,12 +96,6 @@ downloadDependents() {
   echo "$_BASE_URL"
 
   echo "Downloading flags file, secret file, cert file for $OS os"
-  if [ "$OS" = "linux" ]; then
-    mkdir -p /etc/osquery
-    curl -o /etc/osquery/osquery.flags  "$_BASE_URL"linux/osquery.flags -k || wget -O /etc/osquery/osquery.flags "$_BASE_URL"linux/osquery.flags --no-check-certificate
-    curl -o /etc/osquery/secret.txt   "$_BASE_URL"secret.txt -k || wget -O /etc/osquery/secret.txt "$_BASE_URL"secret.txt --no-check-certificate
-    curl -o /etc/osquery/certificate.crt  "$_BASE_URL"certificate.crt -k || wget  -O /etc/osquery/certificate.crt "$_BASE_URL"certificate.crt --no-check-certificate 
-  fi
   if [ "$OS" = "darwin" ]; then
     mkdir -p /private/var/osquery
     curl -o /private/var/osquery/osquery.flags  "$_BASE_URL"darwin/osquery.flags -k || wget -O /private/var/osquery/osquery.flags "$_BASE_URL"darwin/osquery.flags --no-check-certificate
@@ -143,22 +121,9 @@ log() {
 }
 
 installOsquery() {
-  _OSQUERY_RPM="$_BASE_URL$_OSQUERY_RPM"
-  _OSQUERY_DEB="$_BASE_URL$_OSQUERY_DEB"
   _OSQUERY_PKG="$_BASE_URL$_OSQUERY_PKG"
   echo $_OSQUERY_PKG
   log "Installing osquery for $OS"
-  if [ "$OS" = "linux" ]; then
-    if [ $_LINUX_FLAVOUR = "rpm" ]; then
-      _RPM="$(echo $_OSQUERY_RPM | cut -d"/" -f6)"
-      sudo curl -# "$_OSQUERY_RPM" -o "/tmp/$_RPM" -k
-      sudo rpm -ivh "/tmp/$_RPM"
-    else
-      _DEB="$(echo $_OSQUERY_DEB | cut -d"/" -f6)"
-      sudo curl -# "$_OSQUERY_DEB" -o "/tmp/$_DEB" -k
-      sudo dpkg -i "/tmp/$_DEB"
-    fi
-  fi
   if [ "$OS" = "darwin" ]; then
     _PKG="$(echo $_OSQUERY_PKG | cut -d"/" -f6)"
     sudo curl -# "$_OSQUERY_PKG" -o "/tmp/$_PKG" -k
@@ -175,12 +140,6 @@ verifyOsquery() {
 }
 
 prepareDependents() {
-  if [ "$OS" = "linux" ]; then
-    _SECRET_FILE="$_SECRET_LINUX"
-    _FLAGS="$_FLAGS_LINUX"
-    _CERT="$_CERT_LINUX"
-    _SERVICE="$_OSQUERY_SERVICE_LINUX"
-  fi
   if [ "$OS" = "darwin" ]; then
     _SECRET_FILE="$_SECRET_OSX"
     _FLAGS="$_FLAGS_OSX"
@@ -200,16 +159,6 @@ prepareDependents() {
 }
 
 stopOsquery() {
-  if [ "$OS" = "linux" ]; then
-    log "Stopping $_OSQUERY_SERVICE_LINUX"
-    if which systemctl >/dev/null; then
-      sudo systemctl stop "$_OSQUERY_SERVICE_LINUX"
-    elif which service >/dev/null; then
-      sudo service "$_OSQUERY_SERVICE_LINUX" stop
-    else
-      sudo /etc/init.d/"$_OSQUERY_SERVICE_LINUX" stop
-    fi
-  fi
   if [ "$OS" = "darwin" ]; then
     log "Stopping $_OSQUERY_SERVICE_OSX"
     if launchctl list | grep -qcm1 "$_OSQUERY_SERVICE_OSX"; then
@@ -225,16 +174,6 @@ stopOsquery() {
 }
 
 startOsquery() {
-  if [ "$OS" = "linux" ]; then
-    log "Starting $_OSQUERY_SERVICE_LINUX"
-    if which systemctl >/dev/null; then
-      sudo systemctl start "$_OSQUERY_SERVICE_LINUX"
-      sudo systemctl enable "$_OSQUERY_SERVICE_LINUX"
-    else
-      sudo /etc/init.d/"$_OSQUERY_SERVICE_LINUX" start
-      sudo update-rc.d "$_OSQUERY_SERVICE_LINUX" defaults
-    fi
-  fi
   if [ "$OS" = "darwin" ]; then
     log "Starting $_OSQUERY_SERVICE_OSX"
     sudo cp "$_OSQUERY_PLIST" "$_PLIST_OSX"
@@ -249,26 +188,6 @@ startOsquery() {
 
 
 stopOsqueryAndRemoveService() {
-  if [ "$OS" = "linux" ]; then
-    log "Stopping $_OSQUERY_SERVICE_LINUX"
-    if which systemctl >/dev/null; then
-      sudo systemctl stop "$_OSQUERY_SERVICE_LINUX"
-      sudo systemctl disable "$_OSQUERY_SERVICE_LINUX"
-    elif which service >/dev/null; then
-      sudo service "$_OSQUERY_SERVICE_LINUX" stop
-      echo manual | sudo tee "/etc/init/$_OSQUERY_SERVICE_LINUX.override"
-    else
-      sudo /etc/init.d/"$_OSQUERY_SERVICE_LINUX" stop
-      sudo update-rc.d -f "$_OSQUERY_SERVICE_LINUX" remove
-    fi
-    if [ $_LINUX_FLAVOUR = "rpm" ]; then
-      log "RPM based system detected"
-	  sudo rpm -e osquery 
-    else
-      log "DEB based system detected"
-	  sudo apt-get autoremove osquery
-    fi
-  fi
   if [ "$OS" = "darwin" ]; then
     log "Stopping $_OSQUERY_SERVICE_OSX"
     if launchctl list | grep -qcm1 "$_OSQUERY_SERVICE_OSX"; then

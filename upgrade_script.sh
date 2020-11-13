@@ -55,6 +55,19 @@ else
 fi
 
 
+
+if [ -f ${OLD_PLGX_DIR_PATH}.env ] ; then
+    CREDENTIALS=("RABBITMQ_URL" "POSTGRES_ADDRESS" "POSTGRES_PORT" "POSTGRES_DB_NAME" "POSTGRES_DB" "POSTGRES_USER" "POSTGRES_PASSWORD" "ENROLL_SECRET" "RSYSLOG_FORWARDING")
+    for i in "${CREDENTIALS[@]}"; do
+        sed -i 's/'$i'=.*/'$i'='"$( sed -n 's/'$i'=//p' "${OLD_PLGX_DIR_PATH}".env | cut -d':' -f1)"'/g' "$(pwd)/.env"
+    done
+    echo "Postgres credentials and rabbitmq URL are copied successfully from the existing POLYLOGYX server folder path!"
+else
+    echo "Unable to detect the existing .env file"
+fi
+
+
+
 makeFlagsFile(){
       while true; do
     		read -p "Enter IP to make flags file for: " NEW_IP
@@ -94,6 +107,7 @@ valid_ip(){
 }
 
 
+
 if test -z "$SERVER_IP"; then
       makeFlagsFile
 else
@@ -123,7 +137,9 @@ else
     	esac
 	done
 fi
+echo "Stopping plgx-esp-ui container to avoid port mapping confusion between nginx and plgx-esp-ui container"
+sudo docker stop "$(sudo docker ps -a | grep 'plgx-esp_plgx-esp-ui' | awk '{ print $1 }')"
 
 echo "To build the server run : docker-compose -p 'plgx-esp' up --build -d"
 
-#end
+# end

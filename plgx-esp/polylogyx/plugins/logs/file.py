@@ -63,27 +63,28 @@ class LogPlugin(AbstractLogsPlugin):
 
         # Process each result individually
         try:
-            for item in extract_results(data):
+            for item in data:
                 fields = {}
                 fields.update(kwargs)
 
-                if item.timestamp:
-                    timestamp = time.mktime(item.timestamp.timetuple())
+                if item['timestamp']:
+                    timestamp = time.mktime(item['timestamp'].timetuple())
                 else:
                     timestamp = time.mktime(dt.datetime.utcnow.timetuple())
 
-                fields.update(name=item.name, timestamp=timestamp)
+                fields.update(name=item['name'], timestamp=timestamp)
 
                 base = self.join_fields(fields)
 
                 # Write each added/removed entry on a different line
-                curr_fields = {'result_type': item.action}
-                for key, val in item.columns.items():
-                    curr_fields['_'.join([item.action, key])] = val
+                curr_fields = {'result_type': item['action']}
+                for key, val in item['columns'].items():
+                    curr_fields['_'.join([item['action'], key])] = val
 
                 self.result.write(base + ', ' + self.join_fields(curr_fields) + '\n')
         finally:
             self.result.flush()
             os.fsync(self.result.fileno())
+
     def handle_recon(self, data, **kwargs):
         pass

@@ -39,6 +39,8 @@ class Config(object):
     PROJECT_ROOT = os.path.abspath(os.path.join(APP_DIR, os.pardir))
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_POOL_TIMEOUT = 300
+    SQLALCHEMY_MAX_OVERFLOW = 20
 
     # When osquery is configured to start with the command-line flag
     # --host_identifier=uuid, set this value to True. This will allow
@@ -48,7 +50,7 @@ class Config(object):
     # will have a new node_key generated, and a different corresponding
     # node record in the database. This will result in stale node entries.
     POLYLOGYX_EXPECTS_UNIQUE_HOST_ID = True
-    POLYLOGYX_CHECKIN_INTERVAL = dt.timedelta(seconds=120)
+    POLYLOGYX_CHECKIN_INTERVAL = dt.timedelta(seconds=300)
     POLYLOGYX_ENROLL_OVERRIDE = 'enroll_secret'
     POLYLOGYX_PACK_DELIMITER = '/'
     POLYLOGYX_MINIMUM_OSQUERY_LOG_LEVEL = 0
@@ -83,17 +85,17 @@ class Config(object):
     # osquery.  If you use any custom extensions, you'll need to add the
     # corresponding schema here so you can use them in queries.
     POLYLOGYX_EXTRA_SCHEMA = [
-        'CREATE TABLE win_file_events(action TEXT, eid TEXT,target_path TEXT, md5 TEXT ,hashed BIGINT,uid TEXT, time BIGINT,utc_time TEXT, pe_file TEXT , pid BIGINT,process_guid TEXT , process_name TEXT);',
-        'CREATE TABLE win_process_events(action TEXT, eid TEXT,pid BIGINT,process_guid TEXT , path TEXT ,cmdline TEXT,parent BIGINT, parent_path TEXT,owner_uid TEXT, time BIGINT, utc_time TEXT  );',
+        'CREATE TABLE win_file_events(action TEXT, eid TEXT,target_path TEXT, md5 TEXT , sha256 TEXT, hashed BIGINT,uid TEXT, time BIGINT,utc_time TEXT, pe_file TEXT , pid BIGINT,process_guid TEXT , process_name TEXT);',
+        'CREATE TABLE win_process_events(action TEXT, eid TEXT,pid BIGINT,process_guid TEXT , path TEXT ,cmdline TEXT,parent_pid BIGINT, parent_process_guid TEXT, parent_path TEXT,owner_uid TEXT, time BIGINT, utc_time TEXT  );',
 
-        'CREATE TABLE win_process_open_events(action TEXT, eid TEXT,src_pid BIGINT,src_process_guid TEXT ,target_pid BIGINT,target_process_guid TEXT , src_path TEXT , target_path TEXT, granted_access TEXT, owner_uid TEXT, time BIGINT, utc_time TEXT  );',
-        'CREATE TABLE win_remote_thread_events( eid TEXT,src_pid BIGINT,src_process_guid TEXT ,target_pid BIGINT,target_process_guid TEXT , src_path TEXT ,target_path TEXT,owner_uid TEXT, time BIGINT, utc_time TEXT  );',
+        'CREATE TABLE win_process_open_events(action TEXT, eid TEXT,src_pid BIGINT,src_process_guid TEXT ,target_pid BIGINT,target_process_guid TEXT , src_path TEXT , target_path TEXT, granted_access TEXT, granted_access_value TEXT, owner_uid TEXT, time BIGINT, utc_time TEXT  );',
+        'CREATE TABLE win_remote_thread_events( eid TEXT, action TEXT, src_pid BIGINT,src_process_guid TEXT ,target_pid BIGINT,target_process_guid TEXT , src_path TEXT ,target_path TEXT, function_name TEXT, module_name TEXT, owner_uid TEXT, time BIGINT, utc_time TEXT  );',
 
         'CREATE TABLE win_pefile_events(action TEXT, eid TEXT,target_path TEXT, md5 TEXT ,hashed BIGINT,uid TEXT, pid BIGINT,process_guid TEXT ,process_name TEXT, time BIGINT,utc_time TEXT );',
         'CREATE TABLE win_msr(turbo_disabled INTEGER , turbo_ratio_limt INTEGER ,platform_info INTEGER, perf_status INTEGER ,perf_ctl INTEGER,feature_control INTEGER, rapl_power_limit INTEGER ,rapl_energy_status INTEGER, rapl_power_units INTEGER );',
-        'CREATE TABLE win_removable_media_events(removable_media_event_type TEXT, eid TEXT,uid TEXT, pid BIGINT,time BIGINT, utc_time TEXT);',
+        'CREATE TABLE win_removable_media_events(action TEXT, eid TEXT,uid TEXT, pid BIGINT,time BIGINT, utc_time TEXT);',
 
-        'CREATE TABLE win_http_events(event_type TEXT, eid TEXT, pid BIGINT,process_guid TEXT ,process_name TEXT, url TEXT, remote_address TEXT, remote_port BIGINT, time BIGINT,utc_time TEXT);',
+        'CREATE TABLE win_http_events(event_type TEXT, action TEXT, eid TEXT, pid BIGINT,process_guid TEXT ,process_name TEXT, url TEXT, remote_address TEXT, remote_port BIGINT, time BIGINT,utc_time TEXT);',
 
         'CREATE TABLE win_epp_table(product_type TEXT, product_name TEXT,product_state TEXT, product_signatures TEXT);',
 
@@ -110,8 +112,8 @@ class Config(object):
         'CREATE TABLE  win_yara_events( eid TEXT, target_path TEXT, category TEXT, action TEXT, matches TEXT, count INTEGER,md5 TEXT,time BIGINT, utc_time TEXT);',
 
         'CREATE TABLE  win_obfuscated_ps(script_id TEXT, time_created TEXT, obfuscated_state TEXT, obfuscated_score TEXT);',
-        'CREATE TABLE  win_dns_events(event_type TEXT,eid TEXT, domain_name TEXT,request_type BIGINT,request_class BIGINT, pid TEXT, remote_address TEXT, remote_port BIGINT, time BIGINT, utc_time TEXT);',
-        'CREATE TABLE win_dns_response_events( event_type TEXT,eid TEXT, domain_name TEXT,request_type BIGINT,request_class BIGINT,resolved_ip TEXT, pid BIGINT, remote_address TEXT, remote_port INTEGER , time BIGINT, utc_time TEXT  );',
+        'CREATE TABLE  win_dns_events(event_type TEXT,eid TEXT, action TEXT, domain_name TEXT,request_type BIGINT,request_class BIGINT, pid TEXT, remote_address TEXT, remote_port BIGINT, time BIGINT, utc_time TEXT);',
+        'CREATE TABLE win_dns_response_events( event_type TEXT,eid TEXT, action TEXT, domain_name TEXT,request_type BIGINT,request_class BIGINT,resolved_ip TEXT, pid BIGINT, remote_address TEXT, remote_port INTEGER , time BIGINT, utc_time TEXT  );',
 
         'CREATE TABLE  win_process_handles(pid BIGINT,process_guid TEXT , handle_type TEXT, object_name TEXT, access_mask BIGINT);',
         'CREATE TABLE  win_registry_events(action TEXT, eid TEXT, pid BIGINT,process_guid TEXT , process_name TEXT, target_name TEXT, target_new_name TEXT,value_data TEXT, value_type TEXT, owner_uid TEXT, time BIGINT, utc_time TEXT);',
@@ -129,6 +131,35 @@ class Config(object):
         'CREATE TABLE win_yara( target_path TEXT,matches TEXT,count BIGINT,sig_group TEXT,sigfile TEXT);',
         'CREATE TABLE win_event_log_data(time BIGINT,datetime TEXT,source TEXT,provider_name TEXT,provider_guid TEXT,eventid BIGINT,task BIGINT,level BIGINT,keywords BIGINT,data TEXT,eid TEXT );',
         'CREATE TABLE win_event_log_channels(source TEXT );',
+    ]
+
+    POLYLOGYX_EXTRA_SCHEMA_OPTIMIZED = [
+        'CREATE TABLE win_file_events_optimised(action TEXT, eid TEXT,target_path TEXT, md5 TEXT , sha256 TEXT, hashed BIGINT,uid TEXT, time BIGINT,utc_time TEXT, pe_file TEXT , pid BIGINT,process_guid TEXT , process_name TEXT);',
+        'CREATE TABLE win_process_events_optimised(action TEXT, eid TEXT,pid BIGINT,process_guid TEXT , path TEXT ,cmdline TEXT,parent_pid BIGINT, parent_process_guid TEXT, parent_path TEXT,owner_uid TEXT, time BIGINT, utc_time TEXT  );',
+
+        'CREATE TABLE win_process_open_events_optimised(action TEXT, eid TEXT,src_pid BIGINT,src_process_guid TEXT ,target_pid BIGINT,target_process_guid TEXT , src_path TEXT , target_path TEXT, granted_access TEXT, granted_access_value TEXT, owner_uid TEXT, time BIGINT, utc_time TEXT  );',
+        'CREATE TABLE win_remote_thread_events_optimised( eid TEXT, action TEXT, src_pid BIGINT,src_process_guid TEXT ,target_pid BIGINT,target_process_guid TEXT , src_path TEXT ,target_path TEXT, function_name TEXT, module_name TEXT, owner_uid TEXT, time BIGINT, utc_time TEXT  );',
+
+        'CREATE TABLE win_pefile_events_optimised(action TEXT, eid TEXT,target_path TEXT, md5 TEXT ,hashed BIGINT,uid TEXT, pid BIGINT,process_guid TEXT ,process_name TEXT, time BIGINT,utc_time TEXT );',
+        'CREATE TABLE win_removable_media_events_optimised(action TEXT, eid TEXT,uid TEXT, pid BIGINT,time BIGINT, utc_time TEXT);',
+
+        'CREATE TABLE win_http_events_optimised(event_type TEXT, action TEXT, eid TEXT, pid BIGINT,process_guid TEXT ,process_name TEXT, url TEXT, remote_address TEXT, remote_port BIGINT, time BIGINT,utc_time TEXT);',
+
+        'CREATE TABLE win_socket_events_optimised(event_type TEXT, eid TEXT, action TEXT, pid BIGINT,process_guid TEXT , process_name TEXT, family TEXT, protocol INTEGER, local_address TEXT, remote_address TEXT, local_port INTEGER,remote_port INTEGER, time BIGINT, utc_time TEXT);',
+        'CREATE TABLE win_image_load_events_optimised(eid TEXT, pid BIGINT,process_guid TEXT ,uid TEXT,  image_path TEXT, sign_info TEXT, trust_info TEXT, time BIGINT, utc_time  \
+    TEXT, num_of_certs BIGINT, cert_type \
+        TEXT, version TEXT, pubkey TEXT, pubkey_length TEXT, pubkey_signhash_algo \
+        TEXT, issuer_name TEXT, subject_name TEXT, serial_number TEXT, signature_algo \
+    TEXT, subject_dn TEXT, issuer_dn TEXT);',
+
+        'CREATE TABLE  win_dns_events_optimised(event_type TEXT,eid TEXT, action TEXT, domain_name TEXT,request_type BIGINT,request_class BIGINT, pid TEXT, remote_address TEXT, remote_port BIGINT, time BIGINT, utc_time TEXT);',
+        'CREATE TABLE win_dns_response_events_optimised( event_type TEXT,eid TEXT, action TEXT, domain_name TEXT,request_type BIGINT,request_class BIGINT,resolved_ip TEXT, pid BIGINT, remote_address TEXT, remote_port INTEGER , time BIGINT, utc_time TEXT  );',
+
+        'CREATE TABLE  win_registry_events_optimised(action TEXT, eid TEXT, pid BIGINT,process_guid TEXT , process_name TEXT, target_name TEXT, target_new_name TEXT,value_data TEXT, value_type TEXT, owner_uid TEXT, time BIGINT, utc_time TEXT);',
+        'CREATE TABLE win_file_timestomp_events_optimised(action TEXT, old_timestamp TEXT , new_timestamp TEXT, eid TEXT,target_path TEXT, md5 TEXT ,hashed BIGINT,uid TEXT, time BIGINT,utc_time TEXT, pe_file TEXT , pid BIGINT,process_guid TEXT , process_name TEXT);',
+
+        'CREATE TABLE win_logger_events_optimised(logger_name TEXT, logger_watch_file TEXT,log_entry TEXT);',
+        'CREATE TABLE win_ssl_events_optimised(event_type TEXT, action TEXT,eid TEXT,subject_name TEXT, issuer_name TEXT,serial_number TEXT,dns_names TEXT, pid BIGINT,process_guid TEXT,process_name TEXT, remote_address TEXT,remote_port BIGINT, utc_time TEXT,time BIGINT);',
     ]
 
     USE_X_FORWARDED_HOST = True
@@ -304,7 +335,10 @@ class Config(object):
 
 class ProdConfig(Config):
     ENV = 'prod'
-    DEBUG = False
+    DEBUG = True
+
+    BASE_URL = "/src/plgx-esp-ui/resources"
+
     DEBUG_TB_ENABLED = False
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     POLYLOGYX_ENROLL_SECRET = [
@@ -341,7 +375,8 @@ class DevConfig(Config):
     DEBUG = True
     DEBUG_TB_ENABLED = True
     DEBUG_TB_INTERCEPT_REDIRECTS = False
-    ASSETS_DEBUG = True
+
+    BASE_URL = os.path.dirname(os.getcwd()) + "/resources"
 
     BROKER_URL = 'pyamqp://guest:guest@localhost//'
     CELERY_RESULT_BACKEND = 'rpc://'
@@ -360,9 +395,12 @@ class TestConfig(Config):
     TESTING = True
     DEBUG = True
 
-    SQLALCHEMY_DATABASE_URI = 'postgresql://localhost:5432/polylogyx_test'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://polylogyx:polylogyx@localhost:5432/polylogyx_test'
+    # BASE_URL = "/src/plgx-esp-ui"
+    BASE_URL = os.path.dirname(os.getcwd()) + "/plgx-esp-ui/tests"
 
     WTF_CSRF_ENABLED = False
+    PRESERVE_CONTEXT_ON_EXCEPTION = False
 
     POLYLOGYX_ENROLL_SECRET = [
         'secret',

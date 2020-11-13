@@ -1,35 +1,36 @@
 # -*- coding: utf-8 -*-
 import base64
-import os
+import os, werkzeug
 
-from flask import Flask, render_template, current_app, url_for
+import werkzeug
+from flask import Flask, current_app
+from flask_cors import CORS
+from flask.json import jsonify
 
+from polylogyx.blueprints.v1.external_api import blueprint as external_api_v1
 from polylogyx.blueprints.external_api import blueprint as external_api
-from polylogyx.assets import assets
+
 from polylogyx.extensions import (
-    bcrypt, csrf, db, ldap_manager, login_manager,
+    bcrypt, db, ldap_manager, login_manager,
     mail, make_celery, migrate, sentry
 )
-from polylogyx.manage import blueprint as backend
 from polylogyx.models import EmailRecipient, Settings
 from polylogyx.settings import ProdConfig
 from polylogyx.tasks import celery
 
-from polylogyx.utils import get_node_health, pretty_field, pretty_operator, jinja2_escapejs_filter, render_column, \
-    jinja2_to_json_filter, jinja2_array_to_string_filter, date_diff
-
 
 def create_app(config=ProdConfig):
     app = Flask(__name__)
+    CORS(app)
     app.config.from_object(config)
+
     app.config.from_envvar('POLYLOGYX_SETTINGS', silent=True)
 
     register_blueprints(app)
-    register_errorhandlers(app)
     register_loggers(app)
     register_extensions(app)
     register_auth_method(app)
-    register_filters(app)
+    register_errorhandlers(app)
     return app
 
 
@@ -37,18 +38,13 @@ def register_blueprints(app):
     # if the POLYLOGYX_NO_MANAGER environment variable isn't set,
     # register the backend blueprint. This is useful when you want
     # to only deploy the api as a standalone service.
-
     app.register_blueprint(external_api, url_prefix="/services/api/v0",name="external_api")
 
-    csrf.exempt(external_api)
-
-    app.register_blueprint(backend)
-
+    app.register_blueprint(external_api_v1, url_prefix="/services/api/v1",name="external_api")
 
 
 def register_extensions(app):
     bcrypt.init_app(app)
-    csrf.init_app(app)
     db.init_app(app)
 
     migrate.init_app(app, db)
@@ -57,7 +53,6 @@ def register_extensions(app):
     except:
         print('No email address configured')
 
-    assets.init_app(app)
     mail.init_app(app)
     make_celery(app, celery)
     login_manager.init_app(app)
@@ -110,35 +105,16 @@ def register_errorhandlers(app):
         error_code = getattr(error, 'code', 500)
         if 'POLYLOGYX_NO_MANAGER' in os.environ:
             return '', 400
-        return render_template('{0}.html'.format(error_code)), error_code
+        return '', error_code
 
-    for errcode in [401, 403, 404, 500]:
-        app.errorhandler(errcode)(render_error)
+    @app.errorhandler(werkzeug.exceptions.Unauthorized)
+    def handle_unauthorised(e):
+        return jsonify({'status': "failure", 'message': 'Username/Password is/are wrong!'}), 200
 
-
-def register_filters(app):
-    app.jinja_env.filters['health'] = get_node_health
-    app.jinja_env.filters['pretty_field'] = pretty_field
-    app.jinja_env.filters['pretty_operator'] = pretty_operator
-    app.jinja_env.filters['escapejs'] = jinja2_escapejs_filter
-    app.jinja_env.filters['to_json'] = jinja2_to_json_filter
-    app.jinja_env.filters['date_diff'] = date_diff
-    app.jinja_env.filters['render'] = render_column
-    app.jinja_env.filters['array_to_string'] = jinja2_array_to_string_filter
-
-
-
+    app.register_error_handler(401, handle_unauthorised)
 
 
 def register_auth_method(app):
-    from polylogyx.users import views
-    app.register_blueprint(views.blueprint)
-
-    if app.config['POLYLOGYX_AUTH_METHOD'] is None:
-        from polylogyx.users.mixins import NoAuthUserMixin
-        login_manager.anonymous_user = NoAuthUserMixin
-        return
-
     login_manager.login_view = 'users.login'
     login_manager.login_message_category = 'warning'
 
@@ -151,10 +127,6 @@ def register_auth_method(app):
     if app.config['POLYLOGYX_AUTH_METHOD'] != 'polylogyx':
         login_manager.login_message = None
         login_manager.needs_refresh_message = None
-
-        from polylogyx.users.oauth import OAuthLogin
-        provider = OAuthLogin.get_provider(app.config['POLYLOGYX_AUTH_METHOD'])
-        provider.init_app(app)
 
 
 def set_email_value(app):

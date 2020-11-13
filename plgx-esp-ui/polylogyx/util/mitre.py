@@ -42,7 +42,7 @@ class TestMail:
 
         from email.mime.text import MIMEText
         SMTPserver = smtp
-        sender ='username'
+        sender = 'username'
         destination =recipients
 
         USERNAME =username

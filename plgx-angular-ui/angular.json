@@ -1,0 +1,292 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "polylogyx": {
+      "projectType": "application",
+      "schematics": {},
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist",
+            "index": "src/index.html",
+            "main": "src/main.ts",
+            "polyfills": "src/polyfills.ts",
+            "tsConfig": "tsconfig.app.json",
+            "aot": false,
+            "assets": [
+              "src/assets"
+            ],
+            "styles": [
+              "src/styles.css",
+              "src/public/css/style.bundle.css",
+              "src/public/css/style.bundle.min.css",
+              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "node_modules/bootstrap-select/dist/css/bootstrap-select.min.css",
+              "./node_modules/jsoneditor/dist/jsoneditor.css",
+              "node_modules/datatables.net-dt/css/jquery.dataTables.css",
+              "node_modules/vis/dist/vis.css",
+
+              "src/assets/vendors/general/perfect-scrollbar/css/perfect-scrollbar.css",
+              "src/assets/vendors/general/socicon/css/socicon.css",
+              "src/assets/vendors/custom/vendors/line-awesome/css/line-awesome.css",
+              "src/assets/vendors/custom/vendors/flaticon/flaticon.css",
+              "src/assets/vendors/custom/vendors/flaticon2/flaticon.css",
+              "src/assets/vendors/custom/vendors/fontawesome5/css/all.min.css",
+              "src/assets/demo/default/base/style.bundle.css",
+              "src/assets/demo/default/skins/brand/dark.css",
+
+              "src/assets/demo/default/skins/aside/dark.css",
+
+              "src/assets/vendors/general/select2/dist/css/select2.css",
+
+              "src/libs/bootstrap-tagsinput/dist/bootstrap-tagsinput.css",
+              "src/css/cube.css",
+              "src/css/query-builder.default.css",
+              "src/assets/css/custom/d3-context-menu.css",
+
+              "src/assets/demo/default/skins/header/base/light.css",
+              "src/assets/demo/default/skins/header/menu/light.css",
+              "src/css/datatable.css",
+              "src/assets/vendors/custom/datatables/datatables.bundle.css",
+              "node_modules/ngx-toastr/toastr.css"
+            ],
+            "scripts": [
+              "node_modules/jquery/dist/jquery.min.js",
+              "node_modules/popper.js/dist/umd/popper.min.js",
+              "node_modules/bootstrap/dist/js/bootstrap.min.js",
+              "node_modules/perfect-scrollbar/dist/perfect-scrollbar.min.js",
+              "src/assets/demo/default/base/scripts.bundle.js",
+
+              "src/assets/app/bundle/app.bundle.js",
+              "src/assets/vendors/custom/datatables/datatables.bundle.js",
+              "node_modules/jquery-extendext/jquery-extendext.js",
+              "node_modules/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js",
+              "node_modules/bootstrap-select/js/bootstrap-select.js",
+              "src/js/plugins.js",
+              "node_modules/jsoneditor/dist/jsoneditor.min.js",
+              "node_modules/xlsx/dist/xlsx.core.min.js",
+
+               "src/assets/js/plugins.js",
+              "src/js/util.js"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot": true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "70mb",
+                  "maximumError": "70mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "5mb",
+                  "maximumError": "5mb"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "polylogyx:build",
+            "proxyConfig": "src/proxy.conf.json"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "polylogyx:build:production"
+            }
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "polylogyx:build"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "src/test.ts",
+            "polyfills": "src/polyfills.ts",
+            "tsConfig": "tsconfig.spec.json",
+            "karmaConfig": "karma.conf.js",
+            "assets": [
+              "src/favicon.ico",
+              "src/assets"
+            ],
+            "styles": [
+              "src/styles.css"
+            ],
+            "scripts": []
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "tsconfig.app.json",
+              "tsconfig.spec.json",
+              "e2e/tsconfig.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        },
+        "e2e": {
+          "builder": "@angular-devkit/build-angular:protractor",
+          "options": {
+            "protractorConfig": "e2e/protractor.conf.js",
+            "devServerTarget": "polylogyx:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "polylogyx:serve:production"
+            }
+          }
+        }
+      }
+    },
+    "interceptor": {
+      "projectType": "application",
+      "schematics": {},
+      "root": "projects/interceptor",
+      "sourceRoot": "projects/interceptor/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/interceptor",
+            "index": "projects/interceptor/src/index.html",
+            "main": "projects/interceptor/src/main.ts",
+            "polyfills": "projects/interceptor/src/polyfills.ts",
+            "tsConfig": "projects/interceptor/tsconfig.app.json",
+            "aot": false,
+            "assets": [
+              "projects/interceptor/src/favicon.ico",
+              "projects/interceptor/src/assets"
+            ],
+            "styles": [
+              "projects/interceptor/src/styles.css"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "projects/interceptor/src/environments/environment.ts",
+                  "with": "projects/interceptor/src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot": true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "12mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "10kb",
+                  "maximumError": "10kb"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "interceptor:build"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "interceptor:build:production"
+            }
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "interceptor:build"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/interceptor/src/test.ts",
+            "polyfills": "projects/interceptor/src/polyfills.ts",
+            "tsConfig": "projects/interceptor/tsconfig.spec.json",
+            "karmaConfig": "projects/interceptor/karma.conf.js",
+            "assets": [
+              "projects/interceptor/src/favicon.ico",
+              "projects/interceptor/src/assets"
+            ],
+            "styles": [
+              "projects/interceptor/src/styles.css"
+            ],
+            "scripts": []
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/interceptor/tsconfig.app.json",
+              "projects/interceptor/tsconfig.spec.json",
+              "projects/interceptor/e2e/tsconfig.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        },
+        "e2e": {
+          "builder": "@angular-devkit/build-angular:protractor",
+          "options": {
+            "protractorConfig": "projects/interceptor/e2e/protractor.conf.js",
+            "devServerTarget": "interceptor:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "interceptor:serve:production"
+            }
+          }
+        }
+      }
+    }},
+  "defaultProject": "polylogyx"
+}

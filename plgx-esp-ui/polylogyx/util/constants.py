@@ -44,3 +44,16 @@ DEFAULT_EVENT_STATE_QUERIES = {
         "state_queries": []
     }
 }
+
+
+DEFAULT_PROCESS_GRAPH_QUERIES=[
+        "win_file_events",
+        "win_file_timestomp_events",
+        "win_http_events",
+        "win_pefile_events",
+        "win_process_events",
+        "win_registry_events",
+        "win_socket_events",
+        "win_ssl_events"
+
+    ]

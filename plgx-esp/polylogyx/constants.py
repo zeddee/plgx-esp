@@ -271,13 +271,20 @@ class PolyReconPackData:
                           "platform": "darwin", "version": "2.9.0", "description": "Startup Items",
                           "value": "Startup Items", "snapshot": True}}}}}
 
-class PolyLogyxConstants:
 
+class PolyLogyxConstants:
     DEFAULT_OPTIONS = {
-        "custom_plgx_EnableSSL": "false",
+        "custom_plgx_EnableLogging": "true",
+        "custom_plgx_EnableSSL": "true",
+        "custom_plgx_LogFileName": "C:\\Program Files\\plgx_osquery\\plgx-agent.log",
+        "custom_plgx_LogLevel": "3",
+        "custom_plgx_LogModeQuiet": "0",
         "custom_plgx_EnableWatcher": "true",
+        "custom_plgx_MemoryLimit": "150",
         "schedule_splay_percent": 10,
+        "custom_plgx_LogFileNameLinux":"/tmp/plgx-agent.log",
     }
+
 
 class PolyLogyxServerDefaults:
     plgx_config_all_options = "plgx_config_all_options"
@@ -288,6 +295,7 @@ class PolyLogyxServerDefaults:
     POLYLOGYX_OSQUERY_SCHEMA_JSON = {}
     RECON_INTERVAL = 30
 
+
 class QueryConstants:
     UNSIGNED_JSON = {"sign_info": "Unsigned"}
     PRODUCT_STATE_QUERY = '''SELECT product_type AS product_type,product_state AS product_state,SUM(sum__count) AS product_count
@@ -295,10 +303,12 @@ class QueryConstants:
  FROM (SELECT jsonb_array_elements(data)->>'product_type' as product_type,jsonb_array_elements(data)->>'product_state' as product_state,COUNT(jsonb_array_elements(data)->>'product_state') as count FROM node_data where name='win_epp_table' and data::TEXT !='""'::TEXT and data::TEXT !='[]'::TEXT group by product_type,product_state order by count DESC) AS expr_qry GROUP BY product_type, product_state ORDER BY sum__count DESC LIMIT 10000) AS expr_qry GROUP BY product_type, product_state ORDER BY product_count DESC LIMIT 10000;'''
     PRODUCT_SIGNATURES_QUERY = '''SELECT product_type AS product_type,product_signatures AS product_signatures,SUM(sum__count) AS product_count FROM(SELECT product_type AS product_type, product_signatures AS product_signatures,sum(count) AS sum__count FROM (SELECT jsonb_array_elements(data)->>'product_type' as product_type,jsonb_array_elements(data)->>'product_signatures' as product_signatures,COUNT(jsonb_array_elements(data)->>'product_signatures') as count FROM node_data where name='win_epp_table' and data::TEXT !='""'::TEXT and data::TEXT !='[]'::TEXT group by product_type,product_signatures order by count DESC) AS expr_qry GROUP BY product_type, product_signatures ORDER BY sum__count DESC LIMIT 10000) AS expr_qry GROUP BY product_type, product_signatures ORDER BY product_count DESC LIMIT 10000;'''
 
+
 class EventQueries:
     TOTAL_FILE_EVENTS = "select count(*) from result_log where name like '%win_file_events%';"
     TOTAL_FILE_EVENTS_LINUX = "select count(*) from result_log where name like '%file_events%' and name not like '%win_file_events%' and name not like '%win_pefile_events%';"
     TOTAL_SOCKET_EVENTS_LINUX = "select count(*) from result_log where name like '%socket_events%' and name not like '%win_socket_events%';"
+
 
 class UtilQueries:
     TOP_FIVE_PROGRAM = "select columns ->> 'path' as path,count(columns ->> 'path' ) as count from result_log where name like 'win_process_events' and columns ->> 'action'='PROC_CREATE' group by path order by count desc limit 5;"
@@ -344,6 +354,7 @@ class UtilQueries:
     ETC_HOSTS_QUERY = "SELECT  count(*) AS count FROM (SELECT jsonb_array_elements(data)->>'hostnames' as hostnames FROM node_data left join node n on n.id=node_id WHERE name = 'etc_hosts' and platform = 'windows' and data::TEXT !='\"\"'::TEXT and data::TEXT !='[]'::TEXT LIMIT 1000000) AS expr_qry ;"
     ETC_HOSTS_LINUX_QUERY = "SELECT  count(*) AS count FROM (SELECT jsonb_array_elements(data)->>'hostnames' as hostnames FROM node_data left join node n on n.id=node_id WHERE name = 'etc_hosts' and platform not in ('windows','darwin') and data::TEXT !='\"\"'::TEXT and data::TEXT !='[]'::TEXT LIMIT 1000000) AS expr_qry ;"
 
+
 class KernelQueries:
     MAC_ADDRESS_QUERY = "select  address, mask, mac,  description,manufacturer,connection_id,connection_status,enabled from interface_details id join interface_addresses ia on ia.interface = id.interface where length(mac) > 0 order by (ibytes + obytes) desc;"
     KERNEL_VERSION_LINUX_QUERY = '''SELECT jsonb_array_elements(data)->>'version' as version,COUNT(jsonb_array_elements(data)->>'version') as count FROM node_data left join node n on n.id=node_id WHERE name='kernel_info' and platform not in  ('windows','darwin') and data::TEXT !='""'::TEXT and data::TEXT !='[]'::TEXT GROUP BY version ORDER BY count DESC LIMIT 1000000;'''
@@ -353,9 +364,11 @@ class KernelQueries:
     CHROME_EXTENSIONS_QUERY = "SELECT name AS name, count(*) AS count FROM (SELECT jsonb_array_elements(data)->>'path' as path, name FROM node_data WHERE name in ('chrome_extensions') and data::TEXT !='\"\"'::TEXT and data::TEXT !='[]'::TEXT LIMIT 1000000) AS expr_qry GROUP BY name ORDER BY count DESC LIMIT 10000;"
     CHROME_FIREFOX_EXTENSIONS_QUERY = "SELECT name AS name, count(*) AS count FROM (SELECT jsonb_array_elements(data)->>'path' as path, name FROM node_data left join node n on n.id=node_id WHERE name in ('chrome_extensions', 'firefox_addons') and data::TEXT !='\"\"'::TEXT and platform not in ('windows','darwin') and data::TEXT !='[]'::TEXT LIMIT 1000000) AS expr_qry GROUP BY name ORDER BY count DESC LIMIT 10000;"
 
+
 class PlugInQueries:
     VIRUS_TOTAL_QUERY = "SELECT count(*) FROM virus_total WHERE detections > 0;"
     IBM_THREAT_INTEL_QUERY = "select count(*) from ibm_force_exchange ;"
+
 
 class SystemInfoQueries:
     SYSTEM_STATE_QUERIES = [
@@ -393,6 +406,7 @@ class SystemInfoQueries:
         'win_registry_events',
         'win_ssl_events'
     ]
+
 
 class DefaultInfoQueries:
     DEFAULT_QUERIES = {
@@ -460,3 +474,7 @@ class DefaultInfoQueries:
         "kva_speculative_info": "e following table provides the presence (or absence) of mitigations for the Spectre and Meltdown vulnerabilites. To know more about fix of these vulnerabilites on Windows operating systems click here (https://support.microsoft.com/en-us/help/4073119/protect-against-speculative-execution-side-channel-vulnerabilities-in). Mitigations for Spectre - Kernel VA Shadowing. Kernel VA Shadowing Enabled (kva_shadow_enabled: 1 => Yes and 0 => No ). ----> With User pages marked global (kva_shadow_user_global: 1 => Yes and 0 => No )"
     }
 
+    DEFAULT_VERSION_INFO_QUERIES = {
+        "_osquery_version": "Snapshot query to find out the osquery running in agent",
+        "_extension_version": "Snapshot query to find out the extension running in agent"
+    }

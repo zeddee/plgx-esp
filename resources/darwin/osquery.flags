@@ -7,9 +7,9 @@
 --disable_audit=false
 --events_expiry=3600
 --events_max=2500
---pidfile=/tmp/osquery.pid
+--pidfile=/private/var/osquery/osquery.pid
 --host_identifier=uuid
---database_path=/tmp/osquery.db
+--database_path=/private/var/osquery/osquery.db
 --config_plugin=tls
 --config_tls_endpoint=/config
 --config_tls_refresh=300

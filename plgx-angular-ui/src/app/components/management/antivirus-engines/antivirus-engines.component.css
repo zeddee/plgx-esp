@@ -1,0 +1,38 @@
+.av_engineinputClass {
+  border: 0px;
+  width: 90%;
+  color: #1d1d2d;
+  background-color: #dadada;
+  font-size: 13px;  
+}
+
+.form-control{
+  padding: 0.65rem 1.5rem;
+  height: calc(0.7em + 1.6rem + 2px);
+  width: 80%;
+}
+
+.kt-portlet__foot{
+  padding-bottom: 4%;
+}
+.paragraph-align {
+  color: #464457;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: .5em .75em;
+  font-size: 85%;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25rem;
+  transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out,-webkit-box-shadow .15s ease-in-out;
+  }
+  .table {
+    width: 40%;
+  }

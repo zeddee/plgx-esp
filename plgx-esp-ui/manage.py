@@ -10,7 +10,6 @@ from os.path import abspath, dirname, join
 import pika
 
 from flask import current_app
-from flask_assets import ManageAssets
 from flask_migrate import MigrateCommand
 from flask_script import Command, Manager, Server, Shell
 from flask_script.commands import Clean, ShowUrls
@@ -18,21 +17,16 @@ from flask_socketio import leave_room
 from flask_sockets import Sockets
 
 from polylogyx import create_app, db
-from polylogyx.assets import assets
-from polylogyx.models import  ThreatIntelCredentials
+from polylogyx.models import ThreatIntelCredentials, OsquerySchema
 from polylogyx.settings import CurrentConfig, RABBITMQ_HOST
-import time
+import time, json
 
 import socketio
 
 from polylogyx.utils import validate_osquery_query
 
-constant_file_event = 'win_file_events'
-constant_process_event = 'win_process_events'
-
 
 app = create_app(config=CurrentConfig)
-
 
 
 async_mode = 'gevent'
@@ -46,6 +40,7 @@ with app.app_context():
 def _make_context():
     return {'app': app, 'db': db}
 
+
 class SSLServer(Command):
     def run_server(self):
             from gevent import pywsgi
@@ -57,6 +52,7 @@ class SSLServer(Command):
             pywsgi.WSGIServer(('', 5000), DebuggedApplication(app),
                               handler_class=WebSocketHandler, keyfile='../nginx/private.key',
                               certfile='../nginx/certificate.crt').serve_forever()
+
     def run(self, *args, **kwargs):
         if __name__ == '__main__':
             from werkzeug.serving import run_with_reloader
@@ -70,9 +66,7 @@ manager.add_command('shell', Shell(make_context=_make_context))
 manager.add_command('db', MigrateCommand)
 manager.add_command('clean', Clean())
 manager.add_command('urls', ShowUrls())
-manager.add_command("assets", ManageAssets(assets))
 manager.add_command('ssl', SSLServer())
-
 
 
 @manager.add_command
@@ -93,22 +87,68 @@ class test(Command):
         return exit_code
 
 
-@manager.command
-def extract_ddl(specs_dir):
-    """Extracts CREATE TABLE statements from osquery's table specifications"""
-    from polylogyx.extract_ddl import extract_schema
+@manager.option('--specs_dir')
+@manager.option('--export_type', default='sql', choices=['sql', 'json'])
+def extract_ddl(specs_dir, export_type):
+    """
+    Extracts CREATE TABLE statements or JSON Array of schema from osquery's table specifications
+
+    python manage.py extract_ddl --specs_dir /Users/polylogyx/osquery/specs --export_type sql  ----> to export to osquery_schema.sql file
+    python manage.py extract_ddl --specs_dir /Users/polylogyx/osquery/specs --export_type json  ----> to export to osquery_schema.json file
+    """
+    from polylogyx.extract_ddl import extract_schema, extract_schema_json
 
     spec_files = []
     spec_files.extend(glob.glob(join(specs_dir, '*.table')))
     spec_files.extend(glob.glob(join(specs_dir, '**', '*.table')))
+    if export_type == 'sql':
+        ddl = sorted([extract_schema(f) for f in spec_files], key=lambda x: x.split()[2])
+        opath = join(dirname(__file__), 'polylogyx', 'resources', 'osquery_schema.sql')
+        content = '\n'.join(ddl)
+    elif export_type == 'json':
+        full_schema = []
+        for f in spec_files:
+            table_dict = extract_schema_json(f)
+            if table_dict['platform']:
+                full_schema.append(table_dict)
+        opath = join(dirname(__file__), 'polylogyx', 'resources', 'osquery_schema.json')
+        content = json.dumps(full_schema)
+    else:
+        print("Export type given is invalid!")
+        opath = None
+        content = None
 
-    ddl = sorted([extract_schema(f) for f in spec_files], key=lambda x: x.split()[2])
-
-    opath = join(dirname(__file__), 'polylogyx', 'resources', 'osquery_schema.sql')
     with open(opath, 'w') as f:
-        f.write('-- This file is generated using "python manage.py extract_ddl"'
-                '- do not edit manually\n')
-        f.write('\n'.join(ddl))
+        if export_type == 'sql':
+            f.write('-- This file is generated using "python manage.py extract_ddl"'
+                    '- do not edit manually\n')
+        f.write(content)
+    app.logger.info('Osquery Schema is exported to the file {} successfully'.format(opath))
+
+
+@manager.option('--file_path', default='polylogyx/resources/osquery_schema.json')
+def update_osquery_schema(file_path):
+    from polylogyx.models import OsquerySchema
+    try:
+        f = open(file_path, "r")
+    except FileNotFoundError:
+        print("File is not present for the path given!")
+        exit(0)
+    except Exception as e:
+        print(str(e))
+        exit(0)
+
+    file_content = f.read()
+    schema_json = json.loads(file_content)
+    for table_dict in schema_json:
+        table = OsquerySchema.query.filter(OsquerySchema.name == table_dict['name']).first()
+        if table:
+            table.update(schema=table_dict['schema'], description=table_dict['description'], platform=table_dict['platform'])
+        else:
+            if not table_dict['platform'] == ['freebsd'] and not table_dict['platform'] == ['posix']:
+                OsquerySchema.create(name=table_dict['name'], schema=table_dict['schema'], description=table_dict['description'], platform=table_dict['platform'])
+    app.logger.info('Osquery Schema is updated to postgres through the file input {} successfully'.format(file_path))
+    exit(0)
 
 
 @manager.option('--IBMxForceKey')
@@ -221,6 +261,7 @@ def declare_queue(distributedQueryId,ws,sid):
     except Exception as e:
         current_app.logger.error(e)
 
+
 class ConsumerThread(threading.Thread):
     def __init__(self,query_id,ws,sid, *args, **kwargs):
         super(ConsumerThread, self).__init__(*args, **kwargs)
@@ -293,6 +334,13 @@ def close_queue(distributedQueryId):
     # pubsub.unsubscribe(channel)
     print ('closing {channel}'.format(**locals()))
 
+
+@app.after_request
+def add_response_headers(response):
+    response.headers.add('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,x-access-token,content-type')
+    response.headers.add('Access-Control-Expose-Headers', 'Content-Type,Content-Length,Authorization,X-Pagination')
+    return response
 
 
 if __name__ == '__main__':

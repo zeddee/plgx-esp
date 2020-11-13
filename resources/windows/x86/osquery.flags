@@ -18,7 +18,7 @@
 --logger_tls_period=150
 --logger_stderr=false
 --extensions_socket=\\.\pipe\plgx_osquery.em
---tls_hostname=<IP of the server>:9000
+--tls_hostname=localhost:9000
 --tls_server_certs=C:\Program Files\plgx_osquery\certificate.crt
 --database_path=C:\Program Files\plgx_osquery\osquery.db
 --pidfile=C:\Program Files\plgx_osquery\osquery.pid

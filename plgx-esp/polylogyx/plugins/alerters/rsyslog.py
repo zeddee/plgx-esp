@@ -22,14 +22,14 @@ class RsyslogAlerter(AbstractAlerterPlugin):
         self.incident_count = 0
         self.logger = logging.getLogger(__name__ + '.RsyslogAlerter')
 
-    def handle_alert(self, node, match,intel_match):
+    def handle_alert(self, node, match, intel_match):
+        import datetime as dt
+
         self.incident_count += 1
         key = self.key_format.format(
             count=self.incident_count
         )
 
-
-        import datetime as dt
         if match:
             current_app.logger.log(logging.WARNING, 'Triggered alert: {0!r}'.format(match))
             description = match.rule.template.safe_substitute(
@@ -55,7 +55,7 @@ class RsyslogAlerter(AbstractAlerterPlugin):
                 'alert_type': 'Rule',
                 'created_at': dt.datetime.utcnow(),
                 'action': match.result['action'],
-                'columns': match.result['columns'],
+                'columns': match.result['columns']
             })), cls=DateTimeEncoder)
         elif intel_match:
             current_app.logger.log(logging.WARNING, 'Triggered alert: {0!r}'.format(intel_match))

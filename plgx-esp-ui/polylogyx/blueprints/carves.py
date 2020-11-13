@@ -9,7 +9,6 @@ from polylogyx.dao import carves_dao as dao
 from polylogyx.dao import nodes_dao as nodedao
 from polylogyx.wrappers import parent_wrappers as parentwrapper
 from polylogyx.wrappers import carve_wrappers as wrapper
-from polylogyx.constants import PolyLogyxServerDefaults
 from polylogyx.models import DistributedQueryTask,db,CarveSession
 ns = Namespace('carves', description='Carves related operations')
 
@@ -60,8 +59,7 @@ class DownloadCarves(Resource):
             if carve_session:
                 status = 'success'
                 message = 'Successfully fetched the carves'
-                print ('file is : '+PolyLogyxServerDefaults.BASE_URL + '/carves/' + carve_session.node.host_identifier + '/'+carve_session.archive)
-                data = send_file(PolyLogyxServerDefaults.BASE_URL + '/carves/' + carve_session.node.host_identifier + '/'+ carve_session.archive , as_attachment=True, attachment_filename='carve_session.archive')
+                data = send_file(current_app.config['BASE_URL'] + '/carves/' + carve_session.node.host_identifier + '/'+ carve_session.archive , as_attachment=True, mimetype='application/x-tar',attachment_filename='carve_session.tar')
                 return data
             else:
                 message = 'This session id does not exist'
@@ -75,7 +73,13 @@ class DownloadCarves(Resource):
 class CarveSessionByQueryId(Resource):
     '''download carves through session id'''
 
-    def post(self, query_id,host_identifier):
+    def post(self, query_id, host_identifier):
+        return self.func(query_id, host_identifier)
+
+    def get(self, query_id, host_identifier):
+        return self.func(query_id, host_identifier)
+
+    def func(self, query_id, host_identifier):
         status = 'failure'
         message = 'Data missing'
 

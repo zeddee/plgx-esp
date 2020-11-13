@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-import base64
 import datetime as dt
 import gzip
 import json
-import os
 import random
 import string
 from functools import wraps
@@ -11,9 +9,9 @@ from io import BytesIO
 from operator import itemgetter
 
 from flask import Blueprint, current_app, jsonify, request
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
-from polylogyx.constants import PolyLogyxServerDefaults, KernelQueries, DefaultInfoQueries
+from polylogyx.constants import KernelQueries
 from polylogyx.database import db
 from polylogyx.extensions import log_tee
 from polylogyx.models import (
@@ -21,8 +19,11 @@ from polylogyx.models import (
     DistributedQueryTask,
     StatusLog,
     CarveSession, CarvedBlock)
-from polylogyx.tasks import notify_of_node_enrollment, save_distributed_query_data, build_carve_session_archive
-from polylogyx.tasks import save_schedule_query_data
+from polylogyx.tasks import (
+     build_carve_session_archive,
+    analyze_result
+)
+from polylogyx.utils import process_result, update_osquery_or_agent_version
 
 blueprint = Blueprint('api', __name__)
 
@@ -51,7 +52,7 @@ def node_required(f):
             return ""
 
         node_key = request_json.get('node_key')
-        node = Node.query.filter_by(node_key=node_key) \
+        node = Node.query.filter(and_(Node.state != Node.DELETED, Node.state != Node.REMOVED, Node.node_key == node_key)) \
             .options(db.lazyload('*')).first()
 
         if not node:
@@ -66,10 +67,8 @@ def node_required(f):
                 "%s - Node %s came back from the dead!",
                 request.remote_addr, node_key
             )
-            send_checkin_queries(node)
             current_app.logger.info(
-                "[Checkin] Last checkin time for node :"+ str(node.id)+" is  :: "+ str(node.last_checkin))
-            # return jsonify(node_invalid=False)
+                "[Checkin] Last checkin time for node :" + str(node.id) + " is  :: " + str(node.last_checkin))
 
         node.update(
             last_checkin=dt.datetime.utcnow(),
@@ -117,6 +116,14 @@ def enroll():
         )
         return jsonify(node_invalid=True)
 
+    host_identifier = request_json.get('host_identifier')
+
+    if Node.query.filter(or_(Node.state == Node.DELETED, Node.state == Node.REMOVED)).filter(Node.host_identifier == host_identifier).first():
+        current_app.logger.error("%s - Host was enrolled already and is disabled/deleted %s",
+                                 remote_addr, enroll_secret
+                                 )
+        return jsonify(node_invalid=True)
+
     # If we pre-populate node table with a per-node enroll_secret,
     # let's query it now.
 
@@ -135,8 +142,6 @@ def enroll():
                                  )
         return jsonify(node_invalid=True)
 
-    host_identifier = request_json.get('host_identifier')
-
     if node and node.enrolled_on:
         current_app.logger.warn(
             "%s - %s already enrolled on %s, returning existing node_key",
@@ -154,13 +159,15 @@ def enroll():
             last_checkin=dt.datetime.utcnow(),
             last_ip=remote_addr
         )
+        update_system_details(request_json, node)
         send_checkin_queries(node)
+
         return jsonify(node_key=node.node_key, node_invalid=False)
 
     existing_node = None
     if host_identifier:
-        existing_node = Node.query.filter(
-            Node.host_identifier == host_identifier
+        existing_node = Node.query.filter(and_(
+            Node.host_identifier == host_identifier)
         ).first()
 
     if existing_node and not existing_node.enroll_secret:
@@ -179,7 +186,9 @@ def enroll():
                 last_checkin=dt.datetime.utcnow(),
                 last_ip=remote_addr
             )
+            update_system_details(request_json, existing_node)
             send_checkin_queries(existing_node)
+
             return jsonify(node_key=existing_node.node_key, node_invalid=False)
 
     now = dt.datetime.utcnow()
@@ -209,54 +218,10 @@ def enroll():
     current_app.logger.info("%s - Enrolled new node %s",
                             remote_addr, node
                             )
-    notify_of_node_enrollment.apply_async(queue='default_queue_tasks', args = [node.to_dict()])
-    # notify_of_node_enrollment.delay(node.to_dict())
-    send_checkin_queries(node)
     update_system_details(request_json, node)
+    send_checkin_queries(node)
 
     return jsonify(node_key=node.node_key, node_invalid=False)
-
-
-@blueprint.route('/start_uploads', methods=['POST', 'PUT'])
-@blueprint.route('/v1/start_uploads', methods=['POST', 'PUT'])
-@node_required
-def upload_file(node=None):
-    sid = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
-    data = request.get_json()
-    CarveSession.create(node_id=node.id, session_id=sid, carve_guid=data['carve_id'], status=CarveSession.StatusInProgress,carve_size=data['carve_size'],
-                       block_size=data['block_size'], block_count=data['block_count'],request_id=data['request_id'])
-
-    return jsonify(session_id=sid)
-
-
-@blueprint.route('/upload_blocks', methods=['POST', 'PUT'])
-@blueprint.route('/v1/upload_blocks', methods=['POST', 'PUT'])
-def upload_blocks():
-    data = request.get_json()
-    carveSession = CarveSession.query.filter(CarveSession.session_id == data['session_id']).first_or_404()
-
-    if CarvedBlock.query.filter(and_(CarvedBlock.session_id==data['session_id'],CarvedBlock.block_id==data['block_id'])).first():
-        return
-    size = len(data['data'])
-
-    CarvedBlock.create(data=data['data'],block_id=data['block_id'],session_id=data['session_id'],request_id=data['request_id'],size=size)
-    carveSession.completed_blocks = carveSession.completed_blocks + 1
-
-    # Are we expecting to receive more blocks?
-    if carveSession.completed_blocks < carveSession.block_count:
-        carveSession.update(carveSession)
-        db.session.commit()
-
-        print ('Gathering more blocks')
-        return jsonify(node_invalid=False)
-    carveSession.status=CarveSession.StatusBuilding
-    # If not, let's reassemble everything
-
-    db.session.commit()
-    build_carve_session_archive.apply_async(queue='default_queue_tasks', args=[carveSession.session_id])
-    # debug("File successfully carved to: %s" % out_file_name)
-
-    return jsonify(node_invalid=False)
 
 
 @blueprint.route('/config', methods=['POST', 'PUT'])
@@ -272,7 +237,7 @@ def configuration(node=None):
     Retrieve an osquery configuration for a given node.
     :returns: an osquery configuration file
     '''
-    remote_addr=get_ip()
+    remote_addr = get_ip()
     current_app.logger.info(
         "%s - %s checking in to retrieve a new configuration",
         remote_addr, node
@@ -292,7 +257,7 @@ def configuration(node=None):
 def logger(node=None):
     '''
     '''
-    remote_addr=get_ip()
+    remote_addr = get_ip()
     data = request.get_json()
     log_type = data['log_type']
     log_level = current_app.config['POLYLOGYX_MINIMUM_OSQUERY_LOG_LEVEL']
@@ -318,19 +283,14 @@ def logger(node=None):
 
     elif log_type == 'result':
         current_app.logger.info("[S] Schedule query results for node: " + str(node.id))
-
-        try:
-            # db.session.bulk_save_objects(process_result(data, node.to_dict()))
-            node.update(last_result=dt.datetime.utcnow())
-            save_schedule_query_data.apply_async(queue='result_log_queue', args=[data, node.to_dict()])
-            # save_schedule_query_data.delay(data, node.to_dict())
-        except Exception as e:
-            current_app.logger.error(e)
-            return jsonify(node_invalid=True)
-        # handle_result.delay(data, node.host_identifier, node.to_dict())
-        log_tee.handle_result(data, host_identifier=node.host_identifier,node=node.to_dict())
+        query_results, results_dict = process_result(data, node)
+        if query_results:
+            db.session.bulk_save_objects(query_results)
+        node.update(last_result=dt.datetime.utcnow())
         db.session.add(node)
         db.session.commit()
+        log_tee.handle_result(results_dict, host_identifier=node.host_identifier, node=node.to_dict())
+        analyze_result.apply_async(queue='default_queue_tasks', args=[results_dict, node.to_dict()])
 
     else:
         current_app.logger.error("%s - Unknown log_type %r",
@@ -350,8 +310,7 @@ def logger(node=None):
 def distributed_read(node=None):
     '''
     '''
-    data = request.get_json()
-    remote_addr=get_ip()
+    remote_addr = get_ip()
 
     current_app.logger.info(
         "%s - %s checking in to retrieve distributed queries",
@@ -377,7 +336,7 @@ def distributed_write(node=None):
     '''
     '''
     data = request.get_json()
-    remote_addr=get_ip()
+    remote_addr = get_ip()
 
     if current_app.debug:
         current_app.logger.debug(json.dumps(data, indent=2))
@@ -401,7 +360,7 @@ def distributed_write(node=None):
             continue
 
         # non-zero status indicates sqlite errors
-
+        current_app.logger.info(statuses)
         if not statuses.get(guid, 0):
             status = DistributedQueryTask.COMPLETE
         else:
@@ -419,31 +378,12 @@ def distributed_write(node=None):
                 update_system_info(node, results[0])
             elif 'os_version' in str(task.distributed_query.sql) and len(results) > 0:
                 update_os_info(node, results[0])
-
             elif KernelQueries.MAC_ADDRESS_QUERY in str(task.distributed_query.sql) and len(results) > 0:
                 update_mac_address(node, results)
-            elif task.distributed_query.description and (
-                    (task.distributed_query.description in DefaultInfoQueries.DEFAULT_INFO_QUERIES) or (
-                    task.distributed_query.description in DefaultInfoQueries.DEFAULT_HASHES_QUERY) or (
-                            task.distributed_query.description in DefaultInfoQueries.DEFAULT_INFO_QUERIES_LINUX)):
-                current_app.logger.info('saving in db')
-                save_distributed_query_data.apply_async(queue='default_queue_tasks',
-                                                        args=[node.id, results, task.distributed_query.description])
-                data = {}
-                node_data = {'id': node.id}
-                if node.node_info and 'computer_name' in node.node_info:
-                    node_data['name'] = node.node_info['computer_name']
-                else:
-                    current_app.logger.error('System name is empty')
-                    node_data['host_identifier'] = node.host_identifier
-
-                data['node'] = node_data
-                data['data'] = results
-                data['query_id'] = task.distributed_query.id
-
-                push_live_query_results_to_websocket(data, task.distributed_query.id)
-                # save_distributed_query_data.delay(node.id, results, task.distributed_query.description)
-
+            elif 'md5 from hash' in str(task.distributed_query.sql) and len(results) > 0:
+                update_osquery_or_agent_version(node, results[0])
+            elif 'version from osquery_info' in str(task.distributed_query.sql) and len(results) > 0:
+                update_osquery_or_agent_version(node, results[0])
         else:
             data = {}
             node_data = {'id': node.id}
@@ -456,20 +396,15 @@ def distributed_write(node=None):
             data['node'] = node_data
             data['data'] = results
             data['query_id'] = task.distributed_query.id
+            if not statuses.get(guid, 0):
+                data['status'] = 0
+            else:
+                data['status'] = 1
 
             push_live_query_results_to_websocket(data, task.distributed_query.id)
 
-        for columns in results:
-            pass
-            # result = DistributedQueryResult(
-            #     columns,
-            #     distributed_query=task.distributed_query,
-            #     distributed_query_task=task
-            # )
-            # db.session.add(result)
-        else:
-            task.status = status
-            db.session.add(task)
+        task.status = status
+        db.session.add(task)
 
     else:
         # need to write last_checkin, last_ip on node
@@ -481,14 +416,59 @@ def distributed_write(node=None):
     return jsonify(node_invalid=False)
 
 
+@blueprint.route('/start_uploads', methods=['POST', 'PUT'])
+@blueprint.route('/v1/start_uploads', methods=['POST', 'PUT'])
+@node_required
+def upload_file(node=None):
+    sid = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+    data = request.get_json()
+    CarveSession.create(node_id=node.id, session_id=sid, carve_guid=data['carve_id'],
+                        status=CarveSession.StatusInProgress, carve_size=data['carve_size'],
+                        block_size=data['block_size'], block_count=data['block_count'], request_id=data['request_id'])
+
+    return jsonify(session_id=sid)
+
+
+@blueprint.route('/upload_blocks', methods=['POST', 'PUT'])
+@blueprint.route('/v1/upload_blocks', methods=['POST', 'PUT'])
+def upload_blocks():
+    data = request.get_json()
+    carveSession = CarveSession.query.filter(CarveSession.session_id == data['session_id']).first_or_404()
+
+    if CarvedBlock.query.filter(
+            and_(CarvedBlock.session_id == data['session_id'], CarvedBlock.block_id == data['block_id'])).first():
+        return
+    size = len(data['data'])
+
+    CarvedBlock.create(data=data['data'], block_id=data['block_id'], session_id=data['session_id'],
+                       request_id=data['request_id'], size=size)
+    carveSession.completed_blocks = carveSession.completed_blocks + 1
+
+    # Are we expecting to receive more blocks?
+    if carveSession.completed_blocks < carveSession.block_count:
+        carveSession.update(carveSession)
+        db.session.commit()
+
+        print('Gathering more blocks')
+        return jsonify(node_invalid=False)
+    carveSession.status = CarveSession.StatusBuilding
+    # If not, let's reassemble everything
+
+    db.session.commit()
+    build_carve_session_archive.apply_async(queue='default_queue_tasks', args=[carveSession.session_id])
+    # debug("File successfully carved to: %s" % out_file_name)
+
+    return jsonify(node_invalid=False)
+
+
 def push_live_query_results_to_websocket(results, queryId):
     import pika
-    from polylogyx.settings import RABBITMQ_HOST,credentials
+    from polylogyx.settings import RABBITMQ_HOST, credentials
     queryId = str(queryId)
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         host=RABBITMQ_HOST, credentials=credentials))
     channel = connection.channel()
-    query_string="live_query_"+queryId
+    query_string = "live_query_" + queryId
     try:
         channel.basic_publish(exchange=query_string,
                               routing_key=query_string,
@@ -558,10 +538,8 @@ def get_ip():
 
 def send_checkin_queries(node):
     from polylogyx.tasks import send_recon_on_checkin
-
-    # send_recon_on_checkin.delay(node.to_dict())
-
     send_recon_on_checkin.apply_async(queue='default_queue_tasks', args=[node.to_dict()])
+
 
 def update_system_details(request_json, node):
     if 'host_details' in request_json and request_json.get('host_details'):

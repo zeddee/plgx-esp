@@ -2,6 +2,7 @@
 import os
 
 from flask import Flask, render_template
+from flask_cors import CORS
 
 from polylogyx.api import blueprint as api
 from polylogyx.extensions import (
@@ -14,6 +15,7 @@ from flask_caching import Cache
 
 def create_app(config=ProdConfig):
     app = Flask(__name__)
+    CORS(app)
     cache=Cache(app=app, config={'CACHE_TYPE': 'simple'})
 
     app.config.from_object(config)

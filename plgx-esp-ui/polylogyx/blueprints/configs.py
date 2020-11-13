@@ -38,14 +38,13 @@ class ConfigByPlatform(Resource):
            arch = "x86_64"
 
         type = args['type']
-
         if not type:
             type = "default"
-
         if platform == "windows" and arch == "x86_64" and type == "default":
             type = "shallow"
         type_mapping = {'default': 0, 'shallow': 1, 'deep': 2}
-        config = dao.edit_config_by_platform(platform, args['filters'], args['queries'], arch, type_mapping[type])
+        config = dao.get_config_by_platform(platform, arch, type_mapping[type])
+        config_dict = dao.edit_config_by_platform(config, args['filters'], args['queries'])
         status = "success"
         message = "Config is updated successfully"
-        return marshal(respcls(message, status, config), parentwrapper.common_response_wrapper, skip_none=True)
+        return marshal(respcls(message, status, config_dict), parentwrapper.common_response_wrapper, skip_none=True)

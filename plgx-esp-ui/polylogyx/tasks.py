@@ -5,17 +5,16 @@ import datetime as dt
 import sqlalchemy
 from celery import Celery
 from flask import current_app, json
-from kombu import Exchange,Queue
+from kombu import Exchange, Queue
 
-from polylogyx.models import Settings, AlertEmail, \
-    Node, EmailRecipient, ResultLog,StatusLog
+from polylogyx.models import Settings, AlertEmail, Node, ResultLog, StatusLog, db, Alerts, CarveSession, DistributedQueryTask
+from polylogyx.constants import PolyLogyxServerDefaults
 
 celery = Celery(__name__)
 default_exchange = Exchange('default', type='direct')
 
 celery.conf.task_queues = (
     Queue('worker3', default_exchange, routing_key='default'),
-
 )
 celery.conf.task_default_queue = 'worker3'
 celery.conf.task_default_exchange = 'default'
@@ -27,31 +26,26 @@ celery.conf.beat_schedule = {
     }, "purge_old_data": {
         "task": "polylogyx.tasks.purge_old_data",
         "schedule": 86400.0
-    },"cache_dashboard_data": {
-        "task": "polylogyx.tasks.cache_top_query_count",
-        "schedule": 300.0
     }
 }
 
 
 def update_sender_email(db):
-    emailSenderObj = db.session.query(Settings).filter(Settings.name == 'email').first()
+    emailSenderObj = db.session.query(Settings).filter(Settings.name == PolyLogyxServerDefaults.plgx_config_all_settings).first()
     if not emailSenderObj:
-        current_app.logger.info( "Email credentials are not set..")
+        current_app.logger.info("Email credentials are not set..")
         return False
-
     try:
-
-        emailSender = emailSenderObj.setting
-        emailPassword = base64.b64decode(
-            db.session.query(Settings).filter(Settings.name == 'password').first().setting)
-        smtpPort = db.session.query(Settings).filter(Settings.name == 'smtpPort').first().setting
-        smtpAddress = db.session.query(Settings).filter(Settings.name == 'smtpAddress').first().setting
-        emailRecipients = db.session.query(EmailRecipient).filter(EmailRecipient.status == 'active').all()
+        settings = json.loads(emailSenderObj.setting)
+        emailSender = settings['email']
+        emailPassword = base64.decodestring(settings['password'].encode('utf-8')).decode('utf-8')
+        smtpPort = settings['smtpPort']
+        smtpAddress = settings['smtpAddress']
+        emailRecipients = settings['emailRecipients']
         emailRecipientList = []
         if emailRecipients and len(emailRecipients) > 0:
             for emailRecipient in emailRecipients:
-                emailRecipientList.append(emailRecipient.recipient)
+                emailRecipientList.append(emailRecipient)
                 current_app.config['EMAIL_RECIPIENTS'] = emailRecipientList
 
         current_app.config['MAIL_USERNAME'] = emailSender
@@ -60,126 +54,89 @@ def update_sender_email(db):
         current_app.config['MAIL_PORT'] = int(smtpPort)
         return True
     except Exception as e:
-        current_app.logger.info( "Incomplete email credentials")
+        current_app.logger.info("Incomplete email credentials")
         current_app.logger.error(e)
         return False
 
 
 @celery.task()
-def cache_dashboard_data():
-    from polylogyx.models import DashboardData, db
-    from polylogyx.constants import QueryConstants, EventQueries, UtilQueries, KernelQueries, PlugInQueries
-
-    dahboard_data = {}
-    try:
-        dahboard_data['product_state'] = format_records(db.engine.execute(sqlalchemy.text(QueryConstants.PRODUCT_STATE_QUERY)))
-
-        dahboard_data['product_signatures'] = format_records(db.engine.execute(sqlalchemy.text(QueryConstants.PRODUCT_SIGNATURES_QUERY)))
-
-        dahboard_data['kernel_version'] = format_records(db.engine.execute(sqlalchemy.text(KernelQueries.KERNEL_VERSION_QUERY)))
-
-        dahboard_data['chrome_ie_extensions'] = format_records(
-            db.engine.execute(sqlalchemy.text(KernelQueries.CHROME_IE_EXTENSIONS_QUERY)))
-
-        dahboard_data['file_events'] = format_records(db.engine.execute(sqlalchemy.text(EventQueries.TOTAL_FILE_EVENTS)))
-
-        dahboard_data['unsigned_binary'] = format_records(db.engine.execute(sqlalchemy.text(UtilQueries.UNSIGNED_BINARY)))
-        dahboard_data['virus_total'] = format_records(db.engine.execute(sqlalchemy.text(PlugInQueries.VIRUS_TOTAL_QUERY)))
-        dahboard_data['ibm_threat_intel'] = format_records(db.engine.execute(sqlalchemy.text(PlugInQueries.IBM_THREAT_INTEL_QUERY)))
-
-        dahboard_data['top_5_programs'] = format_records(db.engine.execute(sqlalchemy.text(UtilQueries.TOP_FIVE_PROGRAM)))
-        dahboard_data['bottom_5_programs'] = format_records(db.engine.execute(sqlalchemy.text(UtilQueries.BOTTOM_FIVE_PROGRAM)))
-
-        dahboard_data['etc_hosts'] = format_records(db.engine.execute(sqlalchemy.text(UtilQueries.ETC_HOSTS_QUERY)))
-
-        dashboard_windows = db.session.query(DashboardData).filter(DashboardData.name == 'dashboard_windows').first()
-
-        dahboard_Linux_data = {}
-        dahboard_Linux_data['kernel_version'] = format_records(
-            db.engine.execute(sqlalchemy.text(KernelQueries.KERNEL_VERSION_LINUX_QUERY)))
-
-        dahboard_Linux_data['chrome_ie_extensions'] = format_records(
-            db.engine.execute(sqlalchemy.text(KernelQueries.CHROME_FIREFOX_EXTENSIONS_QUERY)))
-
-        dahboard_Linux_data['etc_hosts'] = format_records(db.engine.execute(sqlalchemy.text(UtilQueries.ETC_HOSTS_LINUX_QUERY)))
-        dahboard_Linux_data['packages'] = format_records(db.engine.execute(sqlalchemy.text(KernelQueries.RMP_DEB_PACKAGES)))
-
-        dahboard_Linux_data['file_events'] = format_records(db.engine.execute(sqlalchemy.text(EventQueries.TOTAL_FILE_EVENTS_LINUX)))
-
-        dahboard_Linux_data['top_5_programs'] = format_records(db.engine.execute(sqlalchemy.text(UtilQueries.TOP_FIVE_PROGRAM_LINUX)))
-        dahboard_Linux_data['top_5_ports'] = format_records(db.engine.execute(sqlalchemy.text(UtilQueries.TOP_FIVE_PORTS_LINUX)))
-        dahboard_Linux_data['top_5_ips'] = format_records(db.engine.execute(sqlalchemy.text(UtilQueries.TOP_FIVE_IPS_LINUX)))
-        dahboard_Linux_data['bottom_5_programs'] = format_records(
-            db.engine.execute(sqlalchemy.text(UtilQueries.BOTTOM_FIVE_PROGRAM_LINUX)))
-
-        dahboard_Linux_data['socket_events'] = format_records(db.engine.execute(sqlalchemy.text(EventQueries.TOTAL_SOCKET_EVENTS_LINUX)))
-
-        if not dashboard_windows:
-            DashboardData.create(name='dashboard_windows', data=json.dumps(dahboard_data, cls=DecimalEncoder))
-        else:
-            dashboard_windows.update(data=json.dumps(dahboard_data, cls=DecimalEncoder), updated_at=dt.datetime.utcnow())
-            db.session.commit()
-        dashboard_linux = db.session.query(DashboardData).filter(DashboardData.name == 'dashboard_linux').first()
-        if not dashboard_linux:
-            DashboardData.create(name='dashboard_linux', data=json.dumps(dahboard_data, cls=DecimalEncoder))
-        else:
-            dashboard_linux.update(data=json.dumps(dahboard_Linux_data, cls=DecimalEncoder),
-                                   updated_at=dt.datetime.utcnow())
-            db.session.commit()
-    except Exception as e:
-        current_app.logger.error(e.message)
-
-
-@celery.task()
-def cache_top_query_count():
-    from polylogyx.models import DashboardData, db
-    from sqlalchemy import text
-    results = db.session.query(ResultLog.name, db.func.count(ResultLog.id).label('total')).group_by(
-        ResultLog.name).order_by(text('total DESC')).limit(5).all()
-    dashboard_data = {}
-    query_data={}
-    for result in results:
-        query_data[result[0]]=result[1]
-    dashboard_data['top_queries'] = query_data
-    dashboard_data_obj = db.session.query(DashboardData).filter(DashboardData.name == 'dashboard').first()
-    if not dashboard_data_obj:
-        DashboardData.create(name='dashboard', data=json.dumps(dashboard_data, cls=DecimalEncoder))
-    else:
-        dashboard_data_obj.update(data=json.dumps(dashboard_data, cls=DecimalEncoder),
-                               updated_at=dt.datetime.utcnow())
-
-        db.session.commit()
-@celery.task()
 def send_alert_emails():
     from polylogyx.models import db
-
+    current_app.logger.info("Task is started to send the pending emails of the alerts reported")
     email_credentials_valid = update_sender_email(db)
     if email_credentials_valid:
         nodes = Node.query.all()
         for node in nodes:
             try:
                 send_pending_node_emails(node, db)
-            except Exception  as e:
+                current_app.logger.info("Pending emails of the alerts reported are sent")
+            except Exception as e:
                 current_app.logger.error(e.message)
+    current_app.logger.info("Task is completed in sending the pending emails of the alerts reported")
 
 
 @celery.task()
 def purge_old_data():
     from polylogyx import db
+    import time, datetime
+    current_app.logger.info("Task to purge older data is started")
     try:
-        delete_setting = db.session.query(Settings).filter(Settings.name == 'purge_data_duration').first()
+        deleted_hosts = Node.query.filter(Node.state == Node.DELETED).all()
+        node_ids_to_delete = [node.id for node in deleted_hosts if not node.result_logs.count() and not node.status_logs.count()]
+        if node_ids_to_delete:
+            permanent_host_deletion.apply_async(queue='default_queue_ui_tasks', args=[node_ids_to_delete])
 
+        delete_setting = db.session.query(Settings).filter(Settings.name == 'purge_data_duration').first()
+        current_app.logger.info("Purging the data for the duration {}".format(int(delete_setting.setting)))
+        max_delete_count = 1000
+        actual_delete_count = 1000
         if delete_setting and int(delete_setting.setting) > 0:
             since = dt.datetime.now() - dt.timedelta(hours=24 * int(delete_setting.setting))
-            ResultLog.query.filter(ResultLog.timestamp < since).delete()
-            StatusLog.query.filter(StatusLog.created < since).delete()
+            while actual_delete_count == 1000:
+                try:
+                    actual_delete_count = int(ResultLog.query.filter(ResultLog.id.in_(db.session.query(ResultLog.id).filter(ResultLog.timestamp < since).limit(max_delete_count))).delete(synchronize_session='fetch'))
+                    db.session.commit()
+                    current_app.logger.info("Purged {0} records".format(actual_delete_count))
+                    time.sleep(2)
+                except Exception as e:
+                    current_app.logger.error("Error in Purge : {0}".format(e))
 
+            current_app.logger.info("Purging the Status Logs beyond the purge duration")
+            StatusLog.query.filter(StatusLog.created < since).delete()
             db.session.commit()
-            current_app.logger.info("Deleting data old more than : " + delete_setting.setting)
+
+            current_app.logger.info("Purging the Alerts beyond the purge duration")
+            Alerts.query.filter(Alerts.created_at < since).delete()
+            db.session.commit()
+
+            hosts = db.session.query(Node.host_identifier, Node.id).filter(Node.state == Node.DELETED).filter(Node.updated_at < since).all()
+            node_ids = [item[1] for item in hosts]
+
+            permanent_host_deletion.apply_async(queue='default_queue_ui_tasks', args=[node_ids])
         else:
             current_app.logger.info("Deleting limit not set, skipping ")
     except Exception as e:
         current_app.logger.error(e)
+    current_app.logger.info("Task to purge older data is completed")
+
+
+@celery.task()
+def permanent_host_deletion(node_ids):
+    if node_ids:
+        current_app.logger.info("Hosts with ids {} are requested to delete permanently".format(node_ids))
+        try:
+            nodes = db.session.query(Node).filter(Node.id.in_(node_ids)).all()
+            for node in nodes:
+                node.tags = []
+            db.session.commit()
+
+            deleted_count = Node.query.filter(Node.state == Node.DELETED).filter(Node.id.in_(node_ids)).delete(synchronize_session=False)
+            current_app.logger.info("{} hosts are deleted permanently".format(deleted_count))
+        except Exception as e:
+            current_app.logger.error("Unable to delete tags/result_log/status_log/alert_email/alerts from the node! " + str(e))
+    else:
+        current_app.logger.info("No host is requested to delete")
+    db.session.commit()
 
 
 def format_records(results):
@@ -214,24 +171,19 @@ def send_pending_node_emails(node, db):
             db.session.query(AlertEmail).filter(AlertEmail.status == None).filter(AlertEmail.node == node).update(
                 {'status': 'PENDING'})
             db.session.commit()
-            send_email(node, body,db)
+            send_email(node, body, db)
         except Exception  as e:
             current_app.logger.error(e.message)
-
-        db.session.query(AlertEmail).filter(AlertEmail.status == None).filter(AlertEmail.node == node).update(
-            {'status': 'PENDING'})
-        db.session.commit()
-        send_email(node, body, db)
-
 
 
 def send_email(node, body, db):
     from polylogyx.utils import send_email
     send_email(body=body, subject=node.display_name + ' Alerts Today',
-              config=current_app.config, node=node,db=db)
+               config=current_app.config, node=node, db=db)
     try:
         db.session.query(AlertEmail).filter(AlertEmail.status == 'PENDING').filter(AlertEmail.node == node).update(
             {'status': 'COMPLETED'})
         db.session.commit()
     except Exception  as e:
         current_app.logger.error(e.message)
+

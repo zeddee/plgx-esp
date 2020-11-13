@@ -16,4 +16,4 @@ Review most recent activity for {{ node.display_name }} at https://{{server_url}
 This rule's configuration may be reviewed at https://{{server_url}}/manage/rules/{{match.rule.id}}.
 This alert details may be reviewed at https://{{server_url}}/manage/alerts/data/{{match.alert_id}}.
 
----END polylogyx notification
+---END PolyLogyx notification

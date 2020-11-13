@@ -1,0 +1,181 @@
+
+<div class="kt-grid kt-grid--hor kt-grid--root">
+  <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--ver kt-page">
+    <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--hor kt-wrapper" id="kt_wrapper">
+
+<div class="kt-portlet kt-portlet--mobile kt-portlet--responsive-mobile">
+<div class="kt-portlet__head">
+<div class="kt-portlet__head-label">
+  <span class="kt-portlet__head-icon">
+    <i class="kt-font-brand fa fa-crosshairs"></i>
+  </span>
+  <h3 class="kt-portlet__head-title">
+    Hunt
+  </h3>
+</div>
+<div class="kt-portlet__head-toolbar">
+  <div class="kt-portlet__head-wrapper">
+    <div class="">
+      <a href="javascript:void(0);" (click)="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+        <i class="fas fa-chevron-left"></i>
+        Back
+      </a>
+    </div>
+  </div>
+</div>
+</div>
+<div class="kt-portlet__body">
+<!--begin::Portlet-->
+    <form class="form form-horizontal" [formGroup]="md5form" (ngSubmit)="onSubmit()" enctype="multipart/form-data" id = "md5form">
+      <div class="row">
+        <div class="col-xl-12">
+          <div class="form-group row">
+            <label class="col-2 col-form-label" style="color: #646c9a;">Hunt Type</label>
+      <div class="col-8">
+      <angular2-multiselect [data]="dropdownPacknameList" [(ngModel)]="selectedPacknameItems" formControlName="hunt_type" [ngClass]="{ 'is-invalid': submitted && f.hunt_type.errors }"
+          [settings]="dropdownPacknameSettings"
+          (onSelect)="onItemSelect($event)"
+          (onDeSelect)="OnItemDeSelect($event)"
+          (onSelectAll)="onSelectAll($event)"
+          (onDeSelectAll)="onDeSelectAll($event)">
+      </angular2-multiselect>
+      <div *ngIf="submitted && f.hunt_type.errors" class="invalid-feedback">
+        <div *ngIf="f.hunt_type.errors.required">Hunt Type is required</div>
+        </div>
+      </div>
+      </div>
+      </div>
+      </div>
+       <!-- begin:: datepicker -->
+      <div class="row">
+        <div class="col-xl-12">
+          <div class="form-group row">
+            <label class="col-2 col-form-label" style="color: #646c9a;"></label>
+      <div class="col-2">
+        <select  value="3" class="form-control" (change)="get_duration($event.target.value)" style="cursor: pointer;">
+          <option value="2">1 day</option>
+          <option value="3" selected="selected">1 week</option>
+          <option value="4">1 month</option>
+        </select>
+      </div>
+      <div class="col-4" >
+        <div class="row">
+          <span style="margin-top:auto;margin-bottom: auto;margin-right:10px;" >ending(UTC)</span>
+
+          <ng-datepicker [(ngModel)]="datepicker_date['date']" [ngModelOptions]="{standalone: true}" (ngModelChange)="myHandler()"></ng-datepicker>
+        </div>
+      </div>
+      </div>
+      </div>
+      </div>
+       <!-- End:: datepicker -->
+      <div class="form-group row">
+        <div class="col-5 col-form-label">
+          <h6>Upload indicators using file, separated by newline to search across the entire collected endpoint data:</h6>
+        </div>
+        <div class="col-5 col-form-label">
+          <input type="file" class="custom-input-file" formControlName="indicator_file" (change)="uploadFile($event)"  name="indicator_file" id="indicator_file_md5" style="cursor: pointer;">
+        </div>
+        <div class="col-2 col-form-label">
+                    <button type="submit" class="btn btn-primary submit">
+                      <i class="fas fa-file-upload"></i>Upload
+                      <span *ngIf="loading" class="spinner-border spinner-border-sm" style="margin-left: 10px" role="status" aria-hidden="true"></span>
+                    </button>
+        </div>
+      </div>
+    </form>
+    <div id="text">
+    </div>
+    <!-- <div id="results_md5">
+  </div> -->
+  <div   class="kt-portlet__body table_data">
+    <div class="" style="margin-bottom: 60px;" >
+      <!--begin: Datatable -->
+      <table  datatable [dtOptions]="dtOptions" [dtTrigger]="dtTrigger" class="table table-hover table-checkable" style="text-align: left;" >
+        <thead>
+          <tr>
+            <th style="width:15%">Host Name</th>
+            <th style="width:15%">Query Name</th>
+            <th>Columns</th>
+          </tr>
+        </thead>
+        <tbody >
+            <tr *ngFor="let alrowdata of search_data_output; let i = index ">
+                <td style="vertical-align:left;">
+                  <a [routerLink]="['/hosts/', alrowdata.node_id]" class="active" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="click -> Host Details" style="color:#5867dd;font-weight: 600;">{{alrowdata.hostname}}</a>
+                </td>
+                <td style="vertical-align:left;">
+
+                {{alrowdata.name}}
+                </td>
+                <td class="cell-breakWord">
+
+                  <div (click)="ele.class = ele.class == 'showChildren' ? '' : 'showChildren'" [ngClass]="{ hideChildren : ele.class !== 'showChildren' }" #ele >
+                    <font color='#16ace3'>
+                      <div >
+                        <div class="sql hljs desc-background_rules container" [class.show_1]="alrowdata.visible_1" style="cursor: pointer;">
+                          {{myjson.stringify(alrowdata.columns)}}
+                        </div>
+                        <span *ngIf="myjson.stringify(alrowdata.columns).length > 300" style="cursor: pointer;" class="kt-link" (click)="alrowdata.visible_1 = !alrowdata.visible_1">{{ alrowdata.visible_1 ? 'Read less': 'Read More' }}</span>
+                      </div>
+                </font>
+                  <div (click)="action($event);false" >
+                    <div class="col-10"></div>
+                    <th >
+                  <dt *ngFor="let subhostdata of alrowdata.columns | keyvalue">
+
+                    <!--md5-->
+                    <dl *ngIf="subhostdata.key=='md5'" style="word-break: break-word;padding-left: 40px;" >
+
+                    {{subhostdata.key}}
+                    {{":"}}
+
+                    <a target="_blank" onclick="window.open(this.href,'_blank');return false;"  href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
+                    </dl>
+
+                    <!--domain_name-->
+                    <dl *ngIf="subhostdata.key=='domain_name'" style="word-break: break-word;padding-left: 40px;" >
+
+                    {{subhostdata.key}}
+                    {{":"}}
+
+                    <a target="_blank" onclick="window.open(this.href,'_blank');return false;" href="https://www.virustotal.com/#/domain/{{subhostdata.value}}" >{{subhostdata.value}}</a>
+                    </dl>
+
+                    <!--sha256-->
+                    <dl *ngIf="subhostdata.key=='sha256'" style="word-break: break-word;padding-left: 40px;" >
+
+                    {{subhostdata.key}}
+                    {{":"}}
+
+                    <a target="_blank" onclick="window.open(this.href,'_blank');return false;" href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
+                    </dl>
+
+
+                    <dl *ngIf="!(subhostdata.key=='md5') && !(subhostdata.key=='domain_name') && !(subhostdata.key=='sha256')" style="word-break: break-word;padding-left: 40px;" >
+
+                      {{subhostdata.key}}
+                      {{":"}}
+
+                     {{subhostdata.value}}
+                    </dl>
+
+                  </dt>
+                </th>
+                  </div>
+                  </div>
+                  </td>
+              </tr>
+        </tbody>
+      </table>
+      <div id="table_noresults"  >No results found
+      </div>
+      <!--end: Datatable -->
+    </div>
+  </div>
+<!--end::Portlet-->
+    </div>
+</div>
+</div>
+</div>
+</div>
