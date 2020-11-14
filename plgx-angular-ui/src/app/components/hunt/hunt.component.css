@@ -1,0 +1,87 @@
+.back_icon_align {
+   vertical-align: unset !important;
+ }
+ .kt-portlet .kt-portlet__head .kt-portlet__head-label .kt-portlet__head-title {
+    margin: 0;
+    padding: 0;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #464457;
+ }
+ h3, .h3 {
+   font-size: 1.75rem;
+   color: #646c9a;
+   font-weight: 500;
+   line-height: 1.2;
+ }
+ h5,h6,h2{
+   color: #646c9a;
+   /* font-size: 1rem; */
+   font-weight: 500;
+ line-height: 1.2;
+ }
+ body {
+   color: #646c9a;
+   font-family: Poppins;
+ }
+ .custom-input-file {
+  width: 100%;
+  color: #495057;
+  line-height: 1.5;
+  padding: 0.65rem 1rem;
+  font-weight: 400;
+  border: 1px solid #ebedf2;
+  border-radius: 4px;
+}
+
+:host ::ng-deep .btn-secondary:active, 
+:host ::ng-deep .btn-secondary:hover{
+  background-color: #518c24f2 !important;
+  border-color: #518c24f2 !important;
+}
+
+
+
+.hideChildren>div{
+  display: none;
+  }
+  .cell-breakWord {
+    word-wrap: break-word;
+    max-width: 1px;
+    padding:8px 24px;
+    }
+
+  .nav-tab_align {
+    text-align: right !important;
+    word-break: break-all;
+
+}
+.kt-badge.kt-badge--inline {
+  height: 0;
+  width: auto;
+}
+
+table.dataTable thead th, table.dataTable thead td {
+  padding: 10px;
+   border-bottom: 1px solid #ebedf2;
+
+}
+::ng-deep .table.dataTable.no-footer  {
+  border-bottom: 1px solid #ebedf2;
+}
+
+.dataTables_wrapper .dataTable th {
+  color: #595d6e;
+}
+
+
+.container {
+  font-size: 16px;
+  line-height: 16px;
+  height: 32px;
+  overflow: hidden;
+}
+.show_1{
+  overflow: visible_1;
+  height: auto;
+}

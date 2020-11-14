@@ -13,6 +13,7 @@ from polylogyx.search_rules import AndCondition, OrCondition, BaseCondition, OPE
 
 '''Common utils/ all methods used in blueprints folder will be defined here'''
 
+
 def tag_name_format(Tags):
     '''used in packs queries nodes'''
     data = [tag.to_dict() for tag in Tags]
@@ -27,6 +28,99 @@ def dump_datetime(value):
         return None
     #return datetime.strptime(str(value), '%Y-%m-%d %H:%M:%S')
     return value.strftime("%Y-%m-%d") + ' ' + value.strftime("%H:%M:%S")
+
+
+class SearchParser:
+
+    def parse_condition(self, d):
+        from polylogyx.search_rules import OPERATOR_MAP
+
+        op = d['operator']
+        value = d['value']
+
+        # If this is a "column operator" - i.e. operating on a particular
+        # value in a column - then we need to give a custom extraction
+        # function that knows how to get this value from a query.
+        column_name = None
+        if d['field'] == 'column':
+            # Strip 'column_' prefix to get the 'real' operator.
+            if op.startswith('column_'):
+                op = op[7:]
+            if isinstance(value, six.string_types):
+                column_name = value
+            else:
+                # The 'value' array will look like ['column_name', 'actual value']
+                column_name, value = value
+        if not column_name:
+            column_name = d['field']
+        klass = OPERATOR_MAP.get(op)
+
+        if not klass:
+            raise ValueError("Unsupported operator: {0}".format(op))
+
+        inst = self.make_condition(klass, d['field'], value, column_name=column_name)
+        return inst
+
+    def parse_group(self, d):
+        from polylogyx.search_rules import AndCondition, OrCondition
+
+        if len(d['rules']) == 0:
+            raise ValueError("A group contains no rules")
+        upstreams = [self.parse(r) for r in d['rules']]
+        condition = d['condition']
+        if condition == 'AND' or condition == 'and':
+            return self.make_condition(AndCondition, upstreams)
+        elif condition == 'OR' or condition == 'or':
+            return self.make_condition(OrCondition, upstreams)
+
+        raise ValueError("Unknown condition: {0}".format(condition))
+
+    def parse(self, d):
+        if 'condition' in d:
+            return self.parse_group(d)
+        return self.parse_condition(d)
+
+    def make_condition(self, klass, *args, **kwargs):
+        from polylogyx.search_rules import BaseCondition
+
+        """
+        Memoizing constructor for conditions.  Uses the input config as the cache key.
+        """
+        conditions = {}
+
+        # Calculate the memoization key.  We do this by creating a 3-tuple of
+        # (condition class name, args, kwargs).  There is some nuance to this,
+        # though: we need to put args/kwargs in the right format.  We
+        # recursively iterate through lists/dicts and convert them to tuples,
+        # and extract the memoization key from instances of BaseCondition.
+        def tupleify(obj):
+            if isinstance(obj, BaseCondition):
+                return obj.__network_memo_key
+            elif isinstance(obj, tuple):
+                return tuple(tupleify(x) for x in obj)
+            elif isinstance(obj, list):
+                return tuple(tupleify(x) for x in obj)
+            elif isinstance(obj, dict):
+                items = ((tupleify(k), tupleify(v)) for k, v in obj.items())
+                return tuple(sorted(items))
+            else:
+                return obj
+
+        args_tuple = tupleify(args)
+        kwargs_tuple = tupleify(kwargs)
+
+        key = (klass.__name__, args_tuple, kwargs_tuple)
+        if key in conditions:
+            return conditions[key]
+
+        # Instantiate the condition class.  Also, save the memoization key on
+        # the class, so it can be retrieved (above).
+        inst = klass(*args, **kwargs)
+        inst.__network_memo_key = key
+
+        # Save the condition
+        conditions[key] = inst
+        return inst
 
 
 def validate_json(f):
@@ -230,6 +324,7 @@ def add_pack_through_json_data(args):
 
     if 'tags' in args: tags = args['tags'].split(',')
     else: tags=[]
+
     name = args['name']
     queries = args['queries']
     pack = packs_dao.get_pack_by_name(name)
@@ -466,6 +561,7 @@ def make_condition(klass, *args, **kwargs):
     # Save the condition
     conditions[key] = inst
     return inst
+
 
 def get_tags_list_to_add(tags):
     from polylogyx.models import Tag

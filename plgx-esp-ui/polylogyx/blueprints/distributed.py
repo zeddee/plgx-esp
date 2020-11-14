@@ -18,6 +18,7 @@ ns = Namespace('distributed', description='distributed query related operations'
 
 # Distributed Query section
 
+
 @require_api_key
 @ns.route('/add', endpoint = 'distributed_add')
 @ns.doc(params={'query':'query', 'tags': 'tags', 'nodes':'nodes', 'description':'description for the post method'})
@@ -90,5 +91,4 @@ class DistributedQueryClass(Resource):
                 message = 'No active node present'
             else:
                 return marshal({'query_id': query.id}, wrapper.add_query_wrapper)
-
         return marshal(respcls(message), parentwrapper.failure_response_parent)

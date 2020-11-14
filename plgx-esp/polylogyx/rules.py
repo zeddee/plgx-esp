@@ -82,10 +82,13 @@ class Network(object):
         alerts={}
 
         for (alert, upstream, rule_id) in self.alert_conditions:
-            if upstream.run(input):
-                if not rule_id in alerts:
-                    alerts[rule_id]=[]
-                alerts[rule_id].append(alert)
+            try:
+                if upstream.run(input):
+                    if not rule_id in alerts:
+                        alerts[rule_id] = []
+                    alerts[rule_id].append(alert)
+            except Exception as e:
+                current_app.logger.error(rule_id)
         # Step 3: Return all alerts to the caller.
         return alerts
 
@@ -126,9 +129,9 @@ class Network(object):
             upstreams = [parse(r) for r in d['rules']]
 
             condition = d['condition']
-            if condition == 'AND':
+            if condition == 'AND' or condition == 'and':
                 return self.make_condition(AndCondition, upstreams)
-            elif condition == 'OR':
+            elif condition == 'OR' or condition == 'or':
                 return self.make_condition(OrCondition, upstreams)
 
             raise ValueError("Unknown condition: {0}".format(condition))
@@ -355,16 +358,14 @@ class MatchesRegexCondition(LogicCondition):
         # Pre-compile the 'expected' value - the regex.
         try:
             expected = re.compile(expected)
-            super(NotMatchesRegexCondition, self).__init__(key, expected, **kwargs)
+            super(MatchesRegexCondition, self).__init__(key, expected, **kwargs)
         except Exception as e:
-            current_app.logger.error(e)
             return  False
 
     def compare(self, value):
         try:
             return self.expected.match(value) is not None
         except Exception as e:
-            current_app.logger.error(e)
             return False
 
 

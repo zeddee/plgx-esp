@@ -52,15 +52,21 @@ def get_all_configs():
     return config_data
 
 
-def edit_config_by_platform(platform, filters, queries, arch, type):
+def get_config_by_platform(platform, arch, type):
+    return db.session.query(Config).filter(Config.arch == arch).filter(Config.platform == platform).filter(
+        Config.type == type).first()
+
+
+def edit_config_by_platform(config, filters, queries):
+    arch = config.arch
+    platform = config.platform
+    type = config.type
     db.session.query(Config).filter(Config.arch == arch).filter(Config.platform == platform).update(
         {Config.is_active: False})
     db.session.query(Config).filter(Config.arch == arch).filter(Config.platform == platform).filter(
         Config.type == type).update({Config.is_active: True})
 
     db.session.commit()
-    config = db.session.query(Config).filter(Config.arch == arch).filter(Config.platform == platform).filter(
-        Config.type == type).first()
 
     # fetching the filters data to insert to the config dict
     if arch and arch == DefaultFilters.ARCH_x86:

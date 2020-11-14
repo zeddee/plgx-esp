@@ -72,17 +72,17 @@ class RsyslogPlugin(AbstractLogsPlugin):
             current_app.logger.warning("Unable to socket connect, is rsyslog forwarder running? If not, disable rsyslog forwading in docker compose file.")
 
         try:
-            for item in extract_results(data):
+            for item in data:
                 if bSock:
 
                     sock.send(json.dumps(append_node_information_to_result_log(kwargs.get('node'),flatten_json({
                         '@version': 1,
                         '@host_identifier': host_identifier,
-                        '@timestamp': item.timestamp.isoformat(),
+                        '@timestamp': item['timestamp'].isoformat(),
                         'log_type': 'result',
-                        'action': item.action,
-                        'columns': item.columns,
-                        'query_name': item.name,
+                        'action': item['action'],
+                        'columns': item['columns'],
+                        'query_name': item['name'],
                         'created': created,
                         })), cls=DateTimeEncoder).encode('utf-8'))
 

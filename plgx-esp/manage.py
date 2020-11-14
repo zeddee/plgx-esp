@@ -13,9 +13,9 @@ from flask_script.commands import Clean, ShowUrls
 
 from polylogyx import create_app, db
 from polylogyx.extensions import bcrypt
-from polylogyx.models import Query, Rule, Options, Settings, DefaultFilters, DefaultQuery, Config
+from polylogyx.models import Query, Rule, Options, Settings, DefaultFilters, DefaultQuery, Config,VirusTotalAvEngines
 from polylogyx.settings import CurrentConfig
-from polylogyx.constants import PolyLogyxServerDefaults, UtilQueries, PolyLogyxConstants
+from polylogyx.constants import PolyLogyxServerDefaults, UtilQueries, PolyLogyxConstants, DefaultInfoQueries
 from werkzeug.contrib.fixers import ProxyFix
 import sys
 
@@ -24,14 +24,16 @@ app = create_app(config=CurrentConfig)
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
 
-
 def _make_context():
     return {'app': app, 'db': db}
+
 
 class SSLServer(Command):
     def run(self, *args, **kwargs):
         ssl_context = ('../nginx/certificate.crt', '../nginx/private.key')
-        app.run(debug=True, use_debugger=True, use_reloader=False, passthrough_errors=True,host='0.0.0.0',port=9000,ssl_context=ssl_context, *args, **kwargs)
+        app.run(debug=True, use_debugger=True, use_reloader=False, passthrough_errors=True,host='0.0.0.0',port=1000,ssl_context=ssl_context, *args, **kwargs)
+
+
 manager = Manager(app)
 manager.add_command('server', Server())
 
@@ -40,6 +42,8 @@ manager.add_command('db', MigrateCommand)
 manager.add_command('clean', Clean())
 manager.add_command('urls', ShowUrls())
 manager.add_command('ssl', SSLServer())
+
+
 @manager.add_command
 class test(Command):
     name = 'test'
@@ -76,8 +80,6 @@ def extract_ddl(specs_dir):
         f.write('\n'.join(ddl))
 
 
-
-
 @manager.option('--filepath')
 @manager.option('--platform')
 @manager.option('--arch', default=DefaultFilters.ARCH_x64)
@@ -107,6 +109,7 @@ def add_default_filters( filepath, platform, arch,type):
     except Exception as error:
         print(str(error))
 
+
 @manager.command
 def delete_existing_unmapped_queries_filters():
     db.session.query(DefaultQuery).filter(DefaultQuery.config_id==None).delete()
@@ -118,43 +121,57 @@ def delete_existing_unmapped_queries_filters():
 @manager.option('--platform')
 @manager.option('--arch',   default=DefaultQuery.ARCH_x64)
 @manager.option('--type',   default=Config.TYPE_DEFAULT)
-def add_default_queries( filepath, platform,arch,type):
+def add_default_queries( filepath, platform, arch, type):
     try:
-        sys.stderr.write('Adding queries for '+platform)
+        sys.stderr.write('Adding queries for ' + platform)
         jsonStr = open(filepath, 'r').read()
         query = json.loads(jsonStr)
         queries = query['schedule']
         is_active = False
         if int(type) == 0 or int(type) == 1:
             is_active = True
-        config=db.session.query(Config).filter(Config.type==type).filter(Config.arch==arch).filter(Config.platform==platform).first()
+        config = db.session.query(Config).filter(Config.type == type).filter(Config.arch == arch).filter(
+            Config.platform == platform).first()
         if not config:
-            config=Config.create(platform=platform,arch=arch,type=type,is_active=is_active)
+            config = Config.create(platform=platform, arch=arch, type=type, is_active=is_active)
+
         for query_key in queries.keys():
-            query_filter=DefaultQuery.query.filter_by(platform=platform).filter_by(name=query_key).filter_by(config_id=config.id)
-            if arch==DefaultQuery.ARCH_x86:
-                query_filter=query_filter.filter_by(arch=DefaultQuery.ARCH_x86)
-            query=query_filter.first()
+            if query_key not in DefaultInfoQueries.DEFAULT_VERSION_INFO_QUERIES.keys():
+                query_filter = DefaultQuery.query.filter_by(platform=platform).filter_by(name=query_key).filter_by(config_id=config.id)
+                config_id = config.id
+            else:
+                query_filter = DefaultQuery.query.filter_by(platform=platform).filter_by(name=query_key)
+                config_id = None
+            if arch == DefaultQuery.ARCH_x86:
+                query_filter = query_filter.filter_by(arch=DefaultQuery.ARCH_x86)
+
+            query = query_filter.first()
             try:
+                if 'snapshot' in queries[query_key]:
+                    snapshot = queries[query_key]['snapshot']
+                else:
+                    snapshot = False
+
                 if query:
                     sys.stderr.write("Query name " + query_key + " already exists, updating..!")
                     query.sql = queries[query_key]['query']
                     query.interval = queries[query_key]['interval']
-                    query.status=queries[query_key]['status']
+                    query.status = queries[query_key]['status']
+                    query.snapshot = snapshot
                     query.update(query)
                 else:
                     sys.stderr.write(query_key+" does not exist, adding new...")
-                    status=True
+                    status = True
                     if "status" in queries[query_key]:
-                        status=queries[query_key]['status']
+                        status = queries[query_key]['status']
 
-                    DefaultQuery.create(name=query_key, sql=queries[query_key]['query'],arch=arch,config_id=config.id,
+                    DefaultQuery.create(name=query_key, sql=queries[query_key]['query'],arch=arch,config_id=config_id,
                                             interval=queries[query_key]['interval'], status=status, platform=platform,
-                                            description=queries[query_key].get('description'))
+                                            description=queries[query_key].get('description'), snapshot=snapshot)
             except Exception as error:
                 sys.stderr.write(str(error))
     except Exception as error:
-        raise(str(error))
+        raise (str(error))
 
 
 @manager.option('packname')
@@ -213,7 +230,7 @@ def add_default_options():
 
     if existing_option:
         existing_option.option = json.dumps(PolyLogyxConstants.DEFAULT_OPTIONS)
-        existing_option.update(option)
+        existing_option.update(existing_option)
     else:
         Options.create(name=PolyLogyxServerDefaults.plgx_config_all_options, option=json.dumps(PolyLogyxConstants.DEFAULT_OPTIONS))
     exit(0)
@@ -225,52 +242,71 @@ def add_rules(filepath):
         rules = json.load(f)
 
     for name, data in rules.items():
-        rule = Rule.query.filter_by(name=data['name']).first()
-        if rule:
-            sys.stderr.write('Updating rule.. ' + rule.name)
-            if 'technique_id' in data:
-                if data['technique_id']:
-                    rule.tactics = data['tactics']
-                    rule.technique_id = data['technique_id']
-                    rule.description = data['description']
-                    rule.conditions = data['conditions'],
-                    rule.conditions = rule.conditions[0]
-                    if 'type' not in data:
-                        rule.type = Rule.MITRE
-                    else:
-                        rule.type = data['type']
-                    rule.save(rule)
+        try:
+            rule = Rule.query.filter_by(name=data['name']).first()
+            severity = data.get('severity', Rule.WARNING)
+            description = data.get('description', '')
+            type = data.get('type', Rule.MITRE)
+            tactics = data.get('tactics')
+            alerters = data.get('alerters', ["debug"])
+            technique_id = data.get('technique_id')
+            if not technique_id:
+                type=None
 
-        else:
-            sys.stderr.write('Creating rule.. ' + data['name'])
-            severity = Rule.WARNING
-            try:
-                if data['severity']:
-                    severity = data['severity']
-            except:
-                pass
-            if 'technique_id' in data:
-                if data['technique_id']:
-                    rule = Rule(name=data['name'],
-                                alerters=data['alerters'],
-                                description=data['description'],
-                                conditions=data['conditions'],
-                                status='ACTIVE',
-                                technique_id=data['technique_id'],
-                                tactics=data['tactics'],
-                                severity=severity,
-                                type=Rule.MITRE,
-                                updated_at=dt.datetime.utcnow(), recon_queries=json.dumps(UtilQueries.ALERT_RECON_QUERIES_JSON))
+            if rule:
+                sys.stderr.write('Updating rule.. ' + rule.name)
+                rule.tactics = tactics
+                rule.technique_id = technique_id
+                rule.description = description
+                rule.conditions = data['conditions'],
+                rule.severity=severity
+                rule.type = type
+                rule.alerters=alerters
+                rule.save(rule)
             else:
+                sys.stderr.write('Creating rule.. ' + data['name'])
                 rule = Rule(name=data['name'],
-                            alerters=data['alerters'],
-                            description=data['description'],
+                            alerters=alerters,
+                            description=description,
                             conditions=data['conditions'],
                             status='ACTIVE',
+                            technique_id=technique_id,
+                            tactics=tactics,
                             severity=severity,
-                            updated_at=dt.datetime.utcnow(), recon_queries=json.dumps(UtilQueries.ALERT_RECON_QUERIES_JSON))
-            rule.save()
+                            type=type,
+                            updated_at=dt.datetime.utcnow(),
+                            recon_queries=json.dumps(UtilQueries.ALERT_RECON_QUERIES_JSON))
 
+                rule.save()
+        except Exception as e:
+            print(e)
+
+
+@manager.option('--filepath')
+def add_default_vt_av_engines( filepath):
+    try:
+        sys.stderr.write('Adding Virus total Avengines ')
+        jsonStr = open(filepath, 'r').read()
+        av_engine = json.loads(jsonStr)
+        av_engines = av_engine['av_engines']
+        for key in av_engines.keys():
+            av_engine_Obj = VirusTotalAvEngines.query.filter(VirusTotalAvEngines.name == key).first()
+            if av_engine_Obj:
+                av_engine_Obj.status=av_engines[key]['status']
+            else:
+                VirusTotalAvEngines.create(name=key, status=av_engines[key]['status'])
+    except Exception as error:
+        raise(str(error))
+
+
+@manager.option('--vt_min_match_count')
+def update_vt_match_count(vt_min_match_count):
+    existingSettingObj = Settings.query.filter(Settings.name == 'virustotal_min_match_count').first()
+
+    if existingSettingObj:
+        current_app.logger.info("Match count already set")
+    else:
+        Settings.create(name='virustotal_min_match_count', setting=vt_min_match_count)
 
 
 @manager.option('--purge_data_duration')
@@ -279,10 +315,25 @@ def delete_historical_data(purge_data_duration):
 
     if existingSettingObj:
         current_app.logger.info("Delete duration already set")
+
+
+@manager.option('--purge_data_duration', default=60)
+@manager.option('--alert_aggregation_duration', default=60)
+def update_settings(purge_data_duration, alert_aggregation_duration):
+    purge_dur_setting = Settings.query.filter(Settings.name == 'purge_data_duration').first()
+    alert_aggr_dur_setting = Settings.query.filter(Settings.name == 'alert_aggregation_duration').first()
+
+    if purge_dur_setting:
+        current_app.logger.info("Purge duration is already set")
     else:
         Settings.create(name='purge_data_duration', setting=purge_data_duration)
 
- 
+    if alert_aggr_dur_setting:
+        current_app.logger.info("Alert aggregation duration is already set")
+    else:
+        Settings.create(name='alert_aggregation_duration', setting=alert_aggregation_duration)
+
+
 @manager.option('username')
 @manager.option('--password', default=None)
 @manager.option('--email', default=None)
@@ -308,7 +359,6 @@ def add_user(username, password, email):
         exit(0)
 
 
-
 @manager.option('--username')
 @manager.option('--password', default=None)
 @manager.option('--email', default=None)
@@ -330,6 +380,23 @@ def update_user(username, password, email):
         print("Failed to create user {0} - {1}".format(username, error))
         exit(1)
     exit(0)
+
+
+@manager.option('--filepath')
+def add_release_versions(filepath):
+    from polylogyx.models import ReleasedAgentVersions
+
+    jsonStr = open(filepath, 'r').read()
+    data = json.loads(jsonStr)
+    for release_version, dictionary in data.items():
+        for platform, platform_dict in dictionary.items():
+            agent_version_history = ReleasedAgentVersions.query.filter(ReleasedAgentVersions.platform == platform).filter(ReleasedAgentVersions.platform_release == release_version).first()
+            if agent_version_history:
+                agent_version_history.extension_version = platform_dict['extension_version']
+                agent_version_history.extension_hash_md5 = platform_dict['extension_hash']
+                agent_version_history.update(agent_version_history)
+            else:
+                ReleasedAgentVersions.create(platform=platform, platform_release=release_version, extension_version=platform_dict['extension_version'], extension_hash_md5=platform_dict['extension_hash'])
 
 
 if __name__ == '__main__':

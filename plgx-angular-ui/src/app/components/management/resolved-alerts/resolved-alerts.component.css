@@ -1,0 +1,30 @@
+td {
+    position: relative;
+    font-size: 11px;
+    margin-top: 15px;
+    margin-bottom: 60px;
+    border-collapse: collapse;
+    padding-left: 13px;
+    word-break: break-all;
+    white-space: normal !important;
+  }
+  table.dataTable thead th, table.dataTable thead td {
+    padding: 10px;
+     border-bottom: 1px solid #ebedf2;
+  
+  }
+  ::ng-deep .table.dataTable.no-footer  {
+    border-bottom: 1px solid #ebedf2;
+  }
+  .dropdown-btn-1 {
+    margin-top: -17px;
+    margin-left: 36px;
+    cursor: pointer;
+}
+.dataTables_wrapper .dataTable th {
+    color: #595d6e;
+}
+::ng-deep .query_tab .tab-content .nav {
+  width: 50%;
+    margin: 6px auto;
+}

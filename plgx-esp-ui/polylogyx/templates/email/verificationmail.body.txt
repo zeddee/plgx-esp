@@ -1,2 +1,0 @@
-Please verify your email id using this link : {{ verification_link }}
-You can view your system data here : {{ system_data_link }}

@@ -363,20 +363,12 @@ class NotMatchesRegexCondition(LogicCondition):
 
 
 class MatchesWildCardCondition(LogicCondition):
-    def __init__(self, key, expected, **kwargs):
-        # Pre-compile the 'expected' value - the regex.
-        expected = re.compile(expected)
-        super(MatchesWildCardCondition, self).__init__(key, expected, **kwargs)
 
     def compare(self, value):
         return not fnmatch.fnmatch(value,self.expected)
 
 
 class NotMatchesWildCardCondition(LogicCondition):
-    def __init__(self, key, expected, **kwargs):
-        # Pre-compile the 'expected' value - the regex.
-        expected = re.compile(expected)
-        super(NotMatchesWildCardCondition, self).__init__(key, expected, **kwargs)
 
     def compare(self, value):
         return fnmatch.fnmatch(value,self.expected)

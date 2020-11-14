@@ -51,18 +51,16 @@ exec `echo "$ENROLL_SECRET">resources/secret.txt`
 
 echo "Creating celery tmux sessions..."
 exec `tmux new-session -d -s plgx_celery`
-exec `tmux new-session -d -s plgx_celery_result_log`
 exec `tmux new-session -d -s plgx_celery_beat`
 exec `tmux new-session -d -s plgx_gunicorn`
-exec `tmux new-session -d -s celery_rlbicwa`
-exec `tmux new-session -d -s flower`
+\exec `tmux new-session -d -s flower`
 
 
 
 
 CORES="$(nproc --all)"
 echo "CPU cores are $CORES"
-WORKERS=$(( 2*CORES  ))
+WORKERS=$(( 2*CORES+1  ))
 WORKERS_CELERY=$(( 2*CORES  ))
 
 
@@ -71,6 +69,7 @@ python manage.py db upgrade
 
 echo "Creating default user..."
 exec `tmux send -t plgx_celery 'python manage.py add_user  "$POLYLOGYX_USER" --password  "$POLYLOGYX_PASSWORD"' ENTER`
+
 echo "Adding default configs..."
 exec `tmux send -t plgx_celery 'python manage.py add_default_config default_config_windows --filepath default_data/default_configs/default_config_windows_shallow.conf --platform windows' ENTER`
 exec `tmux send -t plgx_celery 'python manage.py add_default_config default_config_windows --filepath default_data/default_configs/default_config_windows_deep.conf --platform windows' ENTER`
@@ -100,6 +99,9 @@ exec `tmux send -t plgx_celery 'python manage.py add_default_queries --filepath 
 
 exec `tmux send -t plgx_celery 'python manage.py add_default_queries --filepath default_data/default_queries/default_queries_windows_x86.conf --arch x86 --platform windows' ENTER`
 
+echo "Adding released version's agent information..."
+exec `tmux send -t plgx_celery 'python manage.py add_release_versions --filepath default_data/platform_releases.conf' ENTER`
+
 
 echo "Adding default mitre rules..."
 for entry in /src/plgx-esp/default_data/mitre-attack/*
@@ -121,20 +123,24 @@ cd /src/plgx-esp
 echo "Starting celery beat..."
 exec `tmux send -t plgx_celery_beat 'celery beat -A polylogyx.worker:celery   --schedule=/tmp/celerybeat-schedule --loglevel=INFO --pidfile=/tmp/celerybeat.pid' ENTER`
 echo "Starting celery RabbitMQ..."
-exec `tmux send -t celery_rlbicwa "python workerResultLog.py &" ENTER`
 
-exec `tmux send -t plgx_celery_result_log "celery worker -A polylogyx.worker:celery --concurrency=$WORKERS_CELERY -Q result_log_queue -l INFO &" ENTER`
 
 echo "Starting PolyLogyx Vasp osquery fleet manager..."
-exec `tmux send -t plgx_gunicorn "gunicorn -w $WORKERS -k gevent --worker-connections 10 --bind 0.0.0.0:6000   manage:app --reload" ENTER`
+exec `tmux send -t plgx_gunicorn "gunicorn -w $WORKERS -k gevent --worker-connections 40 --timeout 120 --bind 0.0.0.0:6000   manage:app --reload" ENTER`
 
 if [[ -z "$PURGE_DATA_DURATION" ]]
 then
   echo "PURGE_DATA_DURATION value is not set, data will not be purged automatically!"
 else
-  echo "Setting auto database purge duration..."
-  exec `tmux send -t plgx_celery 'python manage.py delete_historical_data --purge_data_duration '"$PURGE_DATA_DURATION" ENTER`
+  echo "Creating platform settings..."
+  exec `tmux send -t plgx_celery 'python manage.py update_settings --purge_data_duration '"$PURGE_DATA_DURATION" ENTER`
 fi
+
+exec `tmux send -t plgx_celery 'python manage.py add_default_vt_av_engines --filepath default_data/Virustotal-avengines/default_VT_Av_engines.json' ENTER`
+
+exec `tmux send -t plgx_celery 'python manage.py  update_vt_match_count --vt_min_match_count '"$VT_MIN_MATCH_COUNT" ENTER`
+
+
 exec `tmux send -t plgx_celery "celery worker -A polylogyx.worker:celery --concurrency=$WORKERS_CELERY -Q default_queue_tasks -l INFO &" ENTER`
 
 echo "Sever is up and running.."

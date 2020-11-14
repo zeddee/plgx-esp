@@ -7,8 +7,9 @@ from flask import jsonify, request, send_file, current_app
 from flask_restplus import Namespace, Resource, marshal
 
 from polylogyx.dao import common_dao as dao
-from polylogyx.constants import PolyLogyxServerDefaults
+
 from .utils import *
+from polylogyx.blueprints.utils import *
 from polylogyx.utils import require_api_key
 from polylogyx.wrappers import parent_wrappers as parentwrapper
 from polylogyx.extensions import bcrypt
@@ -16,7 +17,6 @@ from polylogyx.models import ThreatIntelCredentials, User
 
 
 ns = Namespace('common_api', description='all normal purpose apis operations', path = '/')
-base_resource_folder=PolyLogyxServerDefaults.BASE_URL+"/resources/"
 
 
 @require_api_key
@@ -43,7 +43,6 @@ class ChangePassword(Resource):
         else:
             message = "new password and confirm new password are not matching for the user"
         return marshal(respcls(message,status),parentwrapper.common_response_wrapper,skip_none=True)
-
 
 
 @require_api_key
@@ -74,7 +73,8 @@ class AddOption(Resource):
             data = json.loads(existing_option.option)
         else:
             # convert json into unicode or string format as options db column is string only
-            data = dao.create_option_by_option(json.dumps(args['option']))
+            option = dao.create_option_by_option(json.dumps(args['option']))
+            data = json.loads(option.option)
         if not data: message = "options you updated are null and no data exists to show"
         return marshal(respcls("options are updated successfully","success",data),parentwrapper.common_response_wrapper,skip_none=True)
 
@@ -96,6 +96,7 @@ class FileUpload(Resource):
         args = self.parser.parse_args()
         data = None
         status = "failure"
+        message = None
 
         type = args['type']
         file = args['file']
@@ -107,7 +108,6 @@ class FileUpload(Resource):
             start = 0
         if not limit:
             limit = 100
-
 
         lines = [line.decode('utf-8').replace('\n', '') for line in file.readlines()]
 
@@ -159,7 +159,6 @@ class Search(Resource):
 
     @ns.expect(parser)
     def post(self):
-        from polylogyx.manage.views import parse_group
         args = self.parser.parse_args()
         host_identifier = args['host_identifier']
         query_name = args['query_name']
@@ -173,8 +172,10 @@ class Search(Resource):
 
         data = None
         status = "failure"
+        message = None
         try:
-            root = parse_group(conditions)
+            search_rules = SearchParser()
+            root = search_rules.parse_group(conditions)
         except Exception as e:
             message = str(e)
             return marshal(respcls(message, status),
@@ -211,7 +212,6 @@ class Search(Resource):
             status = "success"
 
         return marshal(respcls(message, status, data), parentwrapper.common_response_wrapper, skip_none=True)
-
 
 
 @require_api_key
@@ -252,7 +252,6 @@ class PreviewQueryResult(Resource):
                        parentwrapper.common_response_wrapper, skip_none=True)
 
 
-
 @require_api_key
 @ns.route('/schedule_query/export', endpoint="schedule_query_export")
 @ns.doc(params = {})
@@ -267,7 +266,6 @@ class ExportScheduleQueryCSV(Resource):
         query_name = all_args['query_name']
         host_identifier = all_args['host_identifier']
         node_id = get_node_id_by_host_id(host_identifier)
-
         record_query = dao.record_query(node_id,query_name)
 
         results = [r for r, in record_query]
@@ -295,6 +293,7 @@ class ExportScheduleQueryCSV(Resource):
             attachment_filename='query_results.csv'
         )
         return file_data
+
 
 @require_api_key
 @ns.route('/nodes_csv')
@@ -341,23 +340,6 @@ class NodesCSV(Resource):
             attachment_filename='nodes.csv'
         )
         return file_data
-
-
-
-@require_api_key
-@ns.route('/downloads/<path:filename>', endpoint="downloads_by_path")
-@ns.doc(params = {'filename':"name of the file to be downloaded"})
-class Download(Resource):
-    '''Download a file through the path given'''
-    def get(self,filename):
-        if filename is None:
-            current_app.logger.error('Error')
-            return marshal(respcls("file doesn't exists", "failure"), parentwrapper.failure_response_parent)
-        try:
-            return send_file(base_resource_folder+filename, as_attachment=True)
-        except Exception as e:
-            current_app.logger.error(e)
-            return marshal(respcls(str(e), "failure"), parentwrapper.failure_response_parent)
 
 
 @require_api_key
@@ -441,68 +423,3 @@ class UpdateApiKeys(Resource):
         if not API_KEYS: message = "Api keys data doesn't exists"
         return marshal(respcls("API keys were fetched successfully","success",API_KEYS),parentwrapper.common_response_wrapper,skip_none=True)
 
-
-
-@require_api_key
-@ns.route('/cpt/<string:platform>/', endpoint='cpt_file_')
-@ns.route('/cpt/<string:platform>/<string:arch>', endpoint='cpt_file')
-@ns.doc(params = {})
-class CPTForPlatForm(Resource):
-    '''returns polylogyx CPT file for windows, mac, linux platform'''
-
-    def get(self, platform, arch=None):
-        if not platform:
-            return marshal(respcls("please provide platform name(windows/linux/mac) to get the POLYLOGYX CPTfile", "failure"),parentwrapper.failure_response_parent)
-        if platform == "windows":
-            if not arch:
-                return marshal(
-                    respcls("please provide architecture details(x86/x86_64) to get the POLYLOGYX CPTfile", "failure"),
-                    parentwrapper.failure_response_parent)
-            elif arch=="x86":
-                file_data = send_file(
-                    base_resource_folder + 'windows/plgx_cpt.exe',
-                    mimetype='application/octet-stream',
-                    as_attachment=True,
-                    attachment_filename='plgx_cpt.exe'
-                )
-            elif arch=="x86_64":
-                file_data = send_file(
-                    base_resource_folder + 'windows/x64/plgx_cpt64.exe',
-                    mimetype='application/octet-stream',
-                    as_attachment=True,
-                    attachment_filename='plgx_cpt.exe'
-                )
-            else:
-                return marshal(
-                    respcls("please provide correct architecture details(x86/x86_64) to get the POLYLOGYX CPTfile", "failure"),
-                    parentwrapper.failure_response_parent)
-            return file_data
-
-        elif platform == "linux" or platform == "mac":
-            file_data = send_file(
-                base_resource_folder+'plgx_cpt.sh',
-                mimetype='application/x-sh',
-                as_attachment=True,
-                attachment_filename='plgx_cpt.sh'
-            )
-            return file_data
-        else:
-            return marshal(
-                respcls("please provide correct platform name to get the POLYLOGYX CPTfile",
-                        "failure"),
-                parentwrapper.failure_response_parent)
-
-
-@require_api_key
-@ns.route('/certificate', endpoint='certificate')
-@ns.doc(params = {})
-class Certificate(Resource):
-    '''returns polylogyx certificate file'''
-    def get(self):
-        file_data = send_file(
-          base_resource_folder+'certificate.crt',
-            mimetype='application/x-x509-ca-cert',
-            as_attachment=True,
-            attachment_filename='certificate.crt'
-        )
-        return file_data

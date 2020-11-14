@@ -6,6 +6,7 @@ import sqlite3
 import string
 import threading
 import uuid
+import re
 from collections import namedtuple
 
 import jinja2
@@ -17,7 +18,8 @@ from flask_mail import Message, Mail
 from sqlalchemy import func, or_, and_
 
 from polylogyx.plugins import AbstractAlerterPlugin
-from polylogyx.constants import DEFAULT_PLATFORMS, PolyLogyxServerDefaults, public_server
+from polylogyx.constants import DEFAULT_PLATFORMS, PolyLogyxServerDefaults, public_server, PolyLogyxConstants, \
+    TO_CAPTURE_COLUMNS, DefaultInfoQueries
 
 import pkg_resources
 import requests
@@ -28,7 +30,9 @@ from polylogyx.database import db
 from polylogyx.models import (
     DistributedQuery, DistributedQueryTask,
     Node, Pack, Query, ResultLog, querypacks,
-    Options, Tag, DefaultQuery, DefaultFilters, StatusLog, Config)
+    Options, Tag, DefaultQuery, DefaultFilters,
+    StatusLog, Config, ResultLogScan, ReleasedAgentVersions
+)
 
 Field = namedtuple('Field', ['name', 'action', 'columns', 'timestamp', 'uuid'])
 
@@ -105,13 +109,19 @@ def assemble_schedule(node):
 
     query = db.session.query(DefaultQuery).join(Config).filter(Config.is_active == True).filter(
         DefaultQuery.platform == platform).filter(DefaultQuery.status == True)
+    version_queries = db.session.query(DefaultQuery).filter(DefaultQuery.config_id == None).filter(
+        DefaultQuery.platform == platform).filter(DefaultQuery.status == True)
     if is_x86:
         queries = query.filter(DefaultQuery.arch == DefaultQuery.ARCH_x86).all()
+        version_queries = version_queries.filter(DefaultQuery.arch == DefaultQuery.ARCH_x86).all()
     else:
         queries = query.filter(
             or_(DefaultQuery.arch == None, DefaultQuery.arch != DefaultQuery.ARCH_x86)).all()
-
+        version_queries = version_queries.filter(
+            or_(DefaultQuery.arch == None, DefaultQuery.arch != DefaultQuery.ARCH_x86)).all()
     for default_query in queries:
+        schedule[default_query.name] = default_query.to_dict()
+    for default_query in version_queries:
         schedule[default_query.name] = default_query.to_dict()
 
     return schedule
@@ -478,12 +488,41 @@ def process_result(result, node):
     if not result['data']:
         current_app.logger.error("No results to process from %s", node)
         return
-    result_logs = []
-
+    query_results = []
+    data = []
     for name, action, columns, timestamp, uuid in extract_results(result):
-        result_logs.append(
-            ResultLog(name=name, uuid=uuid, action=action, columns=columns, timestamp=timestamp, node_id=node['id']))
-    return result_logs
+        if name not in DefaultInfoQueries.DEFAULT_VERSION_INFO_QUERIES.keys():
+            if 'script_text' in columns:
+                script_text = columns['script_text'].replace('\\x0D', '\n').replace('\\x0A', '\r')
+                columns['script_text'] = script_text
+            query_results.append(ResultLog(name=name, uuid=uuid, action=action, columns=columns, timestamp=timestamp, node_id=node.id))
+            data.append({'name': name, 'uuid': uuid, 'action': action, 'columns': columns, 'timestamp': timestamp, 'node_id': node.id})
+        else:
+            update_osquery_or_agent_version(node, columns)
+    return query_results, data
+
+
+def update_osquery_or_agent_version(node, columns):
+    host_details = node.host_details
+    if 'md5' in columns:
+        platform = node.platform
+        if not platform == "windows" and not platform == "darwin" and not platform == "freebsd":
+            platform = "linux"
+        agent_version_obj = ReleasedAgentVersions.query.filter(
+            ReleasedAgentVersions.extension_hash_md5 == columns['md5']).filter(
+            ReleasedAgentVersions.platform == platform).first()
+        if agent_version_obj:
+            host_details['extension_version'] = agent_version_obj.extension_version
+            current_app.logger.info("Extension Version is fetched for node %s are %s", node.host_identifier,
+                                    json.dumps(host_details))
+    elif 'version' in columns:
+        host_details['osquery_version'] = columns['version']
+        current_app.logger.info("OS Query Version is fetched for node %s are %s", node.host_identifier,
+                                json.dumps(host_details))
+    else:
+        current_app.logger.error("Unable to update the host agent details %s", node)
+    db.session.query(Node).filter(Node.id == node.id).update({"host_details": host_details})
+    db.session.commit()
 
 
 def extract_results(result):
@@ -696,12 +735,17 @@ def extract_result_logs(result):
     """
     Field = namedtuple('Field', ['name', 'action', 'columns', 'timestamp', 'uuid', 'node_id'])
 
-    for data in result:
+    timefmt = '%a %b %d %H:%M:%S %Y UTC'
+    strptime = dt.datetime.strptime
 
-        if not data.uuid:
-            data.uuid = str(uuid.uuid4())
+    for data in result['data']:
 
-        yield Field(name=data.name,
-                    action=data.action,
-                    columns=data.columns,
-                    timestamp=data.timestamp, uuid=data.uuid, node_id=data.node_id)
+        if 'uuid' not in data:
+            data['uuid'] = str(uuid.uuid4())
+
+        timestamp = strptime(data['calendarTime'], timefmt)
+
+        yield Field(name=data['name'],
+                    action=data['action'],
+                    columns=data['columns'],
+                    timestamp=timestamp, uuid=data['uuid'], node_id=data['node_id'])

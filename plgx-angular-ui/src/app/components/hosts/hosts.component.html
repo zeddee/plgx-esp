@@ -1,0 +1,470 @@
+<link rel="stylesheet" href="https://mbenford.github.io/ngTagsInput/css/ng-tags-input.min.css" />
+<div class="kt-grid kt-grid--hor kt-grid--root">
+	<div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--ver kt-page">
+		<div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--hor kt-wrapper" id="kt_wrapper">
+			<!-- begin:: Content -->
+
+			<div class="kt-portlet kt-portlet--mobile kt-portlet--responsive-mobile" style="margin-bottom: 0px;">
+				<div class="kt-portlet__head">
+
+					<a [routerLink]="['/hosts']" style="padding-top: 35px">
+						<div class="kt-portlet__head-label" (click)="getByFilterId(true, 'all')">
+							<span class="kt-portlet__head-icon">
+								<i class="kt-font-brand fa fa-desktop "></i>
+							</span>
+							<h3 class="kt-portlet__head-title">
+								Hosts
+							</h3>
+						</div>
+					</a>
+					<!--Begin::Section-1-->
+					<div class="row">
+						<div class="">
+							<div class="kt-portlet kt-portlet--border-bottom-brand window_widget_body2" style="border-bottom: 3px solid #45b4f2; margin-right:15px; margin-bottom:0px;min-height: 87px;min-width: 116px;">
+								<div class="ph-row">
+									<div class="ph-col-4"></div>
+									<div class="ph-col-8 empty"></div>
+									<div class="ph-col-6"></div>
+									<div class="ph-col-6 empty"></div>
+									<div class="ph-col-2"></div>
+									<div class="ph-col-10 empty"></div>
+									<div class="ph-col-6"></div>
+									<div class="ph-col-6 empty"></div>
+								  </div>
+							</div>
+							<!--begin:: Windows Widgets -->
+							<div class="window_widget_body" style="display: none;">
+							<div class="kt-portlet kt-portlet--border-bottom-brand"
+								style="border-bottom: 3px solid #45b4f2; margin-right:15px; margin-bottom:0px;min-height: 76px;min-width: 116px;">
+								<div class="kt-portlet__body" style="padding: 0px;" data-skin="dark"
+									data-toggle="kt-tooltip" data-placement="top" title="Windows Platforms">
+									<div class="kt-widget14" style="padding:10px;">
+
+										<div class="kt-widget14__content">
+											<!-- <i class="fab fa-5x fa-windows"></i> -->
+											<img alt="Logo" src="./assets/media/logo/windows.svg" height="30px"
+												width="30px" />
+											<!-- Begin:: Windows -->
+											<div class="kt-widget14__legends"
+												style="line-height: 2.5rem; margin-top: auto;">
+												<!-- Begin:: Windows Online -->
+												<!-- <a [routerLink]="['/nodes']" id="div_rule"> -->
+												<div *ngIf="windows_online==0" class="kt-widget14__legend"
+													data-skin="dark" data-toggle="kt-tooltip" data-placement="top"
+													title="online">
+													<span class="kt-widget14__bullet kt-bg-success"></span>
+													<span class="kt-widget14__stats">
+
+														<span style="color: #1b9300">
+															{{windows_online}}
+														</span>
+
+													</span>
+												</div>
+												<a *ngIf="windows_online>0"
+													[routerLink]="['/hosts']">
+													<div class="kt-widget14__legend" data-skin="dark"
+														data-toggle="kt-tooltip" data-placement="top" title="online"
+														(click)="getByFilterId(true, 'windows')">
+														<span class="kt-widget14__bullet kt-bg-success"></span>
+														<span class="kt-widget14__stats">
+															<span style="color: #1b9300">
+																{{windows_online}}
+															</span>
+														</span>
+													</div>
+												</a>
+												<!-- </a> -->
+												<!-- End:: Windows Online -->
+												<!-- Begin:: Windows Offline -->
+												<div *ngIf="windows_offline==0"
+													class="kt-widget14__legend" data-skin="dark"
+													data-toggle="kt-tooltip" data-placement="top" title="offline">
+													<span class="kt-widget14__bullet kt-bg-danger"></span>
+													<span class="kt-widget14__stats">
+
+														<span style="color: #f86c6b">
+															{{windows_offline}}
+														</span>
+
+													</span>
+												</div>
+												<a *ngIf="windows_offline>0"
+													[routerLink]="['/hosts']">
+													<div class="kt-widget14__legend" data-skin="dark"
+														data-toggle="kt-tooltip" data-placement="top" title="offline"
+														(click)="getByFilterId(false, 'windows')">
+														<span class="kt-widget14__bullet kt-bg-danger"></span>
+														<span class="kt-widget14__stats">
+
+															<span style="color: #f86c6b">
+																{{windows_offline}}
+															</span>
+
+														</span>
+													</div>
+												</a>
+												<!-- </a> -->
+												<!-- End:: Windows Offline -->
+											</div>
+											<!-- Begin:: Windows -->
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+							<!--end:: Windows Widgets -->
+						</div>
+						<div class="">
+							<div class="kt-portlet kt-portlet--border-bottom-brand linux_widget_body2" style="border-bottom: 3px solid #363638; margin-right:15px; margin-bottom:0px;min-height: 87px;min-width: 116px;">
+
+								<div class="ph-row">
+									<div class="ph-col-4"></div>
+									<div class="ph-col-8 empty"></div>
+									<div class="ph-col-6"></div>
+									<div class="ph-col-6 empty"></div>
+									<div class="ph-col-2"></div>
+									<div class="ph-col-10 empty"></div>
+									<div class="ph-col-6"></div>
+									<div class="ph-col-6 empty"></div>
+								  </div>
+							</div>
+							<!--begin:: Linux Widgets -->
+							<div class="linux_widget_body" style="display: none;">
+							<div class="kt-portlet kt-portlet--border-bottom-brand"
+								style="border-bottom: 3px solid #363638; margin-right:15px; margin-bottom:0px;min-height: 76px;min-width: 116px;">
+								<div class="kt-portlet__body" style="padding: 0px;" data-skin="dark"
+									data-toggle="kt-tooltip" data-placement="top" title="Linux Platforms">
+									<div class="kt-widget14" style="padding:10px;">
+
+										<div class="kt-widget14__content">
+											<!-- <i class="fab fa-5x fa-linux"></i> -->
+											<img alt="Logo" src="./assets/media/logo/Linux1.svg" height="40px"
+												width="30px" />
+											<!-- begin:: Linux -->
+											<div class="kt-widget14__legends"
+												style="line-height: 2.5rem; margin-top: auto;">
+												<!-- Begin:: Linux Online -->
+												<div *ngIf="ubuntu_online==0" class="kt-widget14__legend"
+													data-skin="dark" data-toggle="kt-tooltip" data-placement="top"
+													title="online">
+													<span class="kt-widget14__bullet kt-bg-success"></span>
+													<span class="kt-widget14__stats">
+
+														<span style="color: #1b9300">
+															{{ubuntu_online}}
+														</span>
+
+													</span>
+												</div>
+												<a *ngIf="ubuntu_online>0" [routerLink]="['/hosts']">
+													<div class="kt-widget14__legend" data-skin="dark"
+														data-toggle="kt-tooltip" data-placement="top" title="online"
+														(click)="getByFilterId(true, 'linux')">
+
+														<span class="kt-widget14__bullet kt-bg-success"></span>
+														<span class="kt-widget14__stats">
+															<span style="color: #1b9300">
+																{{ubuntu_online}}
+															</span>
+														</span>
+
+													</div>
+												</a>
+												<!-- End:: Linux Online -->
+
+												<!-- begin:: Linux Offline -->
+
+
+												<div *ngIf="ubuntu_offline==0" class="kt-widget14__legend"
+													data-skin="dark" data-toggle="kt-tooltip" data-placement="top"
+													title="offline">
+													<span class="kt-widget14__bullet kt-bg-danger"></span>
+													<span class="kt-widget14__stats">
+
+														<span style="color: #f86c6b">
+															{{ubuntu_offline}}
+														</span>
+
+													</span>
+												</div>
+												<a *ngIf="ubuntu_offline>0"
+													[routerLink]="['/hosts']">
+													<div class="kt-widget14__legend" data-skin="dark"
+														data-toggle="kt-tooltip" data-placement="top" title="offline"
+														(click)="getByFilterId(false, 'linux')">
+														<span class="kt-widget14__bullet kt-bg-danger"></span>
+														<span class="kt-widget14__stats">
+															<span style="color: #f86c6b">
+																{{ubuntu_offline}}
+															</span>
+														</span>
+													</div>
+												</a>
+
+												<!-- End:: Linux Offline -->
+											</div>
+											<!-- End:: Linux -->
+
+										</div>
+									</div>
+								</div>
+							</div>
+							</div>
+							<!--end:: Linux Widgets-->
+						</div>
+						<div class="">
+							<div class="kt-portlet kt-portlet--border-bottom-brand apple_widget_body2" style="border-bottom: 3px solid #8e8e93; margin-right:15px; margin-bottom:0px;min-height: 87px;min-width: 116px;">
+								<div class="ph-row">
+									<div class="ph-col-4"></div>
+									<div class="ph-col-8 empty"></div>
+									<div class="ph-col-6"></div>
+									<div class="ph-col-6 empty"></div>
+									<div class="ph-col-2"></div>
+									<div class="ph-col-10 empty"></div>
+									<div class="ph-col-6"></div>
+									<div class="ph-col-6 empty"></div>
+								  </div>
+							</div>
+							<!--begin:: Apple Widgets -->
+							<div class="apple_widget_body" style="display: none;">
+							<div class="kt-portlet kt-portlet--border-bottom-brand"
+								style="border-bottom: 3px solid #8e8e93; margin-right:15px; margin-bottom:0px;min-height: 76px;min-width: 116px;">
+								<div class="kt-portlet__body" style="padding: 0px;" data-skin="dark"
+									data-toggle="kt-tooltip" data-placement="top" title="Mac Platforms">
+									<div class="kt-widget14" style="padding:10px;">
+
+										<div class="kt-widget14__content kt-widget21__icon">
+											<i class="fab fa-4x fa-apple" style="color: #8e8e93;"></i>
+											<!-- Begin:: Mac -->
+											<div class="kt-widget14__legends"
+												style="line-height: 2.5rem; margin-top: auto;">
+
+												<div *ngIf="darwins_online==0" class="kt-widget14__legend"
+													data-skin="dark" data-toggle="kt-tooltip" data-placement="top"
+													title="online">
+													<span class="kt-widget14__bullet kt-bg-success"></span>
+													<span class="kt-widget14__stats">
+
+														<span style="color: #1b9300">
+															{{darwins_online}}
+														</span>
+
+													</span>
+												</div>
+												<a *ngIf="darwins_online>0" [routerLink]="['/hosts']">
+													<div class="kt-widget14__legend" data-skin="dark"
+														data-toggle="kt-tooltip" data-placement="top" title="online"
+														(click)="getByFilterId(true, 'darwin')">
+														<span class="kt-widget14__bullet kt-bg-success"></span>
+														<span class="kt-widget14__stats">
+
+															<span style="color: #1b9300">
+																{{darwins_online}}
+															</span>
+
+														</span>
+													</div>
+												</a>
+												<!-- End:: Mac Online -->
+
+												<!-- begin:: Mac Offline -->
+												<!-- <a [routerLink]="['/nodes']" id="div_rule"> -->
+												<div *ngIf="darwins_offline==0" class="kt-widget14__legend"
+													data-skin="dark" data-toggle="kt-tooltip" data-placement="top"
+													title="offline">
+													<span class="kt-widget14__bullet kt-bg-danger"></span>
+													<span class="kt-widget14__stats">
+														<span style="color: #f86c6b">
+															{{darwins_offline}}
+														</span>
+													</span>
+												</div>
+												<a *ngIf="darwins_offline>0"
+													[routerLink]="['/hosts']">
+													<div class="kt-widget14__legend" data-skin="dark"
+														data-toggle="kt-tooltip" data-placement="top" title="offline"
+														(click)="getByFilterId(false, 'darwin')">
+														<span class="kt-widget14__bullet kt-bg-danger"></span>
+														<span class="kt-widget14__stats">
+
+															<span style="color: #f86c6b">
+																{{darwins_offline}}
+															</span>
+
+														</span>
+													</div>
+												</a>
+												<!-- End:: Mac Offline -->
+											</div>
+											<!-- End:: Mac -->
+										</div>
+									</div>
+								</div>
+							</div>
+							</div>
+							<!--end:: Apple Widgets -->
+						</div>
+						<!-- All Networks -->
+
+
+					</div>
+					<!--End::Section-1-->
+					<div class="kt-portlet__head-toolbar">
+						<div class="kt-portlet__head-wrapper">
+							<div class="kt-portlet__head-actions" id="exportData">
+
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="container" style="display:none;"></div>
+				<div class="kt-portlet__body">
+				<div class="row">
+				<div class="col-md-4"></div>
+				<div class="col-md-2">
+
+				</div>
+				</div>
+
+					<!-- end:: Search -->
+					<!-- begin:: Table -->
+
+					 <table datatable [dtOptions]="dtOptions" [dtTrigger]="dtTrigger" class="table table-hover table-checkable row-border hover" id="host_table">
+						<thead>
+						<tr role="row">
+								<th style="min-width: 130px">Host Name</th>
+								<th>Online</th>
+								<th>Health</th>
+								<th style="min-width: 290px">Operating System</th>
+								<th style="min-width: 110px">IP Address</th>
+								<th class="dt-justify" style="min-width: 200px" rowspan="1" colspan="1">Tags</th>
+								<th style="min-width: 24px">Action</th>
+							</tr>
+
+						</thead>
+						<tbody>
+							<tr *ngFor="let hostdata of hostmainvalue_data; let i = index " role="row">
+								<td >
+									<a *ngIf="hostdata.is_active == true;" [routerLink]="['./',hostdata.id]"
+										class="active" data-skin="dark" data-toggle="kt-tooltip" data-placement="top"
+										title="Click -> Host Details"
+										>{{hostdata.display_name}}</a>
+									<a *ngIf="hostdata.is_active == false;" [routerLink]="['./', hostdata.id]"
+										class="active" data-skin="dark" data-toggle="kt-tooltip" data-placement="top"
+										title="Click -> Host Details"
+										>{{hostdata.display_name}}</a>
+								</td>
+								<td  *ngIf="hostdata.is_active == true;" >
+									<i class="fa fa-circle" data-toggle="kt-tooltip" title="Online" style="color: green;margin-left: 15px;"></i>
+
+								</td>
+						<td *ngIf="hostdata.is_active ==false ;"><i class="fa fa-circle" data-toggle="kt-tooltip" title="Offline" style="color: #e60f0db3; margin-left: 15px;"></i>
+                                 </td>
+                                  <td *ngIf="hostdata.alerts_count !=0 ;"><kbd data-toggle="tooltip" title="Unresolved Alerts" style="background-color: orange;border-radius: 15%;margin-left: 10px;"><strong>{{hostdata.alerts_count}}</strong></kbd>
+                </td>
+                <td *ngIf="hostdata.alerts_count ==0 ;"><i class="fa fa-check-circle" data-toggle="kt-tooltip" title="No Alerts" style="color: green;margin-left: 15px;margin-top: 8px;"></i></td>
+
+								<td>
+									<span *ngIf="hostdata.os_info.platform == 'ubuntu'" class='logo-color menu-icon'
+										style='font-weight: 400;'>
+										<img alt='' src='./assets/media/logo/Linux1.svg' height='19px' width='16px' />
+										<span>&ensp;{{hostdata.os_info.name}}</span>
+									</span>
+									<span *ngIf="hostdata.os_info.platform == 'windows'" class='logo-color menu-icon'
+										style='font-weight: 400;'>
+										<img alt='' src='./assets/media/logo/windows.svg' height='19px' width='16px' />
+										<span>&ensp;{{hostdata.os_info.name}}</span>
+									</span>
+									<span *ngIf="hostdata.os_info.platform == 'darwin'" class='logo-color menu-icon'
+										style='font-weight: 400;'>
+										<i class='fab fa-apple' style='font-size: 18px; color: #8e8e93;'></i>
+										<span>&ensp;{{hostdata.os_info.name}}</span>
+									</span>
+									<span *ngIf="hostdata.os_info.platform == 'Ubuntu'" class='logo-color menu-icon'
+										style='font-weight: 400;'>
+										<img alt='' src='./assets/media/logo/Linux1.svg' height='19px' width='16px' />
+										<span>&ensp;{{hostdata.os_info.name}}</span>
+									</span>
+									<span *ngIf="hostdata.os_info.name == 'ubuntu'" class='logo-color menu-icon'
+										style='font-weight: 400;'>
+										<img alt='' src='./assets/media/logo/Linux1.svg' height='19px' width='16px' />
+										<span>&ensp;{{hostdata.os_info.name}}</span>
+									</span>
+									<span *ngIf="hostdata.os_info.platform == 'rhel'" class='logo-color menu-icon'
+										style='font-weight: 400;'>
+										<img alt='' src='./assets/media/logo/Linux1.svg' height='19px' width='16px' />
+										<span>&ensp;{{hostdata.os_info.name}}</span>
+									</span>
+									<span *ngIf="hostdata.os_info.name == 'windows'" class='logo-color menu-icon'
+										style='font-weight: 400;'>
+										<img alt='' src='./assets/media/logo/windows.svg' height='19px' width='16px' />
+										<span>&ensp;{{hostdata.os_info.name}}</span>
+									</span>
+									<span *ngIf="hostdata.os_info.platform == 'debian'" class='logo-color menu-icon'
+
+										style='font-weight: 400;'>
+
+										<img alt='' src='./assets/media/logo/Linux1.svg' height='19px' width='16px' />
+
+										<span>&ensp;{{hostdata.os_info.name}}</span>
+
+									</span>
+
+									<span *ngIf="hostdata.os_info.platform == 'sles'" class='logo-color menu-icon'
+
+										style='font-weight: 400;'>
+
+										<img alt='' src='./assets/media/logo/Linux1.svg' height='19px' width='16px' />
+
+										<span>&ensp;{{hostdata.os_info.name}}</span>
+
+									</span>
+
+									<span *ngIf="hostdata.os_info.platform == 'amzn'" class='logo-color menu-icon'
+
+										style='font-weight: 400;'>
+
+										<img alt='' src='./assets/media/logo/Linux1.svg' height='19px' width='16px' />
+
+										<span>&ensp;{{hostdata.os_info.name}}</span>
+
+									</span>
+								</td>
+								<td>
+									<div style="color: #25282a" class="text-wrap width">{{hostdata.last_ip}}</div>
+								</td>
+								<td class="dt-justify">
+									<tag-input [theme]="'foundation-theme'" [(ngModel)]='hostdata.tags'  [secondaryPlaceholder]="'Add tags here...'" [placeholder]="'Add tags here...'"
+										(onAdd)="hosts_addTag(hostdata.tags,hostdata.id)"
+										(onRemove)="hosts_removeTag($event,hostdata.id)" [modelAsStrings]="true"
+										style="font-family: 'Poppins', sans-serif !important;">
+									</tag-input>
+								</td>
+								<td >
+									<i style="font-size:12px;color:orange;cursor: pointer;" (click) ="disableHost(hostdata.host_identifier)" title="Remove Host" class="fa fa fa-trash-alt"></i>
+
+								</td>
+							</tr>
+						</tbody>
+						<tbody *ngIf="hostmainvalue_data?.length === 0">
+						<tr>
+							<td></td>
+							<td><span style=" text-align: center;">
+								{{errorMessage}}
+							</span></td>
+						<!-- </div> -->
+					</tbody>
+					</table>
+					<!-- end:: Table -->
+
+
+				</div>
+				<!-- </div> -->
+				<!-- end:: Content -->
+
+			</div>
+
+		</div>
+	</div>
+</div>

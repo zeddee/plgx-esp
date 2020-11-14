@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import jwt
+import jwt, werkzeug
 
 from flask import abort, Blueprint, current_app, request, g
 from flask.json import jsonify
@@ -7,6 +7,7 @@ from flask_restplus import Api
 
 from polylogyx.models import User, HandlingToken
 from polylogyx.blueprints import (nodes,distributed,configs,tags,alerts,packs,queries,schema,rules,carves,yara,iocs,common,email)
+
 from polylogyx.utils import require_api_key
 from .utils import *
 
@@ -38,6 +39,7 @@ api.add_namespace(common.ns)
 api.add_namespace(distributed.ns)
 api.add_namespace(email.ns)
 
+
 def validate_json(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -59,10 +61,10 @@ def validate_json(f):
     return decorated_function
 
 
-
 @blueprint.route('/api')
 def index():
     return '', 204
+
 
 @blueprint.route('/login', methods=['POST'])
 @auth.login_required
@@ -81,22 +83,26 @@ def get_auth_token():
 def logout_method():
     # store logout time and token_expired into InvalidateToken table
     user_logged_in = HandlingToken.query.filter(HandlingToken.token == request.headers.environ.get('HTTP_X_ACCESS_TOKEN')).first()
-    user_logged_in.update(logged_out_at = dt.datetime.utcnow(), token_expired = True)
-    return jsonify({'message':"user logged out successfully",'status':"success"})
+    if user_logged_in:
+        user_logged_in.update(logged_out_at=dt.datetime.utcnow(), token_expired=True)
+        return jsonify({'message': "user logged out successfully", 'status': "success"})
+    return jsonify({'message': "API key passed is invalid", 'status': "failure"})
 
 
 @auth.verify_password
 def verify_password(username, password):
-    request_json = get_body_data(request)
+    try:
+        request_json = json.loads(request.data)
+    except json.decoder.JSONDecodeError:
+        return abort(400, {'message': 'JSON Decode Error!'})
     print (request_json)
     if not ('username' in request_json and 'password' in request_json):
-        return False
+        return abort(400, {'message': 'Username and/or Password is/are missing!'})
     user = User.query.filter_by(username = request_json.get('username')).first()
     if not user or not user.check_password(request_json.get('password')):
-        return False
+        raise werkzeug.exceptions.Unauthorized
     g.user = user
     return True
-
 
 
 @require_api_key

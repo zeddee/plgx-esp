@@ -31,9 +31,11 @@ def result_log_query(lines,type,offset,limit):
     return db.session.query(ResultLog.node_id, ResultLog.name, ResultLog.columns).filter(
         ResultLog.columns[type].astext.in_(lines)).offset(offset).limit(limit).all()
 
+
 def record_query(node_id, query_name):
     return db.session.query(ResultLog.columns).filter(
             and_(ResultLog.node_id == (node_id), and_(ResultLog.name == query_name, ResultLog.action != 'removed'))).all()
+
 
 def search_query(filter_node_recon):
     return db.session.query(NodeReconData).join(
@@ -43,13 +45,16 @@ def search_query(filter_node_recon):
         ).with_entities(NodeData.node_id, NodeData.name, NodeData.data).filter(
             *filter_node_recon).group_by(NodeData.node_id, NodeData.name, NodeData.data).all()
 
+
 def result_log_search_results(filter,node_id,query_name,offset,limit):
     return db.session.query(ResultLog.columns).filter(*filter).filter(ResultLog.node_id == node_id).filter(
         ResultLog.name == query_name).offset(offset).limit(limit).all()
 
+
 def result_log_query_count(lines,type):
     return db.session.query(ResultLog.node_id, ResultLog.name, db.func.count(ResultLog.columns)).filter(
         ResultLog.columns[type].astext.in_(lines)).group_by(ResultLog.node_id,ResultLog.name).all()
+
 
 def result_log_search_results_count(filter):
     return db.session.query(ResultLog.node_id, ResultLog.name, db.func.count(ResultLog.columns)).filter(*filter).group_by(ResultLog.node_id,

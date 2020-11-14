@@ -1,0 +1,184 @@
+<div class="kt-grid kt-grid--hor kt-grid--root">
+  <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--ver kt-page">
+    <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--hor kt-wrapper" id="kt_wrapper">
+<div class="kt-portlet kt-portlet--mobile kt-portlet--responsive-mobile" style="margin-bottom: 0px;">
+<div class="kt-portlet__head ">
+<div class="kt-portlet__head-label">
+  <span class="kt-portlet__head-icon">
+    <i class="kt-font-brand fa fa-chart-line"></i>
+  </span>
+  <h1 class="kt-portlet__head-title" style="font-size: 20px;">
+    <a [routerLink]="['../']">{{this?.nodes}}</a>
+    <!-- <a href="{{ url_for('manage.get_node', node_id=node.id) }}">{{ node.display_name }}</a> -->
+    / recent activity
+  </h1>
+</div>
+<div class="kt-portlet__head-toolbar">
+  <div class="kt-portlet__head-wrapper">
+    <a href="javascript:void(0);" (click)="goBack()" class="btn btn-clean btn-sm" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="Back to Previous Page">
+      <i class="fas fa-chevron-left"></i>
+      Back
+    </a>
+  </div>
+</div>
+</div>
+<div class="kt-portlet__body">
+<!--Begin:: Content -->
+<!-- {% if queries_packs  %} -->
+<div id="activity_node">
+  <!--begin::System Data-->
+<div *ngIf = "activitynode?.length != 0" class="kt-portlet kt-portlet--responsive-mobile" style="margin-bottom: 0px;">
+<div class="kt-portlet__body">
+ <div class="row">
+   <div class="col-2 nav-background col-queryborder">
+     <!--begin: Search Table -->
+     <div class="">
+       <div class="kt-input-icon kt-input-icon--left" style="margin-bottom: 10px;">
+         <input type="text" class="form-control" placeholder="Search here..." id="search_rule_name" [(ngModel)]="activitysearch">
+         <span class="kt-input-icon__icon kt-input-icon__icon--left">
+           <span><i class="la la-search"></i></span>
+         </span>
+       </div>
+     </div>
+     <!--end: Search Table -->
+     <div class="col-queryname nav-tab_align ">
+       <div class="" >
+            <div *ngFor="let activeNodes of ( activitynode | activitysearch:activitysearch ) as result " class="kt-notification conf-div " id="rule" style="cursor:pointer;" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="{{activeNodes.name}}">
+              <div *ngIf="activeNodes === -1">No Matching Record Found</div>
+              <div *ngIf="activeNodes != -1">
+
+
+          <div class="kt-notification__item-title list-group "  [ngClass]="{'active': selectedItem == activeNodes.name}"   (click)='getByActivityId($event, activeNodes.name,activeNodes.name, this.id)'>
+           <a data-target="{{activeNodes.name}}" class="" >
+             <div class="kt-notification__item-title nav_border">
+                   <!-- Application Shim Installation -->
+                 <span class="badge-queryname">{{activeNodes.name}}</span>
+                  &nbsp;
+                 <span class="kt-badge kt-badge--primary kt-badge--inline kt-badge--pill badge-queryname" >{{activeNodes.count}}</span>
+             </div>
+           </a>
+           </div>
+          </div>
+         </div>
+       </div>
+     </div>
+   </div>
+
+   <div class="col-10 col-querytable">
+     <div class="tab-content" >
+       <table datatable [dtOptions]="dtOptions" [dtTrigger]="dtTrigger" class="table table-hover table-checkable">
+         <thead>
+           <tr>
+                <button class="btn btn-outline-success btn-sm buttons-csv buttons-html5"  (click)="get_csv_data(host_identifier,queryname)" tabindex="0" aria-controls="1per_query_perf_table" type="button">
+                  <span>CSV</span>
+                </button>
+           </tr>
+
+           <tr role="row"><th class="sorting_disabled details-control" rowspan="1" colspan="1" style="color: #595d6e;font-weight: 500;">data</th></tr>
+         </thead>
+         <tbody>
+
+           <tr *ngFor="let hostdata of this.activitydatanode " style="font-size: 13px; font-family:Poppins; font-weight: 600;">
+               <td class="cell-breakWord">
+                <div (click)="ele.class = ele.class == 'showChildren' ? '' : 'showChildren'" [ngClass]="{ hideChildren : ele.class !== 'showChildren' }" #ele>
+                  <font color='#16ace3'>
+                {{myjson.stringify(hostdata.columns)}}
+              </font>
+                <div (click)="action($event);false" >
+                  <div class="col-10"></div>
+                  <th >
+                <dt *ngFor="let subhostdata of hostdata.columns | keyvalue">
+
+                <!--URL-->
+                <dl  *ngIf="subhostdata.key=='url'" style="word-break: break-word;padding-left: 40px;" >
+
+                {{subhostdata.key}}
+                {{":"}}
+
+                <a onclick="window.open(this.href,'_blank');return false;"  target="_blank" href="http://{{subhostdata.value}}" >{{subhostdata.value}}</a>
+                </dl>
+
+                <!--md5-->
+                <dl *ngIf="subhostdata.key=='md5'" style="word-break: break-word;padding-left: 40px;" >
+
+                {{subhostdata.key}}
+                {{":"}}
+
+                <a onclick="window.open(this.href,'_blank');return false;"  target="_blank"  href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
+                </dl>
+
+                <!--domain_name-->
+                <dl *ngIf="subhostdata.key=='domain_name'" style="word-break: break-word;padding-left: 40px;" >
+
+                {{subhostdata.key}}
+                {{":"}}
+
+                <a onclick="window.open(this.href,'_blank');return false;"  href="https://www.virustotal.com/#/domain/{{subhostdata.value}}" >{{subhostdata.value}}</a>
+                </dl>
+
+                <!--sha1-->
+                <dl *ngIf="subhostdata.key=='sha1'" style="word-break: break-word;padding-left: 40px;" >
+
+                {{subhostdata.key}}
+                {{":"}}
+
+                <a onclick="window.open(this.href,'_blank');return false;"  href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
+                </dl>
+
+                <!--sha256-->
+                <dl *ngIf="subhostdata.key=='sha256'" style="word-break: break-word;padding-left: 40px;" >
+
+                {{subhostdata.key}}
+                {{":"}}
+
+                <a onclick="window.open(this.href,'_blank');return false;"  href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
+                </dl>
+
+                  <dl *ngIf="!(subhostdata.key=='url') && !(subhostdata.key=='md5') && !(subhostdata.key=='domain_name') && !(subhostdata.key=='sha1') && !(subhostdata.key=='sha256')" style="word-break: break-word;padding-left: 40px;" >
+
+                    {{subhostdata.key}}
+                    {{":"}}
+
+                   {{subhostdata.value}}
+                  </dl>
+                </dt>
+              </th>
+                </div>
+                </div>
+                <div >
+                  <!-- Modal -->
+
+                </div>
+                </td>
+            </tr>
+         </tbody>
+         <div *ngIf="this.activitydatanode === null ">
+          <span style=" text-align: center; padding-left: 300px;font-size: larger;font-weight: 600;">
+          {{errorMessage}}
+        </span>
+        </div>
+       </table>
+
+
+
+    </div>
+   </div>
+ </div>
+</div>
+</div>
+
+<div id="container" style="display:none;"></div>
+
+</div>
+<!-- {% else %} -->
+    <!-- {% endif %} -->
+<!--Begin:: Content -->
+<div *ngIf="activitynode?.length == 0">
+  <p style="color: #646c9a;font-size: 13px;font-weight: 400;">No recent activity for this host</p>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+</div>

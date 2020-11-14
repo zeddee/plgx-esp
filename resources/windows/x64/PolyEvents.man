@@ -825,7 +825,117 @@
 						<data name="Message" inType="win:AnsiString" outType="xs:string"></data>
 					</template>
 				</templates>
-			</provider>			
+			</provider>
+			<provider name="PlgxRealTimeFileTimestompEvents" 
+					guid="{CD2E39F5-2F45-42B7-888C-3D8B753EA48F}"
+					symbol="PlgxRealTimeFileTimestompEvents" 
+					resourceFileName="%systemdrive%\Program Files\plgx_osquery\plgx_win_extension.ext.exe" 
+					messageFileName="%systemdrive%\Program Files\plgx_osquery\plgx_win_extension.ext.exe">				
+				<events>
+					<event symbol="FILE_TIMESTOMP_EVENT" 
+						value="16" 
+						version="0" 
+						channel="RealTimeFileTimestompEvents" 
+						level="win:Informational" 
+						task="RealTimeFileTimestompEventsTask" 
+						opcode="MessageOpcode" 
+						template="_template_message" 
+						keywords="InfoWindowsEventLogMessage" 
+						message="$(string.polylogyx.event.16.message)">
+					</event>
+				</events>				
+				<levels>
+				</levels>				
+				<tasks>
+					<task name="RealTimeFileTimestompEventsTask" 
+						symbol="RealTimeFileTimestompEventsTask" 
+						value="1" 
+						eventGUID="{FCF80A65-5216-4EA3-A811-492A25B9CC8D}">
+					</task>
+				</tasks>				
+				<opcodes>
+					<opcode name="MessageOpcode"
+						symbol="_opcode_message" 
+						value="10">
+					</opcode>
+				</opcodes>				
+				<channels>
+					<channel name="PlgxRealTimeFileTimestompEvents/Log" 
+						chid="RealTimeFileTimestompEvents" 
+						symbol="RealTimeFileTimestompEvents" 
+						type="Admin" 
+						enabled="true" 
+						message="$(string.polylogyx.channel.16.message)">
+					</channel>
+				</channels>				
+				<keywords>
+					<keyword name="InfoWindowsEventLogMessage" symbol="_keyword_info_message" mask="0x1"></keyword>
+					<keyword name="WarningWindowsEventLogMessage" symbol="_keyword_warning_message" mask="0x2"></keyword>
+					<keyword name="ErrorWindowsEventLogMessage" symbol="_keyword_error_message" mask="0x4"></keyword>
+					<keyword name="FatalWindowsEventLogMessage" symbol="_keyword_fatal_message" mask="0x8"></keyword>
+					<keyword name="DebugWindowsEventLogMessage" symbol="_keyword_debug_message" mask="0x10"></keyword>
+				</keywords>				
+				<templates>
+					<template tid="_template_message">
+						<data name="Message" inType="win:AnsiString" outType="xs:string"></data>
+					</template>
+				</templates>
+			</provider>
+			<provider name="PlgxRealTimePefileEvents" 
+					guid="{5BDD7C1B-370F-4037-9346-A31822980033}"
+					symbol="PlgxRealTimePefileEvents" 
+					resourceFileName="%systemdrive%\Program Files\plgx_osquery\plgx_win_extension.ext.exe" 
+					messageFileName="%systemdrive%\Program Files\plgx_osquery\plgx_win_extension.ext.exe">				
+				<events>
+					<event symbol="PEFILE_EVENT" 
+						value="17" 
+						version="0" 
+						channel="RealTimePefileEvents" 
+						level="win:Informational" 
+						task="RealTimePefileEventsTask" 
+						opcode="MessageOpcode" 
+						template="_template_message" 
+						keywords="InfoWindowsEventLogMessage" 
+						message="$(string.polylogyx.event.17.message)">
+					</event>
+				</events>				
+				<levels>
+				</levels>				
+				<tasks>
+					<task name="RealTimePefileEventsTask" 
+						symbol="RealTimePefileEventsTask" 
+						value="1" 
+						eventGUID="{92226F00-EF7C-476B-9FF0-7088C9E75116}">
+					</task>
+				</tasks>				
+				<opcodes>
+					<opcode name="MessageOpcode"
+						symbol="_opcode_message" 
+						value="10">
+					</opcode>
+				</opcodes>				
+				<channels>
+					<channel name="PlgxRealTimePefileEvents/Log" 
+						chid="RealTimePefileEvents" 
+						symbol="RealTimePefileEvents" 
+						type="Admin" 
+						enabled="true" 
+						message="$(string.polylogyx.channel.17.message)">
+					</channel>
+				</channels>				
+				<keywords>
+					<keyword name="InfoWindowsEventLogMessage" symbol="_keyword_info_message" mask="0x1"></keyword>
+					<keyword name="WarningWindowsEventLogMessage" symbol="_keyword_warning_message" mask="0x2"></keyword>
+					<keyword name="ErrorWindowsEventLogMessage" symbol="_keyword_error_message" mask="0x4"></keyword>
+					<keyword name="FatalWindowsEventLogMessage" symbol="_keyword_fatal_message" mask="0x8"></keyword>
+					<keyword name="DebugWindowsEventLogMessage" symbol="_keyword_debug_message" mask="0x10"></keyword>
+				</keywords>				
+				<templates>
+					<template tid="_template_message">
+						<data name="Message" inType="win:AnsiString" outType="xs:string"></data>
+					</template>
+				</templates>
+			</provider>
 		</events>
 	</instrumentation>
 	<localization>
@@ -846,6 +956,8 @@
 				<string id="polylogyx.event.13.message" value="Information"></string>
 				<string id="polylogyx.event.14.message" value="Information"></string>
 				<string id="polylogyx.event.15.message" value="Information"></string>
+				<string id="polylogyx.event.16.message" value="Information"></string>
+				<string id="polylogyx.event.17.message" value="Information"></string>
 				<string id="polylogyx.channel.1.message" value="Log"></string>
 				<string id="polylogyx.channel.2.message" value="Log"></string>
 				<string id="polylogyx.channel.3.message" value="Log"></string>
@@ -861,6 +973,8 @@
 				<string id="polylogyx.channel.13.message" value="Log"></string>
 				<string id="polylogyx.channel.14.message" value="Log"></string>
 				<string id="polylogyx.channel.15.message" value="Log"></string>
+				<string id="polylogyx.channel.16.message" value="Log"></string>
+				<string id="polylogyx.channel.17.message" value="Log"></string>
 			</stringTable>
 		</resources>
 	</localization>

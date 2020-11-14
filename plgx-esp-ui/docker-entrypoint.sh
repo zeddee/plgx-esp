@@ -9,6 +9,12 @@ until PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_ADDRESS -U $POSTGRES_USER 
 done
 echo "Crating tmux sessions..."
 
+
+CORES="$(nproc --all)"
+echo "CPU cores are $CORES"
+WORKERS=$(( 2*CORES+1  ))
+
+
 exec `tmux new-session -d -s plgx`
 exec `tmux new-session -d -s plgx_celery_beat`
 exec `tmux new-session -d -s plgx_celery`
@@ -34,18 +40,23 @@ else
   then
     exec `tmux send -t plgx_celery "python manage.py add_api_key --IBMxForceKey $IBMxForceKey --IBMxForcePass $IBMxForcePass " ENTER`
   else
-    exec `tmux send -t plgx_celery "python manage.py add_api_key --IBMxForceKey $IBMxForceKey --IBMxForcePass $IBMxForcePass --VT_API_KEY $VT_API_KEY" ENTER`	
+    exec `tmux send -t plgx_celery "python manage.py add_api_key --IBMxForceKey $IBMxForceKey --IBMxForcePass $IBMxForcePass --VT_API_KEY $VT_API_KEY" ENTER`
   fi
 fi
+
+echo "Updating OSQuery Schema from polylogyx/resources/osquery_schema.json ..."
+exec `tmux send -t plgx_celery "python manage.py update_osquery_schema --file_path polylogyx/resources/osquery_schema.json " ENTER`
+
 echo "Changing directory to plgx-esp-ui..."
 cd /src/plgx-esp-ui
 
 echo "Starting celery beat..."
 exec `tmux send -t plgx_celery_beat 'celery beat -A polylogyx.worker:celery --schedule=/tmp/celerybeat-schedule --loglevel=INFO --pidfile=/tmp/celerybeaet.pid' ENTER`
 echo "Starting PolyLogyx Vasp osquery fleet manager..."
-exec `tmux send -t plgx "gunicorn --workers=2 --threads=5  -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --bind 0.0.0.0:5000 --certfile=resources/certificate.crt --keyfile=private.key  manage:app --reload" ENTER`
+exec `tmux send -t plgx "gunicorn --workers=$WORKERS --threads=5  --timeout 120 -k flask_sockets.worker --bind 0.0.0.0:5001 manage:app --reload" ENTER`
+
 echo "Starting celery workers..."
-exec `tmux send -t plgx_celery "celery worker -A polylogyx.worker:celery --concurrency=2 -l INFO &" ENTER`
+exec `tmux send -t plgx_celery "celery worker -A polylogyx.worker:celery --concurrency=4 -Q default_queue_ui_tasks,worker3 -l INFO &" ENTER`
 
 echo "PolyLogyx REST API key is : " "$API_KEY"
 echo "UI Sever is up and running.."

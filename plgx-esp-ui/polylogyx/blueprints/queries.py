@@ -5,6 +5,7 @@ import json
 
 from .utils import *
 from polylogyx.utils import require_api_key, validate_osquery_query, create_tags, get_tags
+
 from polylogyx.dao import queries_dao as dao
 from polylogyx.wrappers import query_wrappers as wrapper
 from polylogyx.wrappers import parent_wrappers as parentwrapper
@@ -52,7 +53,6 @@ class PackedQueriesList(Resource):
         message = "successfully fetched the packed queries info"
         if not data: message = "there is no data to show"
         return respcls(message,"success",data)
-
 
 
 @require_api_key
@@ -196,8 +196,12 @@ class ListTagsOfQuery(Resource):
         args = self.parser.parse_args()  # need to exists for input payload validation
         tags = args['tags'].split(',')
         query = dao.get_query_by_id(query_id)
-        obj_list = get_tags_list_to_add(tags)
-        query.tags.extend(obj_list)
-        query.save()
-        return marshal(respcls('Successfully created the tag(s) to queries', 'success'),
+        if query:
+            obj_list = get_tags_list_to_add(tags)
+            query.tags.extend(obj_list)
+            query.save()
+            return marshal(respcls('Successfully created the tag(s) to queries', 'success'),
+                           parentwrapper.common_response_wrapper, skip_none=True)
+        return marshal(respcls('Query is not present for the id given!', 'failure'),
                        parentwrapper.common_response_wrapper, skip_none=True)
+

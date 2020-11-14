@@ -2,10 +2,14 @@
 
 import six
 import sqlalchemy
+import logging
 from sqlalchemy import or_, and_
 
 from polylogyx.models import ResultLog, NodeReconData
-from polylogyx.rules import RuleInput, logger
+# from polylogyx.rules import RuleInput, logger
+
+
+logger = logging.getLogger(__name__)
 
 
 class BaseCondition(object):
@@ -124,54 +128,54 @@ class LogicCondition(BaseCondition):
 class EqualCondition(LogicCondition):
     def compare(self, value, filter, type):
         if type and type == 'node_recon_data':
-            filter.append(NodeReconData.columns[self.column_name].astext == self.expected.lower())
+            filter.append(NodeReconData.columns[self.column_name].astext == str(self.expected).lower())
         else:
-            filter.append(ResultLog.columns[self.column_name].astext == self.expected)
+            filter.append(ResultLog.columns[self.column_name].astext == str(self.expected))
         return filter
 
 
 class NotEqualCondition(LogicCondition):
     def compare(self, value, filter, type):
-        filter.append(ResultLog.columns[self.column_name].astext != self.expected)
+        filter.append(ResultLog.columns[self.column_name].astext != str(self.expected))
         return filter
 
 
 class BeginsWithCondition(LogicCondition):
     def compare(self, value, filter, type):
-        filter.append(NodeReconData.columns[self.column_name].astext.ilike(self.expected + "%"))
+        filter.append(NodeReconData.columns[self.column_name].astext.ilike(str(self.expected) + "%"))
         return filter
 
 
 class NotBeginsWithCondition(LogicCondition):
     def compare(self, value, filter, type):
-        filter.append(sqlalchemy.not_(NodeReconData.columns[self.column_name].astext.ilike(self.expected + "%")))
+        filter.append(sqlalchemy.not_(NodeReconData.columns[self.column_name].astext.ilike(str(self.expected) + "%")))
         return filter
 
 
 class ContainsCondition(LogicCondition):
     def compare(self, value, filter, type):
         if type and type == 'node_recon_data':
-            filter.append(NodeReconData.columns[self.column_name].astext.ilike("%" + self.expected + "%"))
+            filter.append(NodeReconData.columns[self.column_name].astext.ilike("%" + str(self.expected) + "%"))
         else:
-            filter.append(ResultLog.columns[self.column_name].astext.ilike("%" + self.expected + "%"))
+            filter.append(ResultLog.columns[self.column_name].astext.ilike("%" + str(self.expected) + "%"))
         return filter
 
 
 class NotContainsCondition(LogicCondition):
     def compare(self, value, filter, type):
-        filter.append(sqlalchemy.not_(ResultLog.columns[self.column_name].astext.ilike("%" + self.expected + "%")))
+        filter.append(sqlalchemy.not_(ResultLog.columns[self.column_name].astext.ilike("%" + str(self.expected) + "%")))
         return filter
 
 
 class EndsWithCondition(LogicCondition):
     def compare(self, value, filter, type):
-        filter.append(NodeReconData.columns[self.column_name].astext.ilike("%" + self.expected))
+        filter.append(NodeReconData.columns[self.column_name].astext.ilike("%" + str(self.expected)))
         return filter
 
 
 class NotEndsWithCondition(LogicCondition):
     def compare(self, value, filter, type):
-        filter.append(sqlalchemy.not_(NodeReconData.columns[self.column_name].astext.ilike(self.expected + "%")))
+        filter.append(sqlalchemy.not_(NodeReconData.columns[self.column_name].astext.ilike(str(self.expected) + "%")))
         return filter
 
 

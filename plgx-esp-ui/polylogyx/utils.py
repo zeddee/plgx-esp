@@ -1,33 +1,23 @@
 # -*- coding: utf-8 -*-
-import ast
 import datetime as dt
-import json
-import sqlite3
-import string
-import threading
+import json, os, sqlite3, ast, string, threading, pkg_resources, requests, six
 from collections import namedtuple
 from functools import wraps
 
-from jinja2 import Markup, Template
 from operator import itemgetter
 from os.path import basename, join, splitext
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 from flask_mail import Message, Mail
+from flask import current_app, flash, request, abort, jsonify, g
+
 
 from polylogyx.constants import PolyLogyxServerDefaults, DEFAULT_PLATFORMS
-
-
-import pkg_resources
-import requests
-import six
-from flask import current_app, flash, render_template, request, abort, jsonify, g
-
 from polylogyx.database import db
 from polylogyx.models import (
     DistributedQuery, DistributedQueryTask, HandlingToken,
     Node, Pack, Query, ResultLog, querypacks,
-    Options, Settings, AlertEmail, Tag, User, DefaultFilters)
+    Options, Settings, AlertEmail, Tag, User, DefaultFilters, DefaultQuery, Config)
 
 Field = namedtuple('Field', ['name', 'action', 'columns', 'timestamp'])
 
@@ -61,7 +51,6 @@ def send_email(body, subject, config, node,db):
             charset='utf-8',
         )
 
-
         currentMail = Mail(app=current_app)
         try:
             return currentMail.send(message)
@@ -72,14 +61,32 @@ def send_email(body, subject, config, node,db):
             print (e)
 
 
+def assemble_additional_configuration(node):
+    configuration = {}
+    configuration['queries'] = assemble_queries(node)
+    configuration['packs'] = assemble_packs(node)
+    configuration['tags'] = [tag.value for tag in node.tags]
+    configuration=merge_two_dicts(configuration,assemble_filters(node))
+    return configuration
+
+
 def assemble_configuration(node):
     configuration = {}
     configuration['options'] = assemble_options(node)
     configuration['file_paths'] = assemble_file_paths(node)
-    configuration['schedule'] = assemble_schedule(node)
+    configuration['queries'] = assemble_schedule(node)
     configuration['packs'] = assemble_packs(node)
-    configuration=merge_two_dicts(configuration,assemble_filters(node))
+    configuration['filters'] = assemble_filters(node)
     return configuration
+
+
+def get_additional_config(node):
+    configuration = {}
+    configuration['queries'] = assemble_schedule(node)
+    configuration['packs'] = assemble_packs(node)
+    configuration['tags'] = [tag.value for tag in node.tags]
+    return configuration
+
 
 
 def assemble_options(node):
@@ -108,22 +115,58 @@ def assemble_file_paths(node):
     return file_paths
 
 
-def assemble_schedule(node, config_json=None):
+def assemble_queries(node, config_json=None):
+    if config_json:
+        schedule = {}
+        for query in node.queries.options(db.lazyload('*')):
+            schedule[query.name] = query.to_dict()
+        if config_json:
+            schedule = merge_two_dicts(schedule, config_json.get('schedule'))
+    else:
+        schedule=[]
+        for query in node.queries.options(db.lazyload('*')):
+            schedule.append(query.to_dict())
+    return schedule
+
+
+def assemble_schedule(node):
     schedule = {}
     for query in node.queries.options(db.lazyload('*')):
         schedule[query.name] = query.to_dict()
-    if config_json:
-        schedule = merge_two_dicts(schedule, config_json.get('schedule'))
+    platform = node.platform
+    if platform not in DEFAULT_PLATFORMS:
+        platform = 'linux'
+    is_x86 = False
+    if node.node_info and 'cpu_type' in node.node_info and node.node_info['cpu_type'] == DefaultQuery.ARCH_x86:
+        is_x86 = True
+
+    query = db.session.query(DefaultQuery).join(Config).filter(Config.is_active == True).filter(
+        DefaultQuery.platform == platform).filter(DefaultQuery.status == True)
+    if is_x86:
+        queries = query.filter(DefaultQuery.arch == DefaultQuery.ARCH_x86).all()
+    else:
+        queries = query.filter(
+            or_(DefaultQuery.arch == None, DefaultQuery.arch != DefaultQuery.ARCH_x86)).all()
+
+    for default_query in queries:
+        schedule[default_query.name] = default_query.to_dict()
+
     return schedule
 
 
 def assemble_packs(node, config_json=None):
-    packs = {}
-    for pack in node.packs.join(querypacks).join(Query) \
-            .options(db.contains_eager(Pack.queries)).all():
-        packs[pack.name] = pack.to_dict()
     if config_json:
-        packs = merge_two_dicts(packs, config_json.get('packs'))
+        packs = {}
+        for pack in node.packs.join(querypacks).join(Query) \
+                .options(db.contains_eager(Pack.queries)).all():
+            packs[pack.name] = pack.to_dict()
+        if config_json:
+            packs = merge_two_dicts(packs, config_json.get('packs'))
+    else:
+        packs = []
+        for pack in node.packs.join(querypacks).join(Query) \
+                .options(db.contains_eager(Pack.queries)).all():
+            packs.append(pack.to_dict())
     return packs
 
 
@@ -196,15 +239,15 @@ def assemble_filters(node):
     is_x86 = False
     if node.node_info and 'cpu_type' in node.node_info and node.node_info['cpu_type'] == DefaultFilters.ARCH_x86:
         is_x86 = True
-    query = DefaultFilters.query.filter(DefaultFilters.platform == platform)
+    query = DefaultFilters.query.filter(DefaultFilters.platform == platform).join(Config).filter(Config.is_active == True)
 
     if is_x86:
         default_filters_obj=query.filter(DefaultFilters.arch == DefaultFilters.ARCH_x86).first()
     else:
         default_filters_obj=query.filter(
-            and_(DefaultFilters.arch == None, DefaultFilters.arch != DefaultFilters.ARCH_x86)).first()
-
-    return default_filters_obj
+            and_(DefaultFilters.arch != DefaultFilters.ARCH_x86)).first()
+    if default_filters_obj:
+        return default_filters_obj.filters
 
 
 def create_tags(*tags):
@@ -242,6 +285,7 @@ def get_tags(*tags):
             existing.append(tag)
     return existing
 
+
 def merge_two_dicts(x, y):
     if not x:
         x = {}
@@ -250,87 +294,6 @@ def merge_two_dicts(x, y):
     z = x.copy()  # start with x's keys and values
     z.update(y)  # modifies z with y's keys and values & returns None
     return z
-
-
-def create_query_pack_from_upload(upload,category):
-    '''
-    Create a pack and queries from a query pack file. **Note**, if a
-    pack already exists under the filename being uploaded, then any
-    queries defined here will be added to the existing pack! However,
-    if a query with a particular name already exists, and its sql is
-    NOT the same, then a new query with the same name but different id
-    will be created (as to avoid clobbering the existing query). If its
-    sql is identical, then the query will be reused.
-
-    '''
-    # The json package on Python 3 expects a `str` input, so we're going to
-    # read the body and possibly convert to the right type
-    from werkzeug import datastructures
-
-    if not type(upload) == datastructures.FileStorage:
-        body = upload.data.read()
-    else:
-        body = upload
-
-    if not isinstance(body, six.string_types):
-        body = body.decode('utf-8')
-
-    try:
-        data = json.loads(body)
-    except ValueError:
-        flash(u"Could not load pack as JSON - ensure it is JSON encoded",
-              'danger')
-        return None
-    else:
-        if 'queries' not in data:
-            flash(u"No queries in pack", 'danger')
-            return None
-
-        name = splitext(basename(upload.data.filename))[0]
-        pack = Pack.query.filter(Pack.name == name).first()
-
-    if not pack:
-        current_app.logger.debug("Creating pack %s", name)
-        if 'name' in data:
-            del data['name']
-        if 'category' in data:
-            del data['category']
-        pack = Pack.create(name=name,category=category, **data)
-
-    for query_name, query in data['queries'].items():
-        if not validate_osquery_query(query['query']):
-            flash('Invalid osquery query: "{0}"'.format(query['query']), 'danger')
-            return None
-
-        q = Query.query.filter(Query.name == query_name).first()
-
-        if not q:
-            q = Query.create(name=query_name, **query)
-            pack.queries.append(q)
-            current_app.logger.debug("Adding new query %s to pack %s",
-                                     q.name, pack.name)
-            continue
-        else:
-            if q.sql == query['query']:
-                current_app.logger.debug("Adding existing query %s to pack %s",
-                                         q.name, pack.name)
-                pack.queries.append(q)
-            else:
-                q2 = Query.create(name=query_name, **query)
-                current_app.logger.debug(
-                    "Created another query named %s, but different sql: %r vs %r",
-                    query_name, q2.sql.encode('utf-8'), q.sql.encode('utf-8'))
-                pack.queries.append(q2)
-
-        if q in pack.queries:
-            continue
-
-
-    else:
-        pack.save()
-        flash(u"Imported query pack {0}".format(pack.name), 'success')
-
-    return pack
 
 
 def get_node_health(node):
@@ -366,9 +329,6 @@ PRETTY_OPERATORS = {
 }
 
 
-def pretty_operator(cond):
-    return PRETTY_OPERATORS.get(cond, cond)
-
 
 PRETTY_FIELDS = {
     'query_name': 'Query name',
@@ -378,82 +338,6 @@ PRETTY_FIELDS = {
 }
 
 
-def pretty_field(field):
-    return PRETTY_FIELDS.get(field, field)
-
-
-_js_escapes = {
-    '\\': '\\u005C',
-    '\'': '\\u0027',
-    '"': '\\u0022',
-    '>': '\\u003E',
-    '<': '\\u003C',
-    '&': '\\u0026',
-    '=': '\\u003D',
-    '-': '\\u002D',
-    ';': '\\u003B',
-    u'\u2028': '\\u2028',
-    u'\u2029': '\\u2029'
-}
-# Escape every ASCII character with a value less than 32.
-_js_escapes.update(('%c' % z, '\\u%04X' % z) for z in range(32))
-
-
-def jinja2_escapejs_filter(value):
-    retval = []
-    if not value:
-        return ''
-    else:
-        for letter in value:
-
-            if letter in _js_escapes.keys():
-
-                retval.append(_js_escapes[letter])
-            else:
-                retval.append(letter)
-
-        return Markup("".join(retval))
-def jinja2_to_json_filter(value):
-    retval = []
-    if not value:
-        return ''
-    else:
-        return (jinja2_escapejs_filter(json.dumps(value)))
-
-
-def date_diff(date):
-    from dateutil.relativedelta import relativedelta
-
-    if not date:
-        return ''
-    else:
-        diff =relativedelta( dt.datetime.utcnow(),date)
-        if diff.years>0:
-            return "{0} years ago".format(diff.years)
-        elif diff.months>0:
-            return "{0} months ago".format(diff.months)
-
-        elif diff.weeks > 0:
-            return "{0} weeks ago".format(diff.weeks)
-
-        elif diff.days > 0:
-            return "{0} days ago".format(diff.days)
-
-        elif diff.hours>0:
-            return "{0} hours ago".format(diff.hours)
-
-        elif diff.minutes > 0:
-            return "{0} minutes ago".format(diff.minutes)
-
-        elif diff.seconds>0:
-            return "{0} seconds ago".format(diff.seconds)
-
-
-def jinja2_array_to_string_filter(value):
-    if not value:
-        return ''
-    else:
-        return ", ".join(value)
 
 # Since 'string.printable' includes control characters
 PRINTABLE = string.ascii_letters + string.digits + string.punctuation + ' '
@@ -481,13 +365,14 @@ def quote(s, quote='"'):
     buf.append(quote)
     return ''.join(buf)
 
+
 def _carve(string):
     return str(string).title()
+
 
 def create_mock_db():
     mock_db = sqlite3.connect(':memory:')
     mock_db.create_function("carve", 1, _carve)
-
 
     for ddl in schema:
         mock_db.execute(ddl)
@@ -496,6 +381,9 @@ def create_mock_db():
     from polylogyx.constants import PolyLogyxServerDefaults
 
     extra_schema = current_app.config.get('POLYLOGYX_EXTRA_SCHEMA', [])
+    optimized_extra_schema = current_app.config.get('POLYLOGYX_EXTRA_SCHEMA_OPTIMIZED', [])
+    if optimized_extra_schema and not optimized_extra_schema[0] in extra_schema:
+        extra_schema.extend(optimized_extra_schema)
     for ddl in extra_schema:
         mock_db.execute(ddl)
     for osquery_table in cursor.fetchall():
@@ -514,6 +402,9 @@ def validate_osquery_query(query):
         db.execute(query)
     except sqlite3.Error:
         current_app.logger.exception("Invalid query: %s", query)
+        return False
+    except sqlite3.Warning:
+        current_app.logger.exception("Invalid query: %s Only one query can be executed a time!", query)
         return False
 
     return True
@@ -621,45 +512,6 @@ def extract_results(result):
                                      json.dumps(entry))
 
 
-def flash_errors(form):
-    '''http://flask.pocoo.org/snippets/12/'''
-    for field, errors in form.errors.items():
-        for error in errors:
-            message = u"Error in the {0} field - {1}".format(
-                getattr(form, field).label.text, error
-            )
-            flash(message, 'danger')
-
-
-def get_paginate_options(request, model, choices, existing_query=None,
-                           default='id', page=1, max_pp=20, default_sort='asc'):
-    try:
-        per_page = int(request.args.get('pp', max_pp))
-    except Exception:
-        per_page = 20
-
-    per_page = max(0, min(max_pp, per_page))
-
-    order_by = request.args.get('order_by', 'id')
-    if order_by not in choices:
-        order_by = default
-    order_by = getattr(model, order_by, 'id')
-
-    sort = request.args.get('sort', default_sort)
-    if sort not in ('asc', 'desc'):
-        sort = default_sort
-
-    order_by = getattr(order_by, sort)()
-
-    if existing_query:
-        query = existing_query.order_by(order_by)
-    else:
-        query = model.query.order_by(order_by)
-    query = query.paginate(page=page, per_page=per_page)
-    return query
-
-
-
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, dt.datetime):
@@ -667,44 +519,15 @@ class DateTimeEncoder(json.JSONEncoder):
 
         return json.JSONEncoder.default(self, o)
 
-def render_column(value, column):
-    renders = current_app.config.get('POLYLOGYX_COLUMN_RENDER', {})
-    if column not in renders:
-        return value
-
-    template = renders[column]
-
-    try:
-        if callable(template):
-            return template(value)
-        else:
-            template = Template(template, autoescape=True)
-            rendered = template.render(value=value)
-
-            # return a markup object so that the template where this is
-            # rendered is not escaped again
-
-            return Markup(rendered)
-    except Exception:
-        current_app.logger.exception(
-            "Failed to render %s, returning original value",
-            column
-        )
-        return value
-
-
-class Serializer(object):
-    @staticmethod
-    def serialize(object):
-        return json.dumps(object, default=lambda o: o.__dict__.values()[0])
-
 
 def invalidate_token(loggedin_token):
-    qs_object = HandlingToken.query.filter(HandlingToken.token == loggedin_token).filter(HandlingToken.token_expired == False).first()
-    if qs_object:
-        return True
-    else:
+    qs_object = HandlingToken.query.filter(HandlingToken.token == loggedin_token).first()
+    if not qs_object:
         return False
+    elif qs_object.token_expired == True:
+        return False
+    else:
+        return True
 
 
 def require_api_key(f):
@@ -712,10 +535,17 @@ def require_api_key(f):
     def decorated_function(*args, **kwargs):
         if User.verify_auth_token(request.headers.environ.get('HTTP_X_ACCESS_TOKEN')) and invalidate_token(request.headers.environ.get('HTTP_X_ACCESS_TOKEN')):
             return f(*args, **kwargs)
+        elif request.path.endswith('swagger.json'):
+            return f(*args, **kwargs)
         else:
             current_app.logger.error("%s - Request did not contain valid API key", request.remote_addr)
-            abort(401)
-
-        return f(*args, **kwargs)
+            return abort(401, {'message': 'Request did not contain valid API key!'})
 
     return decorated_function
+
+
+def is_number_positive(number=None):
+    if number>0:
+        return True
+    else: return False
+

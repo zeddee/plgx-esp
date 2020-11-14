@@ -95,7 +95,6 @@ class EditTagsToPack(Resource):
                 for add_tag in add_tags:
                     if not add_tag in pack.tags:
                         pack.tags.append(add_tag)
-
             if remove_tags:
                 remove_tags = get_tags(*remove_tags)
                 for remove_tag in remove_tags:
@@ -107,8 +106,6 @@ class EditTagsToPack(Resource):
             message = 'Successfully modified the tag(s)'
 
         return marshal(respcls(message,status), parentwrapper.common_response_wrapper, skip_none=True)
-
-
 
 
 @require_api_key
@@ -130,16 +127,18 @@ class ListTagsOfPack(Resource):
             message = 'Successfully fetched the tag(s)'
         return marshal(respcls(message,status,data), parentwrapper.common_response_wrapper)
 
-
     @ns.expect(parser)
     def post(self, pack_name):
         args = self.parser.parse_args()  # need to exists for input payload validation
         tags = args['tags'].split(',')
         pack = dao.get_pack_by_name(pack_name)
-        obj_list = get_tags_list_to_add(tags)
-        pack.tags.extend(obj_list)
-        pack.save()
-        return marshal(respcls('Successfully created the tag(s) to packs', 'success'), parentwrapper.common_response_wrapper, skip_none=True)
+        if pack:
+            obj_list = get_tags_list_to_add(tags)
+            pack.tags.extend(obj_list)
+            pack.save()
+            return marshal(respcls('Successfully created the tag(s) to packs', 'success'), parentwrapper.common_response_wrapper, skip_none=True)
+        return marshal(respcls('No pack present for the name given!', 'failure'),
+                       parentwrapper.common_response_wrapper, skip_none=True)
 
 
 @require_api_key
