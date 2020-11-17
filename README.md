@@ -106,7 +106,7 @@ server. Please ensure that the following commands are executed from a root/admin
 
     d. Install project packages
     ```
-       npm install
+       sudo npm install
     ```
 
     e. Installing gzipper to  generate the compressed files
@@ -224,7 +224,7 @@ server. Please ensure that the following commands are executed from a root/admin
 
     d. Install project packages
     ```
-       npm install
+       sudo npm install
     ```
 
     e. Installing gzipper to  generate the compressed files
