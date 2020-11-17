@@ -83,7 +83,7 @@ server. Please ensure that the following commands are executed from a root/admin
 		    
 		        curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 		        
-        Note: Here,  node.js version 10.3 is being installed, if you want to install version 11, replace setup_10.x with setup_11.x.
+        Note: Here,  node.js version 10.x is being installed, if you want to install version 11, replace setup_10.x with setup_11.x.
 
         Step 3: To Install Node.js and NPM to your Ubuntu machine, use the command given below:
 		      
@@ -199,9 +199,9 @@ server. Please ensure that the following commands are executed from a root/admin
 		       
         Step 2: Enabling nodesource repo:
 		    
-		        curl -sL https://deb.nodesource.com/setup_10.3 | sudo -E bash -
+		        curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 		        
-        Note: Here,  node.js version 10.3 is being installed, if you want to install version 11, replace setup_10.x with setup_11.x.
+        Note: Here,  node.js version 10.x is being installed, if you want to install version 11, replace setup_10.x with setup_11.x.
 
         Step 3: To Install Node.js and NPM to your Ubuntu machine, use the command given below:
 		      
@@ -219,7 +219,7 @@ server. Please ensure that the following commands are executed from a root/admin
 
     c. cd to the angular folder
     ```
-        cp plgx-angular-ui
+        cd plgx-angular-ui
     ```
 
     d. Install project packages
