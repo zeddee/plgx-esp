@@ -1,0 +1,50 @@
+{{ if .Values.plgx.ingress.enabled }}
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "polylogyx.fullname" . }}-ingress
+  labels: {{- include "polylogyx.labels.standard" . | nindent 4 }}
+  {{ if toYaml .Values.plgx.ingress.annotations }}
+  annotations: {{ toYaml .Values.plgx.ingress.annotations | nindent 4 }}
+  {{ end }}
+spec:
+  rules:
+  - host: {{ .Values.plgx.ingress.host }}
+    http:
+      paths:
+      # esp paths
+      {{ if .Values.plgx.esp.enabled }}
+      - path: /esp(/|$)(.*)
+        pathType: Prefix
+        backend:
+          serviceName: {{ template "polylogyx.fullname" . }}-esp
+          servicePort: 6000
+      {{ end }}
+      # esp-ui paths
+      {{ if .Values.plgx.ui.enabled }}
+      - path: /services
+        pathType: Prefix
+        backend:
+          serviceName: {{ template "polylogyx.fullname" . }}-esp-ui
+          servicePort: 5000
+      - path: /distributed/result
+        pathType: Prefix
+        backend:
+          serviceName: {{ template "polylogyx.fullname" . }}-esp-ui
+          servicePort: 5000
+      {{ end }}
+      # esp-fileserver paths
+      {{ if .Values.plgx.fileserver.enabled }}
+      - path: /
+        pathType: Prefix
+        backend:
+          serviceName: {{ template "polylogyx.fullname" . }}-fileserver
+          servicePort: 80
+      {{ end }}
+  {{ if .Values.plgx.ingress.tls.enabled }}
+  tls:
+  - hosts:
+    - {{ .Values.plgx.ingress.hostname }}
+    secretName: {{ .Values.plgx.ingress.secretName }}
+  {{ end }}
+{{ end }}

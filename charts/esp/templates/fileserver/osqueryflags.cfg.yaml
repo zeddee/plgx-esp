@@ -1,0 +1,210 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "polylogyx.fullname" . }}-fileserver-configmap
+  labels: {{- include "polylogyx.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-esp-fileserver
+data:
+  darwin.osquery.flags: |
+    --disable_events=false
+    --allow_unsafe
+    --audit_allow_config=true
+    --audit_allow_process_events=true
+    --audit_allow_sockets
+    --audit_persist=true
+    --disable_audit=false
+    --events_expiry=3600
+    --events_max=2500
+    --pidfile=/private/var/osquery/osquery.pid
+    --host_identifier=uuid
+    --database_path=/private/var/osquery/osquery.db
+    --config_plugin=tls
+    --config_tls_endpoint=/esp/config
+    --config_tls_refresh=300
+    --config_tls_max_attempts=5
+    --enroll_tls_endpoint=/esp/enroll
+    --enroll_secret_path=/private/var/osquery/secret.txt
+    --disable_distributed=false
+    --distributed_plugin=tls
+    --distributed_interval=15
+    --distributed_tls_max_attempts=5
+    --distributed_tls_read_endpoint=/esp/distributed/read
+    --distributed_tls_write_endpoint=/esp/distributed/write
+    --logger_plugin=tls
+    --logger_tls_endpoint=/esp/log
+    --logger_tls_period=30
+    --tls_hostname={{ .Values.plgx.ingress.hostname | default "REPLACE_WITH_YOUR_HOSTNAME" }}
+    --log_result_events=false
+    --pack_delimiter=/
+    --disable_carver=false
+    --carver_block_size=300000
+    --carver_start_endpoint=/esp/start_uploads
+    --carver_continue_endpoint=/esp/upload_blocks
+    --carver_disable_function=false
+    --watchdog_level=-1
+    --utc
+  freebsd.osquery.flags: --disable_events=false
+    --allow_unsafe
+    --audit_allow_config=true
+    --audit_allow_process_events=true
+    --audit_allow_sockets
+    --audit_persist=true
+    --disable_audit=false
+    --events_expiry=3600
+    --events_max=2500
+    --pidfile=/tmp/osquery.pid
+    --host_identifier=uuid
+    --database_path=/tmp/osquery.db
+    --config_plugin=tls
+    --config_tls_endpoint=/esp/config
+    --config_tls_refresh=300
+    --config_tls_max_attempts=5
+    --enroll_tls_endpoint=/esp/enroll
+    --enroll_secret_path=/usr/local/etc/secret.txt
+    --disable_distributed=false
+    --distributed_plugin=tls
+    --distributed_interval=15
+    --distributed_tls_max_attempts=5
+    --distributed_tls_read_endpoint=/esp/distributed/read
+    --distributed_tls_write_endpoint=/esp/distributed/write
+    --logger_plugin=tls
+    --logger_tls_endpoint=/esp/log
+    --logger_tls_period=30
+    --tls_hostname={{ .Values.plgx.ingress.hostname | default "REPLACE_WITH_YOUR_HOSTNAME" }}
+    --tls_server_certs=/usr/local/etc/certificate.crt
+    --log_result_events=false
+    --pack_delimiter=/
+    --disable_carver=false
+    --carver_block_size=300000
+    --carver_start_endpoint=/esp/start_uploads
+    --carver_continue_endpoint=/esp/upload_blocks
+    --carver_disable_function=false
+    --watchdog_level=-1
+    --utc
+  linux.x64.osquery.flags: |
+    --extensions_socket=/var/plgx_osquery/osquery.em
+    --disable_events=false
+    --audit_allow_config=true
+    --audit_allow_process_events=true
+    --audit_allow_sockets
+    --audit_persist=true
+    --disable_audit=false
+    --events_expiry=3600
+    --events_max=2500
+    --pidfile=/var/run/plgx_osqueryd.pid
+    --host_identifier=uuid
+    --database_path=/var/plgx_osquery/plgx_osquery.db
+    --config_plugin=tls
+    --config_tls_endpoint=/esp/config
+    --config_tls_refresh=300
+    --config_tls_max_attempts=5
+    --enroll_tls_endpoint=/esp/enroll
+    --enroll_secret_path=/etc/plgx_osquery/secret.txt
+    --disable_distributed=false
+    --distributed_plugin=tls
+    --distributed_interval=15
+    --distributed_tls_max_attempts=5
+    --distributed_tls_read_endpoint=/esp/distributed/read
+    --distributed_tls_write_endpoint=/esp/distributed/write
+    --logger_plugin=tls
+    --logger_tls_endpoint=/esp/log
+    --logger_tls_period=30
+    --tls_hostname={{ .Values.plgx.ingress.hostname | default "REPLACE_WITH_YOUR_HOSTNAME" }}
+    --tls_server_certs=/etc/plgx_osquery/certificate.crt
+    --log_result_events=false
+    --pack_delimiter=/
+    --disable_carver=false
+    --carver_block_size=300000
+    --carver_start_endpoint=/esp/start_uploads
+    --carver_continue_endpoint=/esp/upload_blocks
+    --carver_disable_function=false
+    --watchdog_level=-1
+    --utc
+    --allow_unsafe
+    --extensions_autoload=/etc/plgx_osquery/extensions.load
+    --extensions_interval=10
+    --extensions_timeout=90
+  windows.x64.osquery.flags: |
+    --config_plugin=tls
+    --config_tls_endpoint=/esp/config
+    --config_tls_refresh=90
+    --config_tls_max_attempts=5
+    --enable_monitor=true
+    --enroll_tls_endpoint=/esp/enroll
+    --enroll_secret_path=C:\Program Files\plgx_osquery\secret.txt
+    --events_expiry=1800
+    --disable_distributed=false
+    --distributed_plugin=tls
+    --distributed_interval=15
+    --distributed_tls_max_attempts=5
+    --distributed_tls_read_endpoint=/esp/distributed/read
+    --distributed_tls_write_endpoint=/esp/distributed/write
+    --host_identifier=uuid
+    --logger_plugin=tls
+    --logger_tls_endpoint=/esp/log
+    --logger_tls_period=150
+    --logger_stderr=false
+    --extensions_socket=\\.\pipe\plgx_osquery.em
+    --tls_hostname={{ .Values.plgx.ingress.hostname | default "REPLACE_WITH_YOUR_HOSTNAME" }}
+    --tls_server_certs=C:\Program Files\plgx_osquery\certificate.crt
+    --database_path=C:\Program Files\plgx_osquery\osquery.db
+    --pidfile=C:\Program Files\plgx_osquery\osquery.pid
+    --disable_watchdog=true
+    --windows_event_channels=Microsoft-Windows-Windows Defender/Operational,Security,microsoft-windows-powershell/operational
+    --allow_unsafe
+    --extensions_autoload=C:\Program Files\plgx_osquery\extensions.load
+    --extensions_interval=10
+    --extensions_timeout=90
+    --extensions_require=plgx_win_extension
+    --database_dump=false
+    --disable_events=false
+    --schedule_default_interval=30
+    --pack_delimiter=/
+    --disable_carver=false
+    --carver_block_size=300000
+    --carver_start_endpoint=/esp/start_uploads
+    --carver_continue_endpoint=/esp/upload_blocks
+    --carver_disable_function=false
+    --watchdog_level=-1
+    --events_max=1500
+    --utc
+  windows.x86.osquery.flags: |
+    --config_plugin=tls
+    --config_tls_endpoint=/esp/config
+    --config_tls_refresh=300
+    --config_tls_max_attempts=5
+    --enable_monitor=true
+    --enroll_tls_endpoint=/esp/enroll
+    --enroll_secret_path=C:\Program Files\plgx_osquery\secret.txt
+    --events_expiry=1800
+    --disable_distributed=false
+    --distributed_plugin=tls
+    --distributed_interval=15
+    --distributed_tls_max_attempts=5
+    --distributed_tls_read_endpoint=/esp/distributed/read
+    --distributed_tls_write_endpoint=/esp/distributed/write
+    --host_identifier=uuid
+    --logger_plugin=tls
+    --logger_tls_endpoint=/esp/log
+    --logger_tls_period=150
+    --logger_stderr=false
+    --extensions_socket=\\.\pipe\plgx_osquery.em
+    --tls_hostname={{ .Values.plgx.ingress.hostname | default "REPLACE_WITH_YOUR_HOSTNAME" }}
+    --tls_server_certs=C:\Program Files\plgx_osquery\certificate.crt
+    --database_path=C:\Program Files\plgx_osquery\osquery.db
+    --pidfile=C:\Program Files\plgx_osquery\osquery.pid
+    --disable_watchdog=false
+    --windows_event_channels=Microsoft-Windows-Windows Defender/Operational,Security,microsoft-windows-powershell/operational
+    --allow_unsafe
+    --database_dump=false
+    --disable_events=false
+    --schedule_default_interval=30
+    --pack_delimiter=/
+    --disable_carver=false
+    --carver_block_size=300000
+    --carver_start_endpoint=/esp/start_uploads
+    --carver_continue_endpoint=/esp/upload_blocks
+    --carver_disable_function=false
+    --watchdog_level=0
+    --events_max=1500
+    --utc

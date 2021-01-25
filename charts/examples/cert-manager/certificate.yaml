@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: polylogyx-tls-certificate
+  namespace: plgx
+spec:
+  secretName: plgx-tls-secret
+  dnsNames:
+    - polylogyx.dev
+  issuerRef:
+    name: ca-issuer
+    kind: Issuer

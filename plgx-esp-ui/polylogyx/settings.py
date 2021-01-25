@@ -6,10 +6,14 @@ import os
 
 
 RABBITMQ_HOST = "localhost"
+RABBITMQ_PASSWORD = "guest"
+RABBITMQ_USER = "guest"
 
 try:
     if os.environ.get('RABBITMQ_URL'):
         RABBITMQ_HOST = os.environ.get('RABBITMQ_URL')
+        RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD')
+        RABBITMQ_USER = os.environ.get('RABBITMQ_USER')
 except Exception as e:
     print(e)
 
@@ -345,7 +349,10 @@ class ProdConfig(Config):
         'secret',
     ]
     try:
-        BROKER_URL = 'pyamqp://guest:guest@' + os.environ.get('RABBITMQ_URL')
+        RABBITMQ_URL = os.environ.get('RABBITMQ_URL')
+        RABBITMQ_USER = os.environ.get('RABBITMQ_USER')
+        RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD')
+        BROKER_URL = 'pyamqp://' + RABBITMQ_USER + ':' + RABBITMQ_PASSWORD + '@' + RABBITMQ_URL
         CELERY_RESULT_BACKEND = 'rpc://'
 
     except Exception as e:
@@ -378,10 +385,12 @@ class DevConfig(Config):
 
     BASE_URL = os.path.dirname(os.getcwd()) + "/resources"
 
-    BROKER_URL = 'pyamqp://guest:guest@localhost//'
+    RABBITMQ_URL = os.environ.get('RABBITMQ_URL')
+    RABBITMQ_USER = os.environ.get('RABBITMQ_USER')
+    RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD')
+    BROKER_URL = 'pyamqp://' + RABBITMQ_USER + ':' + RABBITMQ_PASSWORD + '@' + RABBITMQ_URL
     CELERY_RESULT_BACKEND = 'rpc://'
     SQLALCHEMY_DATABASE_URI = 'postgresql://polylogyx:polylogyx@localhost:5432/polylogyx'
-    RABBITMQ_URL = 'localhost'
 
     POLYLOGYX_ENROLL_SECRET = [
         'secret',
@@ -426,7 +435,11 @@ if os.environ.get('DYNO'):
         POLYLOGYX_LOGGING_FILENAME = '-'  # handled specially - stdout
 
         SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
-        BROKER_URL = 'pyamqp://guest:guest@' + os.environ.get('RABBITMQ_URL')
+        RABBITMQ_URL = os.environ.get('RABBITMQ_URL')
+        RABBITMQ_USER = os.environ.get('RABBITMQ_USER')
+        RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD')
+        BROKER_URL = 'pyamqp://' + RABBITMQ_USER + ':' + RABBITMQ_PASSWORD + '@' + RABBITMQ_URL
+
         CELERY_RESULT_BACKEND = 'rpc://'
 
         try:

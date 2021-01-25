@@ -1,0 +1,65 @@
+{{ if .Values.plgx.esp.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "polylogyx.fullname" . }}-esp
+  labels: {{- include "polylogyx.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-esp
+spec:
+  replicas: {{ .Values.plgx.esp.replicas }}
+  selector:
+    matchLabels: {{- include "polylogyx.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-esp
+  strategy: {{- toYaml .Values.plgx.esp.updateStrategy | nindent 4 }}
+  template:
+    metadata:
+      labels: {{- include "polylogyx.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-esp
+      {{ if .Values.plgx.esp.podAnnotations }}
+      annotations: {{- toYaml .Values.plgx.esp.podAnnotations | nindent 8 }}
+      {{ end }}
+    spec:
+      {{- if .Values.plgx.esp.pullSecrets }}
+      imagePullSecrets: {{- toYaml .Values.plgx.esp.pullSecrets | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ template "polylogyx.fullname" . }}-esp
+          image: {{ .Values.plgx.esp.image }}
+          imagePullPolicy: {{ .Values.plgx.esp.pullPolicy | quote }}
+          {{- if .Values.plgx.esp.resources }}
+          resources: {{- toYaml .Values.plgx.esp.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - containerPort: 6000
+            - containerPort: 5555
+          {{- if .Values.plgx.esp.livenessProbe }}
+          livenessProbe: {{- toYaml .Values.plgx.esp.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.plgx.esp.readinessProbe }}
+          readinessProbe: {{- toYaml .Values.plgx.esp.readinessProbe | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - secretRef:
+                name: {{ template "polylogyx.fullname" . }}-env-secret
+          volumeMounts:
+            - mountPath: /src/plgx-esp/carves
+              name: carves
+      restartPolicy: Always
+      {{ if .Values.plgx.esp.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.plgx.esp.nodeSelector | nindent 8 }}
+      {{ end }}
+      {{ if .Values.plgx.esp.tolerations }}
+      tolerations: {{ toYaml .Values.plgx.esp.tolerations | nindent 8 }}
+      {{ end }}
+      {{ if .Values.plgx.esp.affinity }}
+      affinity: {{ toYaml .Values.plgx.esp.affinity | nindent 8 }}
+      {{ end }}
+      volumes:
+        - name: carves
+          {{ if .Values.plgx.persistence.carves.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "polylogyx.carves.pvcName" . }}
+          {{ else }}
+            emptyDir: {}
+          {{ end }}
+{{ end }}

@@ -21,8 +21,9 @@ class RsyslogPlugin(AbstractLogsPlugin):
 
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-            sock.connect(("rsyslogf", 514))
+            rsyslogHostname = os.environ.get('RSYSLOG_HOSTNAME')
+            rsyslogPort = os.environ.get('RSYSLOG_PORT')
+            sock.connect((rsyslogHostname, rsyslogPort))
             bSock = True
             current_app.logger.info("[log] Socket connected")
         except:
@@ -64,7 +65,9 @@ class RsyslogPlugin(AbstractLogsPlugin):
 
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect(("rsyslogf", 514))
+            rsyslogHostname = os.environ.get('RSYSLOG_HOSTNAME')
+            rsyslogPort = os.environ.get('RSYSLOG_PORT')
+            sock.connect((rsyslogHostname, rsyslogPort))
             bSock = True
             current_app.logger.info("[log] Socket connected")
         except:
@@ -101,7 +104,9 @@ class RsyslogPlugin(AbstractLogsPlugin):
 
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect(("rsyslogf", 514))
+            rsyslogHostname = os.environ.get('RSYSLOG_HOSTNAME')
+            rsyslogPort = os.environ.get('RSYSLOG_PORT')
+            sock.connect((rsyslogHostname, rsyslogPort))
             bSock = True
             current_app.logger.info("[log] Socket connected")
         except:

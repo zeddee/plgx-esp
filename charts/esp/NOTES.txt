@@ -1,0 +1,9 @@
+** Please be patient while the chart is being deployed **
+
+Polylogyx ESP
+
+{{- if .Values.ingress.enabled }}
+    Polylogyx ESP URL(s):
+{{- if .Values.ingress.hostname }}
+    - https://{{ .Values.ingress.hostname }}
+{{- end }}

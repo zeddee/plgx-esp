@@ -1,0 +1,28 @@
+{{ if .Values.plgx.fileserver.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "polylogyx.fullname" . }}-fileserver
+  {{ if .Values.plgx.fileserver.service.annotations }}
+  annotations: {{- toYaml .Values.plgx.fileserver.service.annotations | nindent 4 }}
+  {{ end }}
+  labels: {{- include "polylogyx.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-esp-fileserver
+spec:
+  type: {{ .Values.plgx.fileserver.service.type }}
+  {{- if eq .Values.plgx.fileserver.service.type "LoadBalancer" }}
+  {{- if .Values.plgx.fileserver.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.plgx.fileserver.service.loadBalancerIP }}
+  {{- end }}
+  {{- end }}
+  {{- if (or (eq .Values.plgx.fileserver.service.type "LoadBalancer") (eq .Values.plgx.fileserver.service.type "NodePort")) }}
+  externalTrafficPolicy: {{ .Values.plgx.fileserver.service.externalTrafficPolicy | quote }}
+  {{- end }}
+  ports:
+    - name: "80"
+      port: 80
+      targetPort: 80
+  type: {{ .Values.plgx.fileserver.serviceType | default "ClusterIP" }}
+  selector: {{- include "polylogyx.labels.matchLabels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-esp-fileserver
+{{ end }}

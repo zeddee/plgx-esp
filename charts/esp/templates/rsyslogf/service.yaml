@@ -1,0 +1,27 @@
+{{ if .Values.plgx.rsyslogf.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "polylogyx.fullname" . }}-rsyslogf
+  {{ if .Values.plgx.rsyslogf.service.annotations }}
+  annotations: {{- toYaml .Values.plgx.rsyslogf.service.annotations | nindent 4 }}
+  {{ end }}
+  labels: {{- include "polylogyx.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-rsyslogf
+spec:
+  type: {{ .Values.plgx.rsyslogf.service.type }}
+  {{- if eq .Values.plgx.rsyslogf.service.type "LoadBalancer" }}
+  {{- if .Values.plgx.rsyslogf.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.plgx.rsyslogf.service.loadBalancerIP }}
+  {{- end }}
+  {{- end }}
+  {{- if (or (eq .Values.plgx.rsyslogf.service.type "LoadBalancer") (eq .Values.plgx.rsyslogf.service.type "NodePort")) }}
+  externalTrafficPolicy: {{ .Values.plgx.rsyslogf.service.externalTrafficPolicy | quote }}
+  {{- end }}
+  selector: {{- include "polylogyx.labels.matchLabels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-rsyslogf
+  ports:
+    - name: "514"
+      port: {{ .Values.plgx.rsyslogf.service.port }}
+      targetPort: 514
+{{ end }}

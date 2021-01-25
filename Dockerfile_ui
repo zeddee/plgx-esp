@@ -32,11 +32,7 @@ RUN pip install -r /tmp/requirements.txt
 
 # Add our application to the container
 COPY ./plgx-esp-ui/. /src/plgx-esp-ui/
-COPY ./nginx/private.key /src/plgx-esp-ui/private.key
 COPY ./resources/. /src/plgx-esp-ui/resources/ 
-COPY ./nginx/certificate.crt /src/plgx-esp-ui/resources/certificate.crt
-COPY ./nginx/certificate.crt /src/plgx-esp-ui/resources/windows/x86/certificate.crt
-COPY ./nginx/certificate.crt /src/plgx-esp-ui/resources/windows/x64/certificate.crt
 
 RUN chmod a+x /src/plgx-esp-ui/docker-entrypoint.sh
 

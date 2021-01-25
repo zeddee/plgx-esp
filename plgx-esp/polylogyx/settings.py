@@ -7,14 +7,17 @@ import os
 import pika
 
 RABBITMQ_HOST = "localhost"
-try:
-    if os.environ.get('RABBITMQ_URL'):
-        RABBITMQ_HOST = os.environ.get('RABBITMQ_URL')
-except Exception as e:
-    print(e)
-
 credentials = pika.PlainCredentials("guest", "guest")
 
+try:
+    RABBITMQ_HOST = os.environ.get('RABBITMQ_URL')
+    RABBITMQ_USER = os.environ.get('RABBITMQ_USER')
+    RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD')
+
+    credentials = pika.PlainCredentials(RABBITMQ_PASSWORD, RABBITMQ_USER)))
+except Exception as e:
+    print(e)
+ 
 
 class Config(object):
     EMAIL_RECIPIENTS = []

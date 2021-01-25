@@ -1,0 +1,191 @@
+rabbitmq:
+  enabled: true
+  fullnameOverride: polylogyx-esp-rabbitmq
+  ingress:
+    enabled: true
+    hostname: polylogyx.dev
+    path: /rabbit(/|$)(.*)
+    existingSecret: plgx-tls-secret
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
+      nginx.ingress.kubernetes.io/use-regex: "true"
+  image:
+    tag: latest
+  resources:
+    limits:
+      memory: 2Gi
+  auth:
+    username: ""
+    password: ""
+  tls:
+    enabled: true
+    existingSecret: polylogyx-tls-secret
+  memoryHighWatermark:
+    value: 0.7
+    enabled: true
+  extraSecrets:
+    load-definition:
+      load_definition.json: |
+        {
+          "policies": [
+        {
+            "vhost": "/",
+            "name": "lazy",
+            "pattern": "result_log_queue",
+            "apply-to": "queues",
+            "definition": {
+              "ha-mode": "exactly",
+              "ha-params": 3,
+              "ha-sync-mode": "automatic",
+              "expires": 604800000,
+              "queue-master-locator": "min-masters",
+              "ha-sync-batch-size": 100,
+              "queue-mode": "lazy"
+            },
+            "priority": 1
+          }
+          ],
+          "rabbit_version": "3.8.0",
+          "users": [
+            {
+              "name": guest,
+              "password_hash": guest,
+              "hashing_algorithm": "rabbit_password_hashing_sha256",
+              "tags": "administrator"
+            }
+          ],
+          "vhosts": [
+            {
+              "name": "/"
+            }
+          ],
+          "permissions": [
+            {
+              "user": "guest",
+              "vhost": "/",
+              "configure": ".*",
+              "write": ".*",
+              "read": ".*"
+            }
+          ],
+          "parameters": [],
+          "queues": [
+            {
+              "name": "result_log_queue",
+              "vhost": "/",
+              "durable": true,
+              "auto_delete": false,
+              "arguments": {
+                "x-ha-policy": "all"
+              }
+            }
+          ],
+          "exchanges": [],
+          "bindings": [
+            {
+              "source": "amq.direct",
+              "vhost": "/",
+              "destination": "result_log_queue",
+              "destination_type": "queue",
+              "routing_key": "logstash",
+              "arguments": {}
+            },
+            {
+              "source": "amq.direct",
+              "vhost": "/",
+              "destination": "result_log_queue",
+              "destination_type": "queue",
+              "routing_key": "v1",
+              "arguments": {}
+            }
+          ]
+        }
+  loadDefinition:
+    enabled: true
+    existingSecret: load-definition
+  extraConfiguration: |
+    load_definitions = /app/load_definition.json
+
+postgresql:
+  enabled: true
+  fullnameOverride: polylogyx-postgresql
+  postgresqlMaxConnections: 500
+  postgresqlPostgresPassword: polylogyx
+  postgresqlUsername: polylogyx
+  postgresqlPassword: polylogyx
+  postgresqlDatabase: polylogyx
+plgx:
+  databaseUrl: "postgres://polylogyx:polylogyx@polylogyx-postgresql:5432/polylogyx"
+  rabbitmqPassword: "guest"
+  rabbitmqUser: "guest"
+  api_keys:
+    vt: ""
+    alienvault: ""
+    IBMxForceKey: ""
+    IBMxForcePass: ""
+  purge_duration: "7"
+  threatIntel:
+    alertFrequency: "30"
+  auth:
+    password: admin
+    user: admin
+    enroll_secret: secret
+  persistence:
+    yara:
+      enabled: true
+      existingClaim: null
+      accessMode: ReadWriteMany
+      storageClass: null
+      size: 100Mi
+    carves:
+      enabled: true
+      existingClaim: null
+      accessMode: ReadWriteMany
+      storageClass: null
+      size: 100Mi
+  rsyslogf:
+    enabled: true
+    image: ghcr.io/gatzjames/esp-rsyslogf:latest
+    pullPolicy: Always
+    service:
+      port: 80
+      type: ClusterIP
+    persistence:
+      enabled: true
+      existingClaim: null
+      storageClass: null
+      accessMode: ReadWriteMany
+      size: 500Mi
+  esp:
+    enabled: true
+    replicas: 1
+    image: ghcr.io/gatzjames/esp:latest
+    pullPolicy: Always
+    resources: {}
+    service:
+      port: 80
+      type: ClusterIP
+  ui:
+    enabled: true
+    replicas: 1
+    image: ghcr.io/gatzjames/esp-ui:latest
+    pullPolicy: Always
+    service:
+      port: 80
+      type: ClusterIP
+  fileserver:
+    enabled: true
+    replicas: 1
+    image: ghcr.io/gatzjames/esp-fileserver:latest
+    pullPolicy: Always
+    service:
+      port: 80
+      type: ClusterIP
+  ingress:
+    enabled: true
+    hostname: polylogyx.dev
+    secretName: plgx-tls-secret
+    annotations:
+      kubernetes.io/ingress.class: "nginx"
+    tls:
+      enabled: true

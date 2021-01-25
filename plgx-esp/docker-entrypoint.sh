@@ -144,6 +144,6 @@ exec `tmux send -t plgx_celery 'python manage.py  update_vt_match_count --vt_min
 exec `tmux send -t plgx_celery "celery worker -A polylogyx.worker:celery --concurrency=$WORKERS_CELERY -Q default_queue_tasks -l INFO &" ENTER`
 
 echo "Sever is up and running.."
-exec `tmux send -t flower "flower -A polylogyx.worker:celery --address=0.0.0.0  --broker_api=http://guest:guest@$RABBITMQ_URL:5672/api --basic_auth=$POLYLOGYX_USER:$POLYLOGYX_PASSWORD" ENTER`
+exec `tmux send -t flower "flower -A polylogyx.worker:celery --address=0.0.0.0  --broker_api=http://$RABBITMQ_USER:$RABBITMQ_PASSWORD@$RABBITMQ_URL:$RABBITMQ_PORT/api --basic_auth=$POLYLOGYX_USER:$POLYLOGYX_PASSWORD" ENTER`
 
 exec `tail -f /dev/null`

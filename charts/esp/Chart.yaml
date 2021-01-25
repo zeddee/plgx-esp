@@ -1,0 +1,17 @@
+name: polylogyx-esp
+description: A Helm Chart for deploying the polylogyx endpoint security platform
+version: 0.0.10
+apiVersion: v2
+keywords:
+  - polylogyx, osquery fleet manager, endpoint security platform
+sources:
+home:
+dependencies:
+  - condition: postgresql.enabled
+    name: postgresql
+    version: 10.2.0
+    repository: https://charts.bitnami.com/bitnami
+  - condition: rabbitmq.enabled
+    name: rabbitmq
+    version: 8.5.4
+    repository: https://charts.bitnami.com/bitnami
