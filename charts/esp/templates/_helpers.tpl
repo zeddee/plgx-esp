@@ -104,3 +104,50 @@ Return the carves pvc name
 {{- end -}}
 
 {{- end -}}
+
+{{/*
+Return the image name as a string
+{{ include "polylogyx.images.image" ( dict "imageRoot" .Values.path.to.the.image "global" $) }}
+*/}}
+{{- define "polylogyx.images.image" -}}
+{{- $registryName := .imageRoot.registry -}}
+{{- $repositoryName := .imageRoot.repository -}}
+{{- $tag := .imageRoot.tag | toString -}}
+{{- if .global }}
+    {{- if .global.imageRegistry }}
+     {{- $registryName = .global.imageRegistry -}}
+    {{- end -}}
+{{- end -}}
+{{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+{{- end -}}
+
+{{/*
+Return the polylogyx-esp esp image name
+*/}}
+{{- define "polylogyx.images.esp" -}}
+{{- $root := dict "imageRoot" .Values.plgx.esp.image "global" .Values.global -}}
+{{- include "polylogyx.images.image" $root -}}
+{{- end -}}
+
+{{/*
+Return the polylogyx-esp ui image name
+*/}}
+{{- define "polylogyx.images.ui" -}}
+{{- include "polylogyx.images.image" ( dict "imageRoot" .Values.plgx.ui.image "global" $) -}}
+{{- end -}}
+
+{{/*
+Return the polylogyx-esp fileserver image name
+*/}}
+{{- define "polylogyx.images.fileserver" -}}
+{{- include "polylogyx.images.image" ( dict "imageRoot" .Values.plgx.fileserver.image "global" $)}}
+{{- end -}}
+
+{{/*
+Return the polylogyx-esp rsyslogf image name
+*/}}
+{{- define "polylogyx.images.rsyslogf" -}}
+{{- $id := .Values.plgx.rsyslogf.image.registry -}}
+{{- $root := dict "imageRoot" .Values.plgx.rsyslogf.image "global" .Values.global -}}
+{{- include "polylogyx.images.image" ($root) -}}
+{{- end -}}

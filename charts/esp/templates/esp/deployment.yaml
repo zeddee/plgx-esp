@@ -24,7 +24,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ template "polylogyx.fullname" . }}-esp
-          image: {{ .Values.plgx.esp.image }}
+          image: {{ template "polylogyx.images.esp" . }}
           imagePullPolicy: {{ .Values.plgx.esp.pullPolicy | quote }}
           {{- if .Values.plgx.esp.resources }}
           resources: {{- toYaml .Values.plgx.esp.resources | nindent 12 }}

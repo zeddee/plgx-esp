@@ -5,4 +5,4 @@ metadata:
   namespace: plgx
 spec:
   ca:
-    secretName: plgx-tls
+    secretName: polylogyx-ca-tls-secret

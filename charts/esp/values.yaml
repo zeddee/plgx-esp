@@ -1,191 +1,185 @@
-rabbitmq:
-  enabled: true
-  fullnameOverride: polylogyx-esp-rabbitmq
-  ingress:
-    enabled: true
-    hostname: polylogyx.dev
-    path: /rabbit(/|$)(.*)
-    existingSecret: plgx-tls-secret
-    annotations:
-      nginx.ingress.kubernetes.io/rewrite-target: /$2
-      nginx.ingress.kubernetes.io/use-regex: "true"
-  image:
-    tag: latest
-  resources:
-    limits:
-      memory: 2Gi
-  auth:
-    username: ""
-    password: ""
-  tls:
-    enabled: true
-    existingSecret: polylogyx-tls-secret
-  memoryHighWatermark:
-    value: 0.7
-    enabled: true
-  extraSecrets:
-    load-definition:
-      load_definition.json: |
-        {
-          "policies": [
-        {
-            "vhost": "/",
-            "name": "lazy",
-            "pattern": "result_log_queue",
-            "apply-to": "queues",
-            "definition": {
-              "ha-mode": "exactly",
-              "ha-params": 3,
-              "ha-sync-mode": "automatic",
-              "expires": 604800000,
-              "queue-master-locator": "min-masters",
-              "ha-sync-batch-size": 100,
-              "queue-mode": "lazy"
-            },
-            "priority": 1
-          }
-          ],
-          "rabbit_version": "3.8.0",
-          "users": [
-            {
-              "name": guest,
-              "password_hash": guest,
-              "hashing_algorithm": "rabbit_password_hashing_sha256",
-              "tags": "administrator"
-            }
-          ],
-          "vhosts": [
-            {
-              "name": "/"
-            }
-          ],
-          "permissions": [
-            {
-              "user": "guest",
-              "vhost": "/",
-              "configure": ".*",
-              "write": ".*",
-              "read": ".*"
-            }
-          ],
-          "parameters": [],
-          "queues": [
-            {
-              "name": "result_log_queue",
-              "vhost": "/",
-              "durable": true,
-              "auto_delete": false,
-              "arguments": {
-                "x-ha-policy": "all"
-              }
-            }
-          ],
-          "exchanges": [],
-          "bindings": [
-            {
-              "source": "amq.direct",
-              "vhost": "/",
-              "destination": "result_log_queue",
-              "destination_type": "queue",
-              "routing_key": "logstash",
-              "arguments": {}
-            },
-            {
-              "source": "amq.direct",
-              "vhost": "/",
-              "destination": "result_log_queue",
-              "destination_type": "queue",
-              "routing_key": "v1",
-              "arguments": {}
-            }
-          ]
-        }
-  loadDefinition:
-    enabled: true
-    existingSecret: load-definition
-  extraConfiguration: |
-    load_definitions = /app/load_definition.json
-
-postgresql:
-  enabled: true
-  fullnameOverride: polylogyx-postgresql
-  postgresqlMaxConnections: 500
-  postgresqlPostgresPassword: polylogyx
-  postgresqlUsername: polylogyx
-  postgresqlPassword: polylogyx
-  postgresqlDatabase: polylogyx
+# Polylogyx ESP parameters
 plgx:
-  databaseUrl: "postgres://polylogyx:polylogyx@polylogyx-postgresql:5432/polylogyx"
-  rabbitmqPassword: "guest"
-  rabbitmqUser: "guest"
+  # PostgreSQL config
+
+  # -- The connection url for the postgresql database
+  databaseUrl: ""
+
+  # RabbitMQ Config
+
+  # -- The rabbitMQ instance password
+  rabbitmqPassword: ""
+  # -- The rabbitMQ instance username
+  rabbitmqUser: ""
+
+  # API Keys Config
   api_keys:
+    # -- VirusTotal API Key
     vt: ""
+    # -- AlienVault API Key
     alienvault: ""
+    # -- IBMxForceKey API Key
     IBMxForceKey: ""
+    # -- IBMxForcePass Password
     IBMxForcePass: ""
+  
+  # -- Specifies the duration after which data should be purged
   purge_duration: "7"
   threatIntel:
     alertFrequency: "30"
+  # ESP Authorization
   auth:
-    password: admin
-    user: admin
-    enroll_secret: secret
+    # -- ESP application username
+    user:
+    # -- ESP application password
+    password:
+    # -- ESP application secret for agent enrollment
+    enroll_secret:
+
+  # ESP Common Persistence parameters
   persistence:
+    # Persistence configuration for Yara files
     yara:
+      # -- Enable persistence for Yara files
       enabled: true
+      # -- Provide an existing `PersistentVolumeClaim` for Yara files
       existingClaim: null
+      # -- PVC Access Mode for Yara files
       accessMode: ReadWriteMany
+      # -- PVC Storage Class for Yara files
       storageClass: null
+      # -- PVC Storage Request for Yara files
       size: 100Mi
+    # Persistence configuration for Carves files
     carves:
+      # -- Enable persistence for Carves files
       enabled: true
+      # -- Provide an existing `PersistentVolumeClaim` for Carves files
       existingClaim: null
+      # -- PVC Access Mode for Carves files
       accessMode: ReadWriteMany
+      # -- PVC Storage Class for Carves files
       storageClass: null
+      # -- PVC Storage Request for Carves files
       size: 100Mi
+  
+  # ESP Rsyslogf parameters
   rsyslogf:
+    # -- Set to true to enable the rsyslogf component
     enabled: true
-    image: ghcr.io/gatzjames/esp-rsyslogf:latest
+    # -- Number of replicas to deploy
+    replicas: 1
+    # -- ESP Rsyslogf image
+    image:
+      registry: "ghcr.io"
+      repository: polylogyx/esp-rsyslogf
+      tag: latest
+
+    # -- Specify an imagePullPolicy. Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    # ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     pullPolicy: Always
+    # -- Specify docker-registry secret names
+    pullSecrets: []
+    # -- ESP Rsyslogf service parameters
     service:
       port: 80
       type: ClusterIP
+    # -- ESP Rsyslogf persistence parameters
     persistence:
+      # -- Enable persistence for rsyslogf data
       enabled: true
+      # -- Provide an existing `PersistentVolumeClaim` for rsyslogf data
       existingClaim: null
-      storageClass: null
+      # -- PVC Access Mode for rsyslogf data
       accessMode: ReadWriteMany
+      # -- PVC Storage Class for rsyslogf data
+      storageClass: null
+      # -- PVC Storage Request for rsyslogf data
       size: 500Mi
+
+  # ESP parameters
   esp:
+    # -- Set to true to enable the esp component
     enabled: true
+    # -- Number of replicas to deploy
     replicas: 1
-    image: ghcr.io/gatzjames/esp:latest
+    # -- ESP image
+    image:
+      registry: ghcr.io
+      repository: polylogyx/esp
+      tag: latest
+    # -- Specify an imagePullPolicy. It is suggested to use 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    # ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     pullPolicy: Always
+    # -- Specify docker-registry secret names
+    pullSecrets: []
     resources: {}
+    # -- ESP service parameters
     service:
       port: 80
       type: ClusterIP
+
+  # ESP UI Parameters
   ui:
+    # -- Set to true to enable the ui component
     enabled: true
+    # -- Number of replicas to deploy
     replicas: 1
-    image: ghcr.io/gatzjames/esp-ui:latest
+    # -- ESP UI image
+    image:
+      registry: ghcr.io
+      repository: polylogyx/esp-ui
+      tag: latest
+    # -- Specify an imagePullPolicy. It is suggested to use 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    # ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     pullPolicy: Always
+    # -- Specify docker-registry secret names
+    pullSecrets: []
+    # -- ESP UI service parameters
     service:
       port: 80
       type: ClusterIP
+
+  # ESP Fileserver Parameters
   fileserver:
+    # -- Set to true to enable the fileserver component
     enabled: true
+    # -- Number of replicas to deploy
     replicas: 1
-    image: ghcr.io/gatzjames/esp-fileserver:latest
+    # -- ESP Fileserver image
+    image:
+      registry: ghcr.io
+      repository: polylogyx/esp-fileserver
+      tag: latest
+    # -- Specify an imagePullPolicy. It is suggested to use 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    # ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     pullPolicy: Always
+    # -- Specify docker-registry secret names
+    pullSecrets: []
+
+    # -- ESP Fileserver service parameters
     service:
       port: 80
       type: ClusterIP
+
+  # ESP Ingress Parameters
   ingress:
+    # -- Set to true to enable the ingress
     enabled: true
-    hostname: polylogyx.dev
-    secretName: plgx-tls-secret
-    annotations:
-      kubernetes.io/ingress.class: "nginx"
+    # -- Default host for the ingress 
+    hostname:
+    # -- Ingress annotations
+    annotations: {}
+    # -- Create ingress TLS section
     tls:
       enabled: true
+
+# -- RabbitMQ configuration.
+# @default -- You can find all of the configuration options for [the rabbitmq chart here](https://github.com/bitnami/charts/tree/master/bitnami/rabbitmq)
+rabbitmq:
+  enabled: true
+
+# -- PostgreSQL configuration.
+# @default -- You can find all of the configuration options for [the postgresql chart here](https://github.com/bitnami/charts/tree/master/bitnami/postgresql)
+postgresql:
+  enabled: true

@@ -24,7 +24,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ template "polylogyx.fullname" . }}-fileserver
-          image: {{ .Values.plgx.fileserver.image }}
+          image: {{ template "polylogyx.images.fileserver" . }}
           imagePullPolicy: {{ .Values.plgx.fileserver.pullPolicy | quote }}
           ports:
             - containerPort: 80

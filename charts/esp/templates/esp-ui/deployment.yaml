@@ -24,7 +24,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ template "polylogyx.fullname" . }}-esp-ui
-          image: {{ .Values.plgx.ui.image }}
+          image: {{ template "polylogyx.images.ui" . }}
           imagePullPolicy: {{ .Values.plgx.ui.pullPolicy | quote }}
           ports:
             - containerPort: 5000

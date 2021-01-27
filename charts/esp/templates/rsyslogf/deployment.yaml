@@ -23,7 +23,7 @@ spec:
       {{- end }}
       containers:
       - name: {{ template "polylogyx.fullname" . }}-rsyslogf
-        image: {{ .Values.plgx.rsyslogf.image }}
+        image: {{ template "polylogyx.images.rsyslogf" . }}
         imagePullPolicy: {{ .Values.plgx.rsyslogf.pullPolicy | quote }}
         resources: {{ toYaml .Values.plgx.rsyslogf.resources | nindent 12 }}
         {{- if .Values.plgx.esp.livenessProbe }}

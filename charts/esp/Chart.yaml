@@ -1,11 +1,18 @@
 name: polylogyx-esp
 description: A Helm Chart for deploying the polylogyx endpoint security platform
-version: 0.0.10
+version: 0.0.11
 apiVersion: v2
-keywords:
-  - polylogyx, osquery fleet manager, endpoint security platform
+appVersion: 2.1.0
 sources:
-home:
+home: https://polylogyx.github.io/plgx-esp
+keywords:
+  - polylogyx
+  - osquery
+  - esp
+  - edr
+  - endpoint security platform
+  - osquery fleet manager
+  - eclecticiq
 dependencies:
   - condition: postgresql.enabled
     name: postgresql
