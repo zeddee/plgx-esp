@@ -231,8 +231,8 @@ rabbitmq:
           "rabbit_version": "3.8.0",
           "users": [
             {
-              "name": guest,
-              "password_hash": guest,
+              "name": "guest",
+              "password_hash": "o2MJjT8UKSRM7eoLDMWvm4LxqaFvDxd2wLg1KQQQ2jXfG5UE",
               "hashing_algorithm": "rabbit_password_hashing_sha256",
               "tags": "administrator"
             }
