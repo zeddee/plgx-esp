@@ -7,16 +7,16 @@ ENV LANG C.UTF-8
 
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.8/main" >> /etc/apk/repositories \
   && apk add --update \
-              bash \
-	      wget \
-              build-base \
-              git \
-              libffi-dev \
-              musl \
-              runit \
-              postgresql-client \
-              postgresql-dev \
-              tmux \
+  bash \
+  wget \
+  build-base \
+  git \
+  libffi-dev \
+  musl \
+  runit \
+  postgresql-client \
+  postgresql-dev \
+  tmux \
   && pip install --upgrade pip 
 
 
@@ -36,7 +36,4 @@ COPY ./resources/. /src/plgx-esp-ui/resources/
 
 RUN chmod a+x /src/plgx-esp-ui/docker-entrypoint.sh
 
-
 ENTRYPOINT ["/src/plgx-esp-ui/docker-entrypoint.sh"]
-
-

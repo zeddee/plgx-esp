@@ -22,7 +22,7 @@ spec:
     - name: "80"
       port: 80
       targetPort: 80
-  type: {{ .Values.plgx.fileserver.serviceType | default "ClusterIP" }}
+  type: {{ .Values.plgx.fileserver.serviceType }}
   selector: {{- include "polylogyx.labels.matchLabels" . | nindent 4 }}
-    app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-esp-fileserver
+    app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-fileserver
 {{ end }}

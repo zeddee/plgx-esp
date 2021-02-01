@@ -3,6 +3,7 @@ import {CommonapiService} from './_services/commonapi.service';
 import { first } from 'rxjs/operators';
 import { Chart } from 'chart.js';
 import 'chartjs-plugin-labels';
+import { environment } from "src/environments/environment";
 
 @Component({
   selector: 'app-dashboard',
@@ -433,9 +434,7 @@ var myChart1 = new Chart('bar-chart-top_5_alerted_rules', {
 
 
   downloadFile(e,val){
-    this.currentURL = window.location.href;
-    let toArray = this.currentURL.split(':');
-    this.cpt_down = toArray[0] + ":" + toArray[1] + ":9000/downloads/" + val;
+    this.cpt_down = environment.downloads_url + "/" + val;
     window.open(this.cpt_down);
     }
 

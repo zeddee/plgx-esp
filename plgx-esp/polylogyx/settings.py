@@ -14,7 +14,7 @@ try:
     RABBITMQ_USER = os.environ.get('RABBITMQ_USER')
     RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD')
 
-    credentials = pika.PlainCredentials(RABBITMQ_PASSWORD, RABBITMQ_USER)))
+    credentials = pika.PlainCredentials(RABBITMQ_PASSWORD, RABBITMQ_USER)
 except Exception as e:
     print(e)
  
