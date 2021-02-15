@@ -14,7 +14,49 @@ spec:
       paths:
       # esp paths
       {{ if .Values.plgx.esp.enabled }}
-      - path: /esp(/|$)(.*)
+      - path: /config
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ template "polylogyx.fullname" . }}-esp
+            port: 
+              number: 6000
+      - path: /enroll
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ template "polylogyx.fullname" . }}-esp
+            port: 
+              number: 6000
+      - path: /distributed/write
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ template "polylogyx.fullname" . }}-esp
+            port: 
+              number: 6000
+      - path: /distributed/read
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ template "polylogyx.fullname" . }}-esp
+            port: 
+              number: 6000
+      - path: /log
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ template "polylogyx.fullname" . }}-esp
+            port: 
+              number: 6000
+      - path: /start_uploads
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ template "polylogyx.fullname" . }}-esp
+            port: 
+              number: 6000
+      - path: /upload_blocks
         pathType: Prefix
         backend:
           service:
