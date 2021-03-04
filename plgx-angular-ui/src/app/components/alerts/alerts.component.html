@@ -46,16 +46,21 @@
       <!-- begin:: Content -->
       <div class="kt-portlet kt-portlet--mobile kt-portlet--responsive-mobile">
         <div class="kt-portlet__head kt-portlet__head--lg">
-          <div class="kt-portlet__head-label">
+          <!-- <div class="kt-portlet__head-label">
         <span class="kt-portlet__head-icon">
           <i class="kt-font-brand fas fa-exclamation-triangle"></i>
         </span>
             <h3 class="kt-portlet__head-title">
               Alerts Table
             </h3>
-          </div>
+          </div> -->
+
           <div class="kt-portlet__head-toolbar">
             <div class="kt-portlet__head-wrapper">
+              <span class="kt-portlet__head-icon">
+                <i class="kt-font-brand fas fa-exclamation-triangle"></i>
+              </span>
+              <label class="alert-title">Total Alerts for last {{purge_data_duration}} Days:</label>
               <ul class="nav nav-pills nav-pills-sm nav-pills-label nav-pills-bold" role="tablist">
 
                 <button style="display: none" id="hidden_button"></button>
@@ -122,14 +127,14 @@
           <!--begin: Datatable -->
           <div id="div_{{ alert_source.name}}" class="alert_source_div"
                style="display: none;padding: 25px;">
-                      <!-- begin:: datepicker -->   
+                      <!-- begin:: datepicker -->
                       <div class="row " style="padding-bottom: 2%;">
                         <h4 class="center" style="margin-top: auto;margin-left:10px;margin-bottom: auto;" ><i class="fa fa-filter" ></i> Alerts : </h4>
                         <div  style="display:none" class="col-sm-2">
                           <select value="2" class="form-control" (change)="update_duration(alert_source.name)" id="type_{{alert_source.name}}">
                             <option value="1" >starting</option>
                             <option value="2" selected="selected">ending</option>
-      
+
                           </select>
                         </div>
                         <div class="col-sm-2">
@@ -142,7 +147,7 @@
                         <div class=" col-sm-4" >
                           <div class="row">
                             <span style="margin-top:auto;margin-bottom:auto;margin-right:10px;" >ending(UTC)</span>
-      
+
                             <ng-datepicker   [ngModelOptions]="{standalone: true}" [(ngModel)]="datepicker_date[alert_source.name]" (ngModelChange)="myHandler(alert_source.name)" ></ng-datepicker>
                           </div>
                         </div>
@@ -244,8 +249,8 @@
               </tbody>
             </table>
 
-            <div *ngIf="this.errorMessage[alert_source.name] !=''">
-              <span style=" text-align: center; padding-left: 300px;font-size: larger;font-weight: 600;">
+            <div *ngIf="this.errorMessage[alert_source.name] !=''" class="text-center">
+              <span style=" text-align: center;font-size: larger;font-weight: 600;">
               {{errorMessage[alert_source.name]}}
             </span>
             </div>
@@ -269,7 +274,12 @@
                   <div class="card-body query_tab">
                         <div  class="tab-content">
                             <div class="" >
-                                    <ul  class="nav nav-pills nav-fill nav-background" role="tablist">
+                                    <ul  class="nav nav-pills nav-fill nav-background nav-wd" role="tablist" *ngIf="aggregate_tab.length <= 1">
+                                      <li *ngFor="let aggregated_data_values of aggregated_data | keyvalue;" class="nav-item">
+                                        <a class="nav-link" data-toggle="tab" (click)="alerts_aggregated_data(aggregated_data_values.key)"[ngClass]="{'active': alert_selectedItem == aggregated_data_values.key}" style="cursor: pointer;">{{ aggregated_data_values.key}}</a>
+                                      </li>
+                                    </ul>
+                                    <ul  class="nav nav-pills nav-fill nav-background" role="tablist" *ngIf="aggregate_tab.length > 1">
                                       <li *ngFor="let aggregated_data_values of aggregated_data | keyvalue;" class="nav-item">
                                         <a class="nav-link" data-toggle="tab" (click)="alerts_aggregated_data(aggregated_data_values.key)"[ngClass]="{'active': alert_selectedItem == aggregated_data_values.key}" style="cursor: pointer;">{{ aggregated_data_values.key}}</a>
                                       </li>
@@ -293,5 +303,3 @@
     </div>
   </div>
 </div>
-
-

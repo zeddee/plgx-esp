@@ -31,7 +31,7 @@ def _make_context():
 class SSLServer(Command):
     def run(self, *args, **kwargs):
         ssl_context = ('../nginx/certificate.crt', '../nginx/private.key')
-        app.run(debug=True, use_debugger=True, use_reloader=False, passthrough_errors=True,host='0.0.0.0',port=1000,ssl_context=ssl_context, *args, **kwargs)
+        app.run(debug=True, use_debugger=True, use_reloader=False, passthrough_errors=True,host='0.0.0.0',port=9000,ssl_context=ssl_context, *args, **kwargs)
 
 
 manager = Manager(app)
@@ -60,24 +60,6 @@ class test(Command):
 
         exit_code = pytest.main(test_args)
         return exit_code
-
-
-@manager.command
-def extract_ddl(specs_dir):
-    """Extracts CREATE TABLE statements from osquery's table specifications"""
-    from polylogyx.extract_ddl import extract_schema
-
-    spec_files = []
-    spec_files.extend(glob.glob(join(specs_dir, '*.table')))
-    spec_files.extend(glob.glob(join(specs_dir, '**', '*.table')))
-
-    ddl = sorted([extract_schema(f) for f in spec_files], key=lambda x: x.split()[2])
-
-    opath = join(dirname(__file__), 'polylogyx', 'resources', 'osquery_schema.sql')
-    with open(opath, 'w') as f:
-        f.write('-- This file is generated using "python manage.py extract_ddl"'
-                '- do not edit manually\n')
-        f.write('\n'.join(ddl))
 
 
 @manager.option('--filepath')
@@ -397,6 +379,70 @@ def add_release_versions(filepath):
                 agent_version_history.update(agent_version_history)
             else:
                 ReleasedAgentVersions.create(platform=platform, platform_release=release_version, extension_version=platform_dict['extension_version'], extension_hash_md5=platform_dict['extension_hash'])
+
+
+@manager.option('--specs_dir')
+@manager.option('--export_type', default='sql', choices=['sql', 'json'])
+def extract_ddl(specs_dir, export_type):
+    """
+    Extracts CREATE TABLE statements or JSON Array of schema from osquery's table specifications
+
+    python manage.py extract_ddl --specs_dir /Users/polylogyx/osquery/specs --export_type sql  ----> to export to osquery_schema.sql file
+    python manage.py extract_ddl --specs_dir /Users/polylogyx/osquery/specs --export_type json  ----> to export to osquery_schema.json file
+    """
+    from polylogyx.extract_ddl import extract_schema, extract_schema_json
+
+    spec_files = []
+    spec_files.extend(glob.glob(join(specs_dir, '*.table')))
+    spec_files.extend(glob.glob(join(specs_dir, '**', '*.table')))
+    if export_type == 'sql':
+        ddl = sorted([extract_schema(f) for f in spec_files], key=lambda x: x.split()[2])
+        opath = join(dirname(__file__), 'polylogyx', 'resources', 'osquery_schema.sql')
+        content = '\n'.join(ddl)
+    elif export_type == 'json':
+        full_schema = []
+        for f in spec_files:
+            table_dict = extract_schema_json(f)
+            if table_dict['platform']:
+                full_schema.append(table_dict)
+        opath = join(dirname(__file__), 'polylogyx', 'resources', 'osquery_schema.json')
+        content = json.dumps(full_schema)
+    else:
+        print("Export type given is invalid!")
+        opath = None
+        content = None
+
+    with open(opath, 'w') as f:
+        if export_type == 'sql':
+            f.write('-- This file is generated using "python manage.py extract_ddl"'
+                    '- do not edit manually\n')
+        f.write(content)
+    app.logger.info('Osquery Schema is exported to the file {} successfully'.format(opath))
+
+
+@manager.option('--file_path', default='polylogyx/resources/osquery_schema.json')
+def update_osquery_schema(file_path):
+    from polylogyx.models import OsquerySchema
+    try:
+        f = open(file_path, "r")
+    except FileNotFoundError:
+        print("File is not present for the path given!")
+        exit(0)
+    except Exception as e:
+        print(str(e))
+        exit(0)
+
+    file_content = f.read()
+    schema_json = json.loads(file_content)
+    for table_dict in schema_json:
+        table = OsquerySchema.query.filter(OsquerySchema.name == table_dict['name']).first()
+        if table:
+            table.update(schema=table_dict['schema'], description=table_dict['description'], platform=table_dict['platform'])
+        else:
+            if not table_dict['platform'] == ['freebsd'] and not table_dict['platform'] == ['posix']:
+                OsquerySchema.create(name=table_dict['name'], schema=table_dict['schema'], description=table_dict['description'], platform=table_dict['platform'])
+    app.logger.info('Osquery Schema is updated to postgres through the file input {} successfully'.format(file_path))
+    exit(0)
 
 
 if __name__ == '__main__':

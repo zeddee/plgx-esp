@@ -311,7 +311,10 @@ class IndicatorsUpload(Resource):
         start = args['start']
         limit = args['limit']
 
-        start_date, end_date = get_start_dat_end_date(args)
+        try:
+            start_date, end_date = get_start_dat_end_date(args)
+        except:
+            return abort(400, {'message': 'Date format passed is invalid!'})
 
         try:
             lines = [line.decode('utf-8').replace('\n', '').replace('\r', '') for line in file.readlines()]
@@ -366,7 +369,10 @@ class ExportIndicatorsUpload(Resource):
         query_name = args['query_name']
         host_identifier = args['host_identifier']
         nodes = get_nodes_for_host_id(host_identifier)
-        start_date, end_date = get_start_dat_end_date(args)
+        try:
+            start_date, end_date = get_start_dat_end_date(args)
+        except:
+            return abort(400, {'message': 'Date format passed is invalid!'})
         try:
             lines = [line.decode('utf-8').replace('\n', '').replace('\r', '') for line in file.readlines()]
         except Exception as e:
@@ -429,7 +435,10 @@ class ActivitySearch(Resource):
 
         status = "failure"
 
-        start_date, end_date = get_start_dat_end_date(args)
+        try:
+            start_date, end_date = get_start_dat_end_date(args)
+        except:
+            return abort(400, {'message': 'Date format passed is invalid!'})
 
         try:
             search_rules = SearchParser()

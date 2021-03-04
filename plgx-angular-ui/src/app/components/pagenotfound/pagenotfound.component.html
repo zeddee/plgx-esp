@@ -1,7 +1,19 @@
-<div class="kt-grid kt-grid--hor kt-grid--root">
-    <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--ver kt-page">
-        <div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--hor kt-wrapper" id="kt_wrapper">
-                <p style="text-align: center;padding-top: 229px;font-size: 52pt;">Page Not Found</p>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="error-template">
+                <h1>
+                    Oops!</h1>
+                <h2>
+                    Page Not Found</h2>
+                <!-- <div class="error-details">
+                    Sorry, an error has occured, Requested page not found!
+                </div> -->
+                <div class="error-actions">
+                    <a [routerLink]="['/manage']" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-home"></span>
+                        Take Me Dashboard </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>

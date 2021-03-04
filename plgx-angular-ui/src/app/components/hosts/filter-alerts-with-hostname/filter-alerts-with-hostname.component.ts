@@ -36,6 +36,7 @@ class DataTablesResponse {
 export class FilterAlertsWithHostnameComponent implements AfterViewInit, OnDestroy, OnInit {
   @ViewChild(JsonEditorComponent, {static: true}) editor: JsonEditorComponent;
   public editorOptions: JsonEditorOptions;
+  id:any;
   alertSource: any;
   virusTotalCount: number;
   alert_data:any;
@@ -62,12 +63,14 @@ export class FilterAlertsWithHostnameComponent implements AfterViewInit, OnDestr
   datepicker_date = {};
   filter_alerts_with_Hostname:any;
   hostname:any;
+  hostdetail:any;
+  purge_data_duration:any;
   constructor(
     private commonapi: CommonapiService,
     private http: HttpClient,
     private _Activatedroute: ActivatedRoute,
+    private router: Router,
     private columndefs: Datatablecolumndefs,
-
   ) {
 
   }
@@ -75,53 +78,79 @@ export class FilterAlertsWithHostnameComponent implements AfterViewInit, OnDestr
   toggle: boolean = false;
 
   ngOnInit() {
-    $.fn.dataTable.ext.errMode = 'none';
-    this._Activatedroute.params.subscribe(params => {
-      this.activeAlerts = this._Activatedroute.snapshot.queryParams["id"];
-      this.filter_alerts_with_Hostname=localStorage.getItem('hostidentifier')
-       this.hostname=localStorage.getItem('Hostname')
-      window.history.pushState("object or string", "Title",window.location.href.substring(window.location.href.indexOf('/hosts/')).split("?")[0]);
-    });
+    this.get_Platform_settings();
+    this._Activatedroute.paramMap.subscribe(params => {
+        this.id = params.get('id');
+        console.log(this.id)
+        this.commonapi.host_name_api(this.id).subscribe(res => {
+           this.hostdetail = res;
+           if(this.hostdetail.status == "failure"){
+             this.pagenotfound();
+           }
+           else{
+           this.filter_alerts_with_Hostname = this.hostdetail.data.host_identifier;
+           if (this.hostdetail.data.id == this.id) {
+             this.hostname = this.hostdetail.data.node_info.computer_name;
+           }
+         }
+         });
+      })
 
-    $('#hidden_button').bind('click', (event, source) => {
+      this._Activatedroute.params.subscribe(params => {
+        this.activeAlerts = this._Activatedroute.snapshot.queryParams["id"];
+        // this.filter_alerts_with_Hostname=localStorage.getItem('hostidentifier')
+        // this.hostname=localStorage.getItem('Hostname')
+        window.history.pushState("object or string", "Title",window.location.href.substring(window.location.href.indexOf('/hosts/')).split("?")[0]);
+      });
+
+    $('#hidden_button').bind('click', (event, source, event_ids) => {
       this.toggleDisplay(source);
     });
-    // this.getDate()
-    this.commonapi.alerts_source_count_api_Host_identifier(this.filter_alerts_with_Hostname).subscribe((res: any) => {
-      var alerttype = ['rule', 'virustotal','ioc', 'alienvault', 'ibmxforce']
-      var sort_alert_type = []
-      for (const name in alerttype) {
-        for (const alert in res.data.alert_source) {
+    this._Activatedroute.paramMap.subscribe(params => {
+      this.id=params.get('id')
+    })
+    this.commonapi.host_name_api(this.id).subscribe(res => {
+      this.filter_alerts_with_Hostname=res['data'].host_identifier
+      this.hostname=res['data'].node_info.computer_name
+      this.get_alerts_source_count(this.filter_alerts_with_Hostname)
+    })
+  }
+  get_alerts_source_count(host_identifier){
+  this.commonapi.alerts_source_count_api_Host_identifier(host_identifier).subscribe((res: any) => {
+    var alerttype = ['rule', 'virustotal','ioc', 'alienvault', 'ibmxforce']
+    var sort_alert_type = []
+    for (const name in alerttype) {
+      for (const alert in res.data.alert_source) {
 
-          if (alerttype[name] == res.data.alert_source[alert].name) {
-            sort_alert_type.push(res.data.alert_source[alert]);
-          }
+        if (alerttype[name] == res.data.alert_source[alert].name) {
+          sort_alert_type.push(res.data.alert_source[alert]);
         }
       }
+    }
+    this.alertSource = sort_alert_type;
+    var active_souce=this.alertSource[0].name;
+    if (this.activeAlerts != null && this.activeAlerts != '' && this.activeAlerts != undefined &&  this.alertSource.find(x => x.name == this.activeAlerts)!=undefined) {
+      active_souce = this.alertSource.find(x => x.name == this.activeAlerts).name;
+    }
+    if (this.alertSource.length > 0) {
 
-      this.alertSource = sort_alert_type;
-      var active_souce=this.alertSource[0].name;
-      if (this.activeAlerts != null && this.activeAlerts != '' && this.activeAlerts != undefined &&  this.alertSource.find(x => x.name == this.activeAlerts)!=undefined) {
-        active_souce = this.alertSource.find(x => x.name == this.activeAlerts).name;
-      }
-      if (this.alertSource.length > 0) {
-        for (let i = 0; i < this.alertSource.length; i++) {
 
-          if (this.alertSource[i].name == "virustotal") {
-            this.virusTotalCount = this.alertSource[i].count;
-          }
-          if (this.alertSource[i].name == "ibmxforce") {
-            this.IBMForceTotalCount = this.alertSource[i].count;
-          }
-          if (this.alertSource[i].name == "alienvault") {
-            this.AlientTotalVault = this.alertSource[i].count;
-          }
-          if (this.alertSource[i].name == "ioc") {
-            this.IOCTotalCount = this.alertSource[i].count;
-          }
-          if (this.alertSource[i].name == "rule") {
-            this.RuleTotalCount = this.alertSource[i].count;
-          }
+      for (let i = 0; i < this.alertSource.length; i++) {
+
+        if (this.alertSource[i].name == "virustotal") {
+          this.virusTotalCount = this.alertSource[i].count;
+        }
+        if (this.alertSource[i].name == "ibmxforce") {
+          this.IBMForceTotalCount = this.alertSource[i].count;
+        }
+        if (this.alertSource[i].name == "alienvault") {
+          this.AlientTotalVault = this.alertSource[i].count;
+        }
+        if (this.alertSource[i].name == "ioc") {
+          this.IOCTotalCount = this.alertSource[i].count;
+        }
+        if (this.alertSource[i].name == "rule") {
+          this.RuleTotalCount = this.alertSource[i].count;
         }
       }
       for (let i = 0; i < this.alertSource.length; i++) {
@@ -135,8 +164,16 @@ export class FilterAlertsWithHostnameComponent implements AfterViewInit, OnDestr
         this.show_hide_div(active_souce);
 
       }, 300);
+    }
     })
 
+    //   this.show_hide_div(active_souce);
+    //   this.getTimelineData(active_souce,undefined,undefined);
+    // }, 300);
+  }
+
+  pagenotfound() {
+    this.router.navigate(['/pagenotfound']);
   }
 
   get_options(source) {
@@ -159,8 +196,12 @@ export class FilterAlertsWithHostnameComponent implements AfterViewInit, OnDestr
         }
       ],
       "language": {
-        "search": "Search: "
+        "search": "Search: ",
+        "sInfoFiltered": "",
       },
+      // "oLanguage": {
+      //          "sInfoFiltered": "",
+      //  },
       ajax: (dataTablesParameters: any, callback) => {
         var body = dataTablesParameters;
         body['limit'] = body['length'];
@@ -231,7 +272,17 @@ export class FilterAlertsWithHostnameComponent implements AfterViewInit, OnDestr
           } else {
 
             if (!searching) {
-              this.errorMessage[source] = "No Data Found";
+              if((source == "virustotal" && this.virusTotalCount > 0 )
+                 || (source == "ibmxforce" && this.IBMForceTotalCount > 0 )
+                 || (source == "alienvault" && this.AlientTotalVault > 0 )
+                 || (source == "ioc" && this.IOCTotalCount > 0 )
+                 || (source == "rule" && this.RuleTotalCount > 0 )
+                ){
+                this.errorMessage[source] = "No alerts found for the selected duration";
+              }
+              else{
+                this.errorMessage[source] = "No alerts found";
+              }
 
               $('#'+source+'_table_paginate').hide();
               $('#'+source+'_table_info').hide();
@@ -377,7 +428,11 @@ export class FilterAlertsWithHostnameComponent implements AfterViewInit, OnDestr
   toggleDisplay(source) {
     this.fetched[source] = true;
     this.dtTrigger[source].next();
-    }
+
+  }
+
+
+
     show_hide_div(name: any) {
       $('.nav-link-active').removeClass("active");
       $('#' + name).addClass("active");
@@ -411,7 +466,10 @@ export class FilterAlertsWithHostnameComponent implements AfterViewInit, OnDestr
 
     /*  Export csv file for all the alert type*/
   exportAlerts(source){
-    var payloadDict = {"source": source, "duration": $('#duration_' + "rule").val(), "type": $('#type_' + "rule").val(), "date": this.datepicker_date[source], "host_identifier": this.filter_alerts_with_Hostname}
+    var payloadDict = {"source": source, "duration": $('#duration_' + source).val(), "type": $('#type_' + source).val(), "date":this.convertDate(this.datepicker_date[source]), "host_identifier": this.filter_alerts_with_Hostname}
+    // if (this.events_ids.length > 0) {
+    //   payloadDict['event_ids'] =this.events_ids;
+    // }
     var alert_name = JSON.stringify(payloadDict);
     var token_val = localStorage.getItem('JWTkey');
     var today = new Date();
@@ -558,9 +616,15 @@ alerts_aggregated_data(key){
       var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
       if(this.dtTrigger[source] == undefined) {
         this.dtTrigger[source] = new Subject<any>();
-        this.datepicker_date[source]=date;
+        this.datepicker_date[source]=today;
       }
       this.all_options[source] = this.get_options(source);
     }
   // End datepicker
+get_Platform_settings(){
+  this.commonapi.getConfigurationSettings().subscribe(res => {
+    this.purge_data_duration=res.data.purge_data_duration;
+  });
+}
+
 }

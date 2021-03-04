@@ -179,20 +179,13 @@ def validate_ip(s):
     return True
 
 
-def node_is_active(node):
-    checkin_interval = current_app.config['POLYLOGYX_CHECKIN_INTERVAL']
-    if isinstance(checkin_interval, (int, float)):
-        checkin_interval = dt.timedelta(seconds=checkin_interval)
-    if (dt.datetime.utcnow() - node.last_checkin) < checkin_interval:
-        return True
-    return False
-
 def save_or_update_setting(setting, v, k):
     if setting:
         setting.setting = v
         setting.update(setting)
     else:
         Settings.create(name=k, setting=v)
+
 
 def save_email_recipients(emails):
     emailListStr = None

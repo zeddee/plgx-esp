@@ -62,7 +62,8 @@ export class Datatablecolumndefs {
       column_defs.push({
         render: function (data, type, full, meta) {
           if (type === 'display') {
-            return '<div class="text-wrap width">' + '<a target="_blank" href="http://' + data + '" style="color:blue"  >' + data + "</a>" + "</div>";
+            // return '<div class="text-wrap width">' + '<a target="_blank" href="http://' + data + '" style="color:blue"  >' + data + "</a>" + "</div>";
+            return '<div class="text-wrap width">' + '<a target="_blank" href="https://www.virustotal.com/gui/domain/' + data + '/detection" style="color:blue"  >' + data + "</a>" + "</div>"
           }
         }, targets: column_postition_url
       })

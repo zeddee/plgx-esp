@@ -468,11 +468,13 @@ def push_live_query_results_to_websocket(results, queryId):
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         host=RABBITMQ_HOST, credentials=credentials))
     channel = connection.channel()
+    channel.confirm_delivery()   # confirms True/False about the message delivery
     query_string = "live_query_" + queryId
     try:
-        channel.basic_publish(exchange=query_string,
-                              routing_key=query_string,
-                              body=json.dumps(results))
+        if channel.basic_publish(exchange=query_string, routing_key=query_string, body=json.dumps(results)):
+            current_app.logger.info("Query Results for query id {} were published successfully".format(queryId))
+        else:
+            current_app.logger.info("Failure in publishing Query Results for query id {}".format(queryId))
     except Exception as e:
         current_app.logger.error(e)
     connection.close()

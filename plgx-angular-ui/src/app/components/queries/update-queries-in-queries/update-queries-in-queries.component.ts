@@ -313,7 +313,10 @@ this.id = params.get('id');
 
 let additional_config =this.commonapi.update_queries_api(this.id).subscribe(res =>{
 this.queriesdata=res;
-
+if(this.queriesdata.status == "failure"){
+  this.pagenotfound();
+}
+else{
 var test = this.sample_data.push(res);
 if(this.queriesdata.data.platform==null){
   this.queriesdata.data.platform="all"
@@ -327,6 +330,7 @@ this.ExistingQueryObj.packs=this.queriesdata.data.packs;
 // this.query_data = this.query_response_data.data.sql;
 
 // LivequeryFunction();
+}
 })
 });
 // LivequeryFunction();
@@ -466,6 +470,9 @@ onDeSelectAll(items: any){
 resetForm() {
   this.ngOnInit()
 
+ }
+ pagenotfound() {
+     this.router.navigate(['/pagenotfound']);
  }
 
 

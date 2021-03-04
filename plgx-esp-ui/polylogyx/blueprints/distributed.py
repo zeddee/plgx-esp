@@ -31,6 +31,8 @@ class DistributedQueryClass(Resource):
 
     @ns.expect(parser)
     def post(self, node=None):
+        from manage import declare_queue
+
         args = self.parser.parse_args()  # need to exists for input payload validation
         onlineNodes = 0
 
@@ -77,7 +79,7 @@ class DistributedQueryClass(Resource):
                 win_sql_query = query.sql.replace('process_events', 'win_process_events')
 
             for node in nodes:
-                if node_is_active(node):
+                if node.node_is_active():
                     onlineNodes += 1
                     task = dao.create_distributed_task_obj(node, query)
                     if node.platform == 'windows':
@@ -86,7 +88,7 @@ class DistributedQueryClass(Resource):
                         db.session.add(task)
             else:
                 db.session.commit()
-
+            declare_queue(query.id)
             if onlineNodes == 0:
                 message = 'No active node present'
             else:

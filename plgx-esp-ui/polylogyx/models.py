@@ -171,7 +171,8 @@ class Query(SurrogatePK, Model):
             'removed': self.removed,
             'shard': self.shard,
             'snapshot': self.snapshot,
-            'tags': [r.to_dict() for r in self.tags]
+            'tags': [r.to_dict() for r in self.tags],
+            'packs': [pack.name for pack in self.packs]
         }
 
 
@@ -283,15 +284,15 @@ class Config(SurrogatePK,Model):
     type = Column(db.Integer, default=TYPE_DEFAULT)
     created_at = Column(db.DateTime, nullable=False,default=dt.datetime.utcnow)
     updated_at = Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
-    is_active=Column(db.Boolean, default=True, nullable=False)
+    is_active = Column(db.Boolean, default=True, nullable=False)
 
     def __init__(self, platform,  arch=ARCH_x64,type=None,updated_at=dt.datetime.utcnow,is_active=False, **kwargs):
         self.platform = platform
         self.updated_at = updated_at
         self.updated_at = dt.datetime.utcnow()
         self.arch = arch
-        self.type=type
-        self.is_active=is_active
+        self.type = type
+        self.is_active = is_active
 
 
 class Pack(SurrogatePK, Model):
@@ -458,12 +459,13 @@ class Node(SurrogatePK, Model):
         return assemble_distributed_queries(self)
 
     def node_is_active(self):
+        if self.is_active:
+            return True
         checkin_interval = current_app.config['POLYLOGYX_CHECKIN_INTERVAL']
         if isinstance(checkin_interval, (int, float)):
             checkin_interval = dt.timedelta(seconds=checkin_interval)
-        if self.last_checkin:
-            if (dt.datetime.utcnow() - self.last_checkin) < checkin_interval:
-                return True
+        if self.last_checkin and dt.datetime.utcnow() - self.last_checkin < checkin_interval:
+            return True
         return False
 
     @property
@@ -993,6 +995,22 @@ class User(UserMixin, SurrogatePK, Model):
             return None  # invalid token
         user = User.query.get(data['id'])
         return user
+
+    @staticmethod
+    def is_auth_token_exists(token):
+        """
+        Method to checks for auth token existency in the db(Could be expired/active)
+        """
+        if not token:
+            return
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+            return True
+        except SignatureExpired:
+            return True
+        except:
+            return
 
 
 class Alerts(SurrogatePK, Model):

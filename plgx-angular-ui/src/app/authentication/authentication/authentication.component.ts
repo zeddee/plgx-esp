@@ -18,7 +18,7 @@ export class AuthenticationComponent implements OnInit, OnDestroy {
 	ngOnInit() {
 		this.router.events;
     }
-    
+
     ngOnDestroy() {
         this.ngUnsubscribe.next();
         this.ngUnsubscribe.complete();

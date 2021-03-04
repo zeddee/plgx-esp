@@ -95,7 +95,7 @@
                 {{subhostdata.key}}
                 {{":"}}
 
-                <a onclick="window.open(this.href,'_blank');return false;"  target="_blank" href="http://{{subhostdata.value}}" >{{subhostdata.value}}</a>
+                <a onclick="window.open(this.href,'_blank');return false;" target="_blank" href="https://www.virustotal.com/gui/domain/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
                 </dl>
 
                 <!--md5-->
@@ -104,7 +104,7 @@
                 {{subhostdata.key}}
                 {{":"}}
 
-                <a onclick="window.open(this.href,'_blank');return false;"  target="_blank"  href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
+                <a onclick="window.open(this.href,'_blank');return false;" target="_blank"  href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
                 </dl>
 
                 <!--domain_name-->
@@ -113,7 +113,7 @@
                 {{subhostdata.key}}
                 {{":"}}
 
-                <a onclick="window.open(this.href,'_blank');return false;"  href="https://www.virustotal.com/#/domain/{{subhostdata.value}}" >{{subhostdata.value}}</a>
+                <a onclick="window.open(this.href,'_blank');return false;" href="https://www.virustotal.com/#/domain/{{subhostdata.value}}" >{{subhostdata.value}}</a>
                 </dl>
 
                 <!--sha1-->
@@ -122,7 +122,7 @@
                 {{subhostdata.key}}
                 {{":"}}
 
-                <a onclick="window.open(this.href,'_blank');return false;"  href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
+                <a onclick="window.open(this.href,'_blank');return false;" href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
                 </dl>
 
                 <!--sha256-->
@@ -131,7 +131,7 @@
                 {{subhostdata.key}}
                 {{":"}}
 
-                <a onclick="window.open(this.href,'_blank');return false;"  href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
+                <a onclick="window.open(this.href,'_blank');return false;" href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
                 </dl>
 
                   <dl *ngIf="!(subhostdata.key=='url') && !(subhostdata.key=='md5') && !(subhostdata.key=='domain_name') && !(subhostdata.key=='sha1') && !(subhostdata.key=='sha256')" style="word-break: break-word;padding-left: 40px;" >

@@ -97,20 +97,24 @@ export class TaggedComponent implements OnInit {
     this.commonapi.tagged_api(qrytags_val).subscribe((res: any) => {
       this.tagged = res;
       this.first_pack = res;
+      if(this.tagged.status == "failure"){
+        this.pagenotfound();
+      }
+      else{
       this.host_data_val = this.tagged.data.hosts;
       this.pack_data_val = this.tagged.data.packs;
       this.query_data_val = this.tagged.data.queries;
-      
+
         if (this.tagged.data.queries.length > 0) {
-          this.getfirst_data() 
+          this.getfirst_data()
         }
-    
+
       if (this.tagged.data.packs.length > 0) {
         this.getfirstpack_data()
       }
-     
+     }
     });
-    
+
   }
 
   hosts_addTag(tags, node_id) {
@@ -151,6 +155,9 @@ export class TaggedComponent implements OnInit {
 
   runAdHoc(queryId) {
     this.router.navigate(["/live-queries/", queryId]);
+  }
+  pagenotfound() {
+      this.router.navigate(['/pagenotfound']);
   }
 
 }

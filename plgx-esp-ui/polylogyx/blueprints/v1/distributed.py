@@ -20,6 +20,8 @@ class DistributedQueryClass(Resource):
 
     @ns.expect(parser)
     def post(self, node=None):
+        from manage import declare_queue
+
         args = self.parser.parse_args()  # need to exists for input payload validation
         onlineNodes = 0
         hosts_array = []
@@ -56,13 +58,14 @@ class DistributedQueryClass(Resource):
 
             if nodes:
                 for node in nodes:
-                    if node_is_active(node):
+                    if node.node_is_active():
                         onlineNodes += 1
                         hosts_array.append({"host_identifier": node.host_identifier, "hostname": node.display_name, "node_id": node.id})
                         task = dao.create_distributed_task_obj(node, query)
                         db.session.add(task)
                 else:
                     db.session.commit()
+            declare_queue(query.id)
             if onlineNodes == 0:
                 message = 'No active node present'
             else:

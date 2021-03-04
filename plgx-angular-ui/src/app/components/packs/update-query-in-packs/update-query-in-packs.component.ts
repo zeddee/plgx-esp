@@ -312,12 +312,17 @@ constructor(
       this.id = params.get('id');
       let additional_config =this.commonapi.update_queries_api(this.id).subscribe(res =>{
         this.queriesdata=res;
-        var test = this.sample_data.push(res);
-        this.queriesdata_data=this.queriesdata.data;
-        this.queriesdata_name=this.queriesdata.data.name
-        this.query_data = this.queriesdata_data.sql;
-        this.editor.mode = 'javascript';
-          this.editor.value = this.queriesdata_data.sql;
+        if(this.queriesdata.status == "failure"){
+          this.pagenotfound();
+        }
+        else{
+         var test = this.sample_data.push(res);
+         this.queriesdata_data=this.queriesdata.data;
+         this.queriesdata_name=this.queriesdata.data.name
+         this.query_data = this.queriesdata_data.sql;
+         this.editor.mode = 'javascript';
+         this.editor.value = this.queriesdata_data.sql;
+        }
         // LivequeryFunction();
         // this.dropdownPacknameSettings = {
         //   singleSelection: false,
@@ -463,6 +468,9 @@ onSelectAll(items: any){
 }
 onDeSelectAll(items: any){
   console.log(items);
+}
+pagenotfound() {
+    this.router.navigate(['/pagenotfound']);
 }
 
 }

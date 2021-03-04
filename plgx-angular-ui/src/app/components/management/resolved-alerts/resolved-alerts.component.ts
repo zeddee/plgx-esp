@@ -5,6 +5,7 @@ import {HttpClient, HttpResponse} from '@angular/common/http';
 import {CommonapiService} from '../../../dashboard/_services/commonapi.service';
 import { CommonVariableService } from '../../../dashboard/_services/commonvariable.service';
 import {JsonEditorComponent, JsonEditorOptions} from 'ang-jsoneditor';
+import {Datatablecolumndefs} from '../../../dashboard/_helpers/datatable-columndefs';
 import {environment} from '../../../../environments/environment';
 import { Title } from '@angular/platform-browser';
 import swal from 'sweetalert'
@@ -49,17 +50,19 @@ export class ResolvedAlertsComponent implements AfterViewInit, OnDestroy, OnInit
   fetched = {};
   aggregated_data:any={};
   alert_selectedItem:any;
-
+  aggregate_tab=[];
   constructor(
     private commonapi: CommonapiService,
     private commonvariable: CommonVariableService,
     private http: HttpClient,
     private titleService: Title,
+    private columndefs:Datatablecolumndefs,
   ) {
 
   }
   toggle: boolean = false;
   ngOnInit() {
+    $.fn.dataTable.ext.errMode = 'none';
     this.titleService.setTitle(this.commonvariable.APP_NAME+"-"+"Resolved Alerts");
     this.commonapi.alerts_source_count_api_resolved().subscribe((res: any) => {
       var alerttype = ['rule', 'virustotal','ioc', 'alienvault', 'ibmxforce']
@@ -179,7 +182,17 @@ export class ResolvedAlertsComponent implements AfterViewInit, OnDestroy, OnInit
           } else {
 
             if (!searching) {
-              this.errorMessage[source] = "No Data Found";
+              if((source == "virustotal" && this.virusTotalCount > 0 )
+                 || (source == "ibmxforce" && this.IBMForceTotalCount > 0 )
+                 || (source == "alienvault" && this.AlientTotalVault > 0 )
+                 || (source == "ioc" && this.IOCTotalCount > 0 )
+                 || (source == "rule" && this.RuleTotalCount > 0 )
+                ){
+                this.errorMessage[source] = "No alerts found for the selected duration";
+              }
+              else{
+                this.errorMessage[source] = "No alerts found";
+              }
 
               $('#'+source+'_table_paginate').hide();
               $('#'+source+'_table_info').hide();
@@ -287,7 +300,7 @@ getAlertData(source) {
     })
   }
 
-  unresolvedAllSelected(source){ 
+  unresolvedAllSelected(source){
    let unresolve_alets_data={}
    unresolve_alets_data["resolve"]=false
    unresolve_alets_data['alert_ids']=this.checkedList[source]
@@ -342,13 +355,15 @@ getAlertData(source) {
         this.toggleDisplay(name);
       }
     }
-    // Start Aggregated alerts 
-get_alerts_aggregated_data(id){  
+    // Start Aggregated alerts
+get_alerts_aggregated_data(id){
   this.aggregated_data={}
+  this.aggregate_tab = [];
   this.commonapi.get_alerts_aggregated_data(id).subscribe((res: any) => {
    for(const i in res.data){
      if (!this.aggregated_data.hasOwnProperty(res.data[i].name)){
-      this.aggregated_data[res.data[i].name]=[]      
+      this.aggregated_data[res.data[i].name]=[]
+      this.aggregate_tab.push(res.data[i].name)
        }
        this.aggregated_data[res.data[i].name].push(res.data[i].columns)
     }
@@ -357,7 +372,7 @@ get_alerts_aggregated_data(id){
     }else{
       $("#alerts_aggretated_table").html('No results found');
     }
-  })  
+  })
 }
 alerts_aggregated_data(key){
   this.alert_selectedItem =key
@@ -372,15 +387,18 @@ alerts_aggregated_data(key){
         $("#"+id).append(div_table);
       let values=this.aggregated_data[key]
       var columns = [];
-            var keys =  Object.keys(values[0]);   
-            var counter = 0;
-            keys.forEach(function (key) {
-              counter++;
-              columns.push({
-                data: key,
-                title: key
-              });
-            });
+            var keys =  Object.keys(values[0]);
+            // var counter = 0;
+            // keys.forEach(function (key) {
+            //   counter++;
+            //   columns.push({
+            //     data: key,
+            //     title: key
+            //   });
+            // });
+            var _result = this.columndefs.columnDefs(keys);
+            var column_defs = _result.column_defs;
+            columns = _result.column;
             $(document).ready(function() {
               div_table.DataTable({
               dom: "Bfrtip",
@@ -389,14 +407,15 @@ alerts_aggregated_data(key){
               sPaginationType:"full_numbers",
               "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
               columns: columns,
-              paging:true, 
+              paging:true,
               buttons: [ {extend: 'csv',filename: function () { return key;}}],
             "language": {
               "search": "Search: "
             },
-            "initComplete": function (settings, json) {  
-              div_table.wrap("<div style='overflow:auto; width:100%;position:relative;'></div>");            
+            "initComplete": function (settings, json) {
+              div_table.wrap("<div style='overflow:auto; width:100%;position:relative;'></div>");
             },
+            "columnDefs":column_defs,
             rowCallback: function(row, data, index){
               $('td', row).css('background-color', 'white');
             }
@@ -404,12 +423,12 @@ alerts_aggregated_data(key){
           })
 
 }
-  
 
-  // End Aggregated alerts 
+
+  // End Aggregated alerts
   close_data(){
     document.getElementById("alerts_aggretated_table").innerHTML = '';
       }
-    
+
 
 }

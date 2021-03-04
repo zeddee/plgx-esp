@@ -16,7 +16,7 @@ export const routes: Routes = [
       then(m => m.AuthenticationModule)
   },
   {
-    path: '',   
+    path: '',
     component: GlobalComponent,
     canActivate: [AuthGuard],
     children: [{
@@ -91,7 +91,11 @@ export const routes: Routes = [
       path: 'pagenotfound', loadChildren: () => import('./components/pagenotfound/pagenotfound.module').
         then(m => m.PagenotfoundModule),
     },
-    {path: '**', redirectTo: 'pagenotfound'}
+    {
+      path: '**',
+      loadChildren: () => import('./components/pagenotfound/pagenotfound.module').
+        then(m => m.PagenotfoundModule),
+    },
       // {
       //   path: '',
       //   component: GlobalComponent,
@@ -101,6 +105,10 @@ export const routes: Routes = [
       // }
 
     ]
+  },
+  {
+    path: '**',
+    redirectTo: 'authentication',
   },
 ];
 

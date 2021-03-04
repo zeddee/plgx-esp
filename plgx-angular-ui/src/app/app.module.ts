@@ -12,12 +12,14 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CommonModule } from '@angular/common';
 import { LogoutComponent } from './logout/logout.component';
 import { ToastrModule } from 'ngx-toastr';
+import { PagenotfoundComponent } from './components/pagenotfound/pagenotfound.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     GlobalComponent,
-    LogoutComponent
+    LogoutComponent,
+    // PagenotfoundComponent
   ],
   imports: [
     CommonModule,

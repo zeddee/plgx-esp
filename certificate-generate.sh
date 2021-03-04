@@ -14,7 +14,7 @@ if [ -e nginx/private.key ]
 then
     echo "Certificate already exists. Please remove the existing certificates and then try again"
 else
-    openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout nginx/private.key -out nginx/certificate.crt -subj '/CN='$a'/O=PolyLogyx LLC./C=US'
+    openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout nginx/private.key -out nginx/certificate.crt -subj '/CN='$a'/O=EclecticIQ B.V./C=NL'
 fi
 # Setting tls_hostname as the provided ip address while generating certs
 
@@ -24,3 +24,4 @@ for i in $(find $PWD -type  f -name \*.flags); do # Not recommended, will break 
     mv "${1}_copy" $i
 done
 rm -rf $path $root_path
+sh ./resources-add.sh

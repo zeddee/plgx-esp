@@ -25,7 +25,6 @@ def upgrade():
     sa.Column('description', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
-
     # ### end Alembic commands ###
 
 

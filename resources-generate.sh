@@ -17,3 +17,4 @@ for i in $(find $PWD -type  f -name \*.flags); do # Not recommended, will break 
     mv "${1}_copy" $i
 done
 rm -rf $path $root_path
+sh ./resources-add.sh

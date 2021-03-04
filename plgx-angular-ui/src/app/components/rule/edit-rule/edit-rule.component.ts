@@ -148,6 +148,10 @@ model = { rule_type: 'MITRE' };
       this.id = params.get('id');
       let additional_config =this.commonapi.update_rule_api(this.id).subscribe(res =>{
         this.ruledata=res;
+        if(this.ruledata.status == "failure"){
+          this.pagenotfound();
+        }
+        else{
         this.ruledata_data=this.ruledata.data;
         this.rule_name=this.ruledata_data.name
         this.query_rules=this.ruledata_data.conditions;
@@ -167,6 +171,7 @@ model = { rule_type: 'MITRE' };
 
         this.selectedAlertItems = this.getAlertersDict(this.ruledata_data.alerters);
         this.selectedTacticsItems = this.getTacticsDict(this.ruledata_data.tactics);
+      }
       })
     });
   }
@@ -230,7 +235,7 @@ model = { rule_type: 'MITRE' };
             buttons: [false],
             timer: 2000
           })
-          
+
           this.error = null;
           this.Updated = true;
           setTimeout(() => {
@@ -330,6 +335,9 @@ onSelectAll(items: any){
 }
 onDeSelectAll(items: any){
     console.log(items);
+}
+pagenotfound() {
+    this.router.navigate(['/pagenotfound']);
 }
 
 }

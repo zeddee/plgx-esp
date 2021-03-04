@@ -520,23 +520,24 @@ class DateTimeEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-def invalidate_token(loggedin_token):
+def is_token_logged_out(loggedin_token):
     qs_object = HandlingToken.query.filter(HandlingToken.token == loggedin_token).first()
-    if not qs_object:
-        return False
-    elif qs_object.token_expired == True:
-        return False
-    else:
+    if qs_object and qs_object.token_expired:
         return True
+    elif qs_object:
+        return False
+    return
 
 
 def require_api_key(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if User.verify_auth_token(request.headers.environ.get('HTTP_X_ACCESS_TOKEN')) and invalidate_token(request.headers.environ.get('HTTP_X_ACCESS_TOKEN')):
+        if User.verify_auth_token(request.headers.environ.get('HTTP_X_ACCESS_TOKEN')) and is_token_logged_out(request.headers.environ.get('HTTP_X_ACCESS_TOKEN')) is False:
             return f(*args, **kwargs)
         elif request.path.endswith('swagger.json'):
             return f(*args, **kwargs)
+        elif User.is_auth_token_exists(request.headers.environ.get('HTTP_X_ACCESS_TOKEN')) or is_token_logged_out(request.headers.environ.get('HTTP_X_ACCESS_TOKEN')):
+            return abort(401, {'message': 'This API key used to authenticate is expired!'})
         else:
             current_app.logger.error("%s - Request did not contain valid API key", request.remote_addr)
             return abort(401, {'message': 'Request did not contain valid API key!'})
@@ -548,4 +549,3 @@ def is_number_positive(number=None):
     if number>0:
         return True
     else: return False
-

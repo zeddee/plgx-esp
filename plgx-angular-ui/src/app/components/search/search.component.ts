@@ -125,7 +125,7 @@ export class SearchComponent implements AfterViewInit,OnInit {
         name: 'remote_address',
         type: 'string',
       }
-      
+
     }
   }
 
@@ -183,7 +183,7 @@ search(){
         "search": "Search: "
       },
       ajax: (dataTablesParameters: any,callback) => {
-  
+
         var body = dataTablesParameters;
         body['limit']=body['length'];
         console.log( body['limit'])
@@ -198,12 +198,12 @@ search(){
             'Content-Type': 'application/json',
             'x-access-token': localStorage.getItem('JWTkey')
           }
-        }).subscribe(res => { 
+        }).subscribe(res => {
           this.loading = false
           if(res['status']=='success'){
-            this.search_data_output=res.data['results']  
+            this.search_data_output=res.data['results']
             if(res.data['count'] > 0 && res.data['results'] != undefined)
-           
+
             {
               $('.table_data').show();
               $('.dataTables_paginate').show();
@@ -216,8 +216,8 @@ search(){
               $('.dataTables_info').hide();
               $('.table_data').show();
               $("#table_noresults").show()
-        
-            } 
+
+            }
             callback({
               recordsTotal: res.data['count'],
               recordsFiltered: res.data['count'],
@@ -228,14 +228,15 @@ search(){
             $('.table_data').hide();
             Swal.fire({
               icon: "warning",
-              text: res['message'],
+              text: "Please check the missing Condition",
+              //text: res['message'],  
             })
-          }    
+          }
         });
       },
       ordering: false,
       columns: [{data: 'hostname'}]
-    }  
+    }
   }
   getDate() {
     var today = new Date();
@@ -244,7 +245,7 @@ search(){
     this.datepicker_date['duration']=3;
     this.getconverted_date()
     this.get_dtOptions()
-    
+
 }
 getconverted_date() {
     var date =  this.datepicker_date['date'];

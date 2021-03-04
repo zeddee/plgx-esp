@@ -46,7 +46,7 @@ export class TagComponent implements AfterViewInit, OnInit {
   dtOptions: DataTables.Settings = {};
   searchText:string;
   errorMessage:any;
-  
+
   constructor(
     private commonapi:CommonapiService,
     private fb:FormBuilder,
@@ -76,15 +76,14 @@ export class TagComponent implements AfterViewInit, OnInit {
         body['searchterm']=body.search.value;
 
       }
-    
-        console.log(body,"bodymm",body['searchterm'])
+
 
         if(body['searchterm']==undefined){
           body['searchterm']="";
         }
-       
+
         this.http.get<DataTablesResponse>(environment.api_url+"/tags"+"?searchterm="+body['searchterm']+"&start="+body['start']+"&limit="+body['limit'],{ headers: {'x-access-token': localStorage.getItem('JWTkey')}}).subscribe(res =>{
-    
+
           this.tags_val = res ;
         this.tags_data = this.tags_val.data.results;
           this.temp_var=true;
@@ -108,7 +107,7 @@ export class TagComponent implements AfterViewInit, OnInit {
           $('.dataTables_paginate').hide();
           $('.dataTables_info').hide();
 
-        }       
+        }
           callback({
             recordsTotal: this.tags_val.data.total_count,
             recordsFiltered: this.tags_val.data.count,
@@ -119,11 +118,11 @@ export class TagComponent implements AfterViewInit, OnInit {
       ordering: false,
       columns: [{ data: 'value' }, { data: 'packs' }, { data: 'queries' }, { data: 'nodes' },{ data: 'Action' }]
     }
-    
+
   }
 
   get f() { return this.addTag.controls; }
-  
+
   clearValue:string = '';
   clearInput() {
     this.clearValue = null;
@@ -134,28 +133,26 @@ export class TagComponent implements AfterViewInit, OnInit {
               return;
     }
     let tags = this.addTag.value.tags
-    console.log(tags);
     if(tags == ''){
       swal({
         icon: 'warning',
         text: 'Please Enter Tag',
-        
+
       })
     }else{
     let tags_list = tags.split('\n');
     for(const i in tags_list){
     this.commonapi.add_tags_api(tags_list[i]).subscribe(res => {
       this.add_tags_val = res ;
-      console.log("tag response", this.add_tags_val)
       if(this.add_tags_val && this.add_tags_val.status === 'failure'){
         swal({
           icon: 'warning',
           title: this.add_tags_val.status,
           text: this.add_tags_val.message,
-          
+
         })
         this.clearInput()
-       
+
       }else if(this.add_tags_val && this.add_tags_val.status === 'success'){
         swal({
           icon: 'success',
@@ -164,7 +161,7 @@ export class TagComponent implements AfterViewInit, OnInit {
           buttons: [false],
           timer: 2000
         })
-       
+
         setTimeout(() => {
           this.clearInput()
           this.dtElement.dtInstance.then((dtInstance: DataTables.Api) => {
@@ -178,7 +175,7 @@ export class TagComponent implements AfterViewInit, OnInit {
     });
   }
 }
- 
+
   }
   ngAfterViewInit(): void {
     this.dtTrigger.next();
@@ -217,4 +214,3 @@ export class TagComponent implements AfterViewInit, OnInit {
 })
 }
 }
-

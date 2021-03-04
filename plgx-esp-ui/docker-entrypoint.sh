@@ -44,9 +44,6 @@ else
   fi
 fi
 
-echo "Updating OSQuery Schema from polylogyx/resources/osquery_schema.json ..."
-exec `tmux send -t plgx_celery "python manage.py update_osquery_schema --file_path polylogyx/resources/osquery_schema.json " ENTER`
-
 echo "Changing directory to plgx-esp-ui..."
 cd /src/plgx-esp-ui
 
