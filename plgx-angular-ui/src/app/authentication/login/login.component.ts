@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { FormArray } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router,ActivatedRoute } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 
 import { loginService } from './login.service';
@@ -16,14 +16,22 @@ export class LoginComponent implements OnInit {
   submitted = false;
   data: any;
   error: string;
+  redirectURL:any;
 
   constructor(
     private router: Router,
     private _loginService: loginService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private _Activatedroute: ActivatedRoute,
   ) { }
 
-  ngOnInit() { }
+  ngOnInit() {
+    let params = this._Activatedroute.snapshot.queryParams;
+      if (params['redirectURL']) {
+          this.redirectURL = params['redirectURL'];
+      }
+      console.log(this.redirectURL);
+    }
 
   credentials = {
     username: "",
@@ -31,7 +39,6 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit(object) {
-    console.log(object)
     if (object.value.username == "" || object.value.username == null) {
 			this.toastr.warning('Please enter Username!!');
 		}
@@ -54,7 +61,13 @@ export class LoginComponent implements OnInit {
           this.data = temp.token;
           localStorage.setItem('currentUser', JSON.stringify(response));
           localStorage.setItem('JWTkey', this.data);
-          this.router.navigate(['/manage']);
+          if (this.redirectURL) {
+               this.router.navigateByUrl(this.redirectURL,)
+             .catch(() => this.router.navigate(['/manage']))
+            } else {
+              this.router.navigate(['/manage']);
+          }
+          // this.router.navigate(['/manage']);
           this.toastr.success('Welcome Admin');
         }else{
           this.error = 'Invalid Username or Password';

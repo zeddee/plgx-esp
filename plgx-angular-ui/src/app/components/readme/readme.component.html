@@ -61,51 +61,51 @@
                                     <tr>
                                       <td>Windows</td>
                                       <td>plgx_cpt.exe</td>
-                                      <td>v1.0.40.3</td>
-                                      <td>aadfc91cdaebfbbf3b3e395eea0b3730</td>
+                                      <td>{{Windows_plgx_cpt_exe["version"]}}</td>
+                                      <td>{{Windows_plgx_cpt_exe["MD5_checksum"]}}</td>
                                     </tr>
                                     <tr>
                                       <td>Linux</td>
                                       <td>plgx_cpt</td>
-                                      <td>v1.0.40.2</td>
-                                      <td>2548cf04e338dfedf90aba2de1b07eb0</td>
+                                      <td>{{Linux_plgx_cpt["version"]}}</td>
+                                      <td>{{Linux_plgx_cpt["MD5_checksum"]}}</td>
                                     </tr>
                                     <tr>
                                       <td>Darwin</td>
                                       <td>plgx_cpt.sh</td>
-                                      <td style="padding-left:3%">-</td>
-                                      <td>4899f3b203d63acef7e5ac633660040d</td>
+                                      <td style="padding-left:3%">{{Darwin_plgx_cpt_sh["version"]}}</td>
+                                      <td>{{Darwin_plgx_cpt_sh["MD5_checksum"]}}</td>
                                     </tr>
                                     <tr>
                                       <td>Windows(x64)</td>
                                       <td>plgx_osqueryd.exe</td>
-                                      <td >4.0.2</td>
-                                      <td>2c0214270213dcc71a103aed12c8c154</td>
+                                      <td >{{Windows_x64_plgx_osqueryd_exe["version"]}}</td>
+                                      <td>{{Windows_x64_plgx_osqueryd_exe["MD5_checksum"]}}</td>
                                     </tr>
                                     <tr>
                                       <td>Windows(x64)</td>
                                       <td>plgx_win_extension.ext.exe</td>
-                                      <td >v1.0.40.3</td>
-                                      <td>3dbca65843725a866f7514f1fccc9180</td>
+                                      <td >{{Windows_x64_plgx_win_extension_ext_exe["version"]}}</td>
+                                      <td>{{Windows_x64_plgx_win_extension_ext_exe["MD5_checksum"]}}</td>
                                     </tr>
                                     <tr>
                                       <td>Windows(x86)</td>
                                       <td>plgx_osqueryd.exe</td>
-                                      <td >3.2.6</td>
-                                      <td>a16a1063fdfa605572798b8d4602a23b</td>
+                                      <td >{{Windows_x86_plgx_osqueryd_exe["version"]}}</td>
+                                      <td>{{Windows_x86_plgx_osqueryd_exe["MD5_checksum"]}}</td>
                                     </tr>
 
                                     <tr>
                                       <td>Linux</td>
                                       <td>plgx_osqueryd</td>
-                                      <td >4.3.0</td>
-                                      <td>47bb0f8c8cafd1cc147b964a8d39b80c</td>
+                                      <td >{{Linux_plgx_osqueryd["version"]}}</td>
+                                      <td>{{Linux_plgx_osqueryd["MD5_checksum"]}}</td>
                                     </tr>
                                     <tr>
                                       <td>Linux</td>
                                       <td>plgx_linux_extension.ext</td>
-                                      <td >v1.0.40.2</td>
-                                      <td>121157d0db89c8fdb060d9bc3ea45743</td>
+                                      <td >{{Linux_plgx_linux_extension_ext["version"]}}</td>
+                                      <td>{{Linux_plgx_linux_extension_ext["MD5_checksum"]}}</td>
                                     </tr>
                                   </tbody>
                                 </table>
@@ -151,12 +151,13 @@
                             <h4>Configuring Alert Email Settings</h4>
                               <p>Email sender and recipient can be configured from <a [routerLink]="['/management/configure-email']" target="_blank" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title=""> Email settings</a> menu. </p>
                              <h4>Threat Intel Integration</h4>
-                              <p>PolyLogyx ESP comes with connectors for following cloud based threat intel platforms:</p>
+                              <p>PolyLogyx ESP comes with connectors for following <b>3rd party</b> cloud based threat intel platforms:</p>
                               <ul>
                                 <li><a target="_blank" href="https://www.virustotal.com/" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="https://www.virustotal.com/">VirusTotal</a></li>
                                 <li><a target="_blank" href="https://exchange.xforce.ibmcloud.com/" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="https://exchange.xforce.ibmcloud.com/">IBM xForce</a></li>
                                 <li><a target="_blank" href="https://otx.alienvault.com/" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="https://otx.alienvault.com/">OTX AlienVault</a></li>
                               </ul>
+                              <p>Please click the links above to know more about them and their terms of usage.</p>
                               <p>Click <a [routerLink]="['/management/intel-keys']" target="_blank" data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="">here</a> to update the API keys.</p>
                               <p>The data collected in the recon phase is matched against the threat intelligence feeds to uncover any persistent malware on the endpoint.</p>
                              <h3>Integration with SIEM</h3>
@@ -352,4 +353,3 @@
   </div>
 </div>
 <!-- end:: Content -->
-

@@ -59,7 +59,7 @@ class NodesCSV(Resource):
             res['last_ip'] = data["last_ip"]
             res['tags'] = [tag.to_dict() for tag in value.tags]
             res['id'] = data['id']
-            res['health'] = node_is_active(value)
+            res['health'] = value.node_is_active()
             res['platform'] = data["platform"]
             results.append(res)
 
@@ -102,6 +102,7 @@ class NodeDetailsList(Resource):
         elif host_identifier:
             queryset = dao.get_node_by_host_identifier(host_identifier)
         else: queryset = None
+        db.session.commit()
 
         if not queryset:
             message = "There is no host exists with this host identifier or node id given!"

@@ -46,16 +46,20 @@
       <!-- begin:: Content -->
       <div class="kt-portlet kt-portlet--mobile kt-portlet--responsive-mobile">
         <div class="kt-portlet__head kt-portlet__head--lg">
-          <div class="kt-portlet__head-label">
+          <!-- <div class="kt-portlet__head-label">
         <span class="kt-portlet__head-icon">
           <i class="kt-font-brand fas fa-exclamation-triangle"></i>
         </span>
             <h3 class="kt-portlet__head-title">
               Resolved Alerts
             </h3>
-          </div>
+          </div> -->
           <div class="kt-portlet__head-toolbar">
             <div class="kt-portlet__head-wrapper">
+              <span class="kt-portlet__head-icon">
+                <i class="kt-font-brand fas fa-exclamation-triangle"></i>
+              </span>
+              <label class="alert-title">Total Resolved Alerts:</label>
               <ul class="nav nav-pills nav-pills-sm nav-pills-label nav-pills-bold" role="tablist">
 
                 <button style="display: none" id="hidden_button"></button>
@@ -220,8 +224,8 @@
               </tbody>
             </table>
 
-            <div *ngIf="this.errorMessage[alert_source.name] !=''">
-              <span style=" text-align: center; padding-left: 300px;font-size: larger;font-weight: 600;">
+            <div *ngIf="this.errorMessage[alert_source.name] !=''" class="text-center">
+              <span style=" text-align: center;font-size: larger;font-weight: 600;">
               {{errorMessage[alert_source.name]}}
             </span>
             </div>
@@ -245,7 +249,12 @@
                     <div class="card-body query_tab">
                           <div  class="tab-content">
                               <div class="" >
-                                      <ul  class="nav nav-pills nav-fill nav-background" role="tablist">
+                                      <ul  class="nav nav-pills nav-fill nav-background nav-wd" role="tablist" *ngIf="aggregate_tab.length <= 1">
+                                        <li *ngFor="let aggregated_data_values of aggregated_data | keyvalue;" class="nav-item">
+                                          <a class="nav-link" data-toggle="tab" (click)="alerts_aggregated_data(aggregated_data_values.key)"[ngClass]="{'active': alert_selectedItem == aggregated_data_values.key}" style="cursor: pointer;">{{ aggregated_data_values.key}}</a>
+                                        </li>
+                                      </ul>
+                                      <ul  class="nav nav-pills nav-fill nav-background" role="tablist" *ngIf="aggregate_tab.length > 1">
                                         <li *ngFor="let aggregated_data_values of aggregated_data | keyvalue;" class="nav-item">
                                           <a class="nav-link" data-toggle="tab" (click)="alerts_aggregated_data(aggregated_data_values.key)"[ngClass]="{'active': alert_selectedItem == aggregated_data_values.key}" style="cursor: pointer;">{{ aggregated_data_values.key}}</a>
                                         </li>
@@ -258,16 +267,14 @@
                   </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-outline-secondary" (click)="close_data()" data-dismiss="modal">Close</button>
-  
+
                 </div>
               </div>
             </div>
           </div>
            <!--End:: Modal-->
-  
+
       </div>
     </div>
   </div>
 </div>
-
-

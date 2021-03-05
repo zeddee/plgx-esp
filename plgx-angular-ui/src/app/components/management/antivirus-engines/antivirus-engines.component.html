@@ -75,20 +75,72 @@
             <!-- begin:: Table -->
             <div >
               <div class="kt-portlet__body" >
-                <table class="table table-hover table-checkable show_av_engines_data"  style="display: none;">
+                <div class=row>
+                <table class="table table-hover table-checkable show_av_engines_data col-3"  style="display: none;">
                   <thead >
                     <tr>
                       <th>Select</th>
-                      <th>Antivirus Engines</th>
+                      <th>AV Engines</th>
                     </tr>
                   </thead>
                     <tbody  >
-                      <tr *ngFor="let engine of av_engines_data['av_engines'] |keyvalue;" >
-                        <td style="width:20%"><input id="status" class="checkboxClass"  name="status" type="checkbox" (ngModelChange)="get_changed_data(av_engines_data['av_engines'])" [ngModelOptions]="{standalone: true}" [(ngModel)]="engine.value.status"></td>
-                        <td><input class="av_engineinputClass" disabled="true" value={{engine.key}} ></td>
+                      
+                      <tr  *ngFor="let engine of av_engines_data_table1['av_engines'] |keyvalue;" >
+                        <td ><input id="status" class="checkboxClass"  name="status" type="checkbox" (ngModelChange)="get_changed_data(av_engines_data_table1['av_engines'])" [ngModelOptions]="{standalone: true}" [(ngModel)]="engine.value.status"></td>
+                        <td > {{engine.key}}</td>
                       </tr>
+                   
                     </tbody>
                 </table>
+                <table class="table table-hover table-checkable show_av_engines_data col-3"  style="display: none;">
+                  <thead >
+                    <tr>
+                      <th>Select</th>
+                      <th>AV Engines</th>
+                    </tr>
+                  </thead>
+                    <tbody  >
+                      
+                      <tr  *ngFor="let engine of av_engines_data_table2['av_engines'] |keyvalue;" >
+                        <td ><input id="status" class="checkboxClass"  name="status" type="checkbox" (ngModelChange)="get_changed_data_table2(av_engines_data_table2['av_engines'])" [ngModelOptions]="{standalone: true}" [(ngModel)]="engine.value.status"></td>
+                        <td > {{engine.key}}</td>
+                      </tr>
+                   
+                    </tbody>
+                </table>
+                <table class="table table-hover table-checkable show_av_engines_data col-3"  style="display: none;">
+                  <thead >
+                    <tr>
+                      <th>Select</th>
+                      <th>AV Engines</th>
+                    </tr>
+                  </thead>
+                    <tbody  >
+                      
+                      <tr  *ngFor="let engine of av_engines_data_table3['av_engines'] |keyvalue;" >
+                        <td ><input id="status" class="checkboxClass"  name="status" type="checkbox" (ngModelChange)="get_changed_data_table3(av_engines_data_table3['av_engines'])" [ngModelOptions]="{standalone: true}" [(ngModel)]="engine.value.status"></td>
+                        <td > {{engine.key}}</td>
+                      </tr>
+                   
+                    </tbody>
+                </table>
+               <table class="table table-hover table-checkable show_av_engines_data col-3"  style="display: none;">
+                  <thead >
+                    <tr>
+                      <th>Select</th>
+                      <th>AV Engines</th>
+                    </tr>
+                  </thead>
+                    <tbody  >
+                      
+                      <tr  *ngFor="let engine of av_engines_data_table4['av_engines'] |keyvalue;" >
+                        <td ><input id="status" class="checkboxClass"  name="status" type="checkbox" (ngModelChange)="get_changed_data_table4(av_engines_data_table4['av_engines'])" [ngModelOptions]="{standalone: true}" [(ngModel)]="engine.value.status"></td>
+                        <td > {{engine.key}}</td>
+                      </tr>
+                   
+                    </tbody>
+                </table>
+              </div>
                 <div class="no_data"></div>
               </div>
               <div class="kt-portlet__foot text-center">

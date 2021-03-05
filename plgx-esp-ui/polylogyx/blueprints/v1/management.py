@@ -40,7 +40,7 @@ class ChangePassword(Resource):
                 message = "New password and old password should not be same"
         else:
             message = "Old password is not matching"
-        return marshal(respcls(message,status),parentwrapper.common_response_wrapper,skip_none=True)
+        return marshal(respcls(message,status), parentwrapper.common_response_wrapper, skip_none=True)
 
 
 @require_api_key
@@ -66,7 +66,7 @@ class SettingsUpdate(Resource):
         current_app.logger.info("Purge data duration and/or Alert aggregation duration is/are changed")
         message = "Platform settings are updated successfully"
         status = "success"
-        return marshal(respcls(message,status),parentwrapper.common_response_wrapper,skip_none=True)
+        return marshal(respcls(message,status), parentwrapper.common_response_wrapper, skip_none=True)
 
 
 @require_api_key
@@ -74,140 +74,85 @@ class SettingsUpdate(Resource):
 @ns.doc(params = {'vt_key':"vt key",'IBMxForceKey':"IBMxForceKey",'IBMxForcePass':"IBMxForcePass",'otx_key':"otx_key"})
 class UpdateApiKeys(Resource):
     """Resource for Threat Intel API keys management"""
-    parser = requestparse(['vt_key', 'IBMxForceKey', 'IBMxForcePass','otx_key'], [str, str, str,str],
-                          ['vt key', 'IBMxForceKey', 'IBMxForcePass','otx key'],[False,False,False,False])
+    parser = requestparse(['vt_key', 'IBMxForceKey', 'IBMxForcePass', 'otx_key'], [str, str, str, str],
+                          ['vt key', 'IBMxForceKey', 'IBMxForcePass', 'otx key'], [False, False, False, False])
     parser_get = requestparse([], [], [], [])
-
-    def func(self):
-        args = self.parser.parse_args()
-        status = "success"
-        vt_key = args['vt_key']
-        ibm_key = args['IBMxForceKey']
-        ibm_pass = args['IBMxForcePass']
-        otx_key = args['otx_key']
-
-        is_ibm_key_valid = True
-        is_vt_key_valid = True
-        is_otx_key_valid = True
-
-        errors = {}
-
-        if ibm_key and ibm_pass:
-            response = api_validator_obj.is_valid_api_ibmxforce(ibm_key, ibm_pass)
-            if response[0]:
-                ibm_x_force_credentials = db.session.query(ThreatIntelCredentials).filter(
-                    ThreatIntelCredentials.intel_name == 'ibmxforce').first()
-
-                if ibm_x_force_credentials:
-                    new_credentials = dict(ibm_x_force_credentials.credentials)
-                    new_credentials['key'] = ibm_key
-                    new_credentials['pass'] = ibm_pass
-                    ibm_x_force_credentials.credentials = new_credentials
-                    db.session.add(ibm_x_force_credentials)
-                    db.session.commit()
-                else:
-                    credentials = {}
-                    credentials['key'] = ibm_key
-                    credentials['pass'] = ibm_pass
-                    ThreatIntelCredentials.create(intel_name='ibmxforce', credentials=credentials)
-                if response[1]:
-                    if 'message' in response[1]:
-                        errors['ibmxforce'] = response[1]['message']
-                    elif 'error' in response[1]:
-                        errors['ibmxforce'] = response[1]['error']
-            else:
-                is_ibm_key_valid = False
-        else:
-            is_ibm_key_valid=False
-
-        if vt_key:
-            response = api_validator_obj.is_valid_api_virustotal(vt_key)
-            if response[0]:
-                vt_credentials = db.session.query(ThreatIntelCredentials).filter(
-                    ThreatIntelCredentials.intel_name == 'virustotal').first()
-
-                if vt_credentials:
-                    new_credentials = dict(vt_credentials.credentials)
-                    new_credentials['key'] = vt_key
-                    vt_credentials.credentials = new_credentials
-                    db.session.add(vt_credentials)
-                    db.session.commit()
-                else:
-                    credentials = {}
-                    credentials['key'] = vt_key
-                    ThreatIntelCredentials.create(intel_name='virustotal', credentials=credentials)
-                if response[1]:
-                    if 'message' in response[1]:
-                        errors['virustotal'] = response[1]['message']
-                    elif 'error' in response[1]:
-                        errors['virustotal'] = response[1]['error']
-            else:
-                is_vt_key_valid=False
-        else:
-            is_vt_key_valid=False
-
-        if otx_key:
-            response = api_validator_obj.is_valid_api_otx(otx_key)
-            if response[0]:
-                alienvault_credentials = db.session.query(ThreatIntelCredentials).filter(
-                    ThreatIntelCredentials.intel_name == 'alienvault').first()
-
-                if alienvault_credentials:
-                    new_credentials = dict(alienvault_credentials.credentials)
-                    new_credentials['key'] = otx_key
-                    alienvault_credentials.credentials = new_credentials
-                    db.session.add(alienvault_credentials)
-                    db.session.commit()
-                else:
-                    credentials = {}
-                    credentials['key'] = otx_key
-                    ThreatIntelCredentials.create(intel_name='alienvault', credentials=credentials)
-                if response[1]:
-                    if 'message' in response[1]:
-                        errors['alienvault'] = response[1]['message']
-                    elif 'error' in response[1]:
-                        errors['alienvault'] = response[1]['error']
-            else:
-                is_otx_key_valid=False
-        else:
-            is_otx_key_valid=False
-
-        API_KEYS = {}
-        threat_intel_credentials = ThreatIntelCredentials.query.all()
-        for threat_intel_credential in threat_intel_credentials:
-            API_KEYS[threat_intel_credential.intel_name] = threat_intel_credential.credentials
-        if (is_ibm_key_valid and is_otx_key_valid) and is_vt_key_valid:
-            message = "Threat Intel keys are updated successfully"
-            current_app.logger.info("Threat Intel keys are updated")
-        elif (not is_ibm_key_valid and not is_otx_key_valid) and not is_vt_key_valid:
-            message = "All Threat Intel keys passed are invalid!"
-            status = "failure"
-        else:
-            status = "failure"
-            message = ""
-            if not is_vt_key_valid:
-                message = message + "VirusTotal"
-            if is_otx_key_valid:
-                if message != "":
-                    message = message + ","
-                message = message + "OTX"
-            if is_ibm_key_valid:
-                if message != "":
-                    message = message + ","
-                message = message + "IBM"
-            message = message + "api keys is/are invalid"
-        return marshal({'status':status, 'message':message, 'data':API_KEYS, 'errors':errors}, parentwrapper.common_response_with_errors_wrapper, skip_none=True)
 
     @ns.doc(body=parser)
     @ns.expect(parser)
     def post(self):
-        """Updates Threat Intel API keys"""
-        return self.func()
+        """
+        Updates Threat Intel API keys
+        """
+        args = self.parser.parse_args()
+        status = "success"
+        passed_keys_count = 0
+        for arg in args:
+            if args[arg]:
+                passed_keys_count += 1
+
+        if not args['IBMxForcePass'] and args['IBMxForceKey'] or args['IBMxForcePass'] and not args['IBMxForceKey']:
+            return marshal({'status': "failure", 'message': "Both IBMxForceKey and IBMxForcePass are required!",
+                        'data': None, 'errors': {'ibmxforce': "Both IBMxForceKey and IBMxForcePass are required!"}},
+                       parentwrapper.common_response_with_errors_wrapper, skip_none=True)
+
+        threat_intel_creds = {'ibmxforce': {}, 'virustotal': {}, 'alienvault': {}}
+        if args['IBMxForceKey'] and args['IBMxForcePass']:
+            threat_intel_creds['ibmxforce'] = {'key': args['IBMxForceKey'], 'pass': args['IBMxForcePass']}
+        if args['vt_key']:
+            threat_intel_creds['virustotal'] = {'key': args['vt_key']}
+        if args['otx_key']:
+            threat_intel_creds['alienvault'] = {'key': args['otx_key']}
+
+        errors = {}
+        invalid = []
+        for intel in threat_intel_creds.keys():
+            is_key_valid = True
+            existing_creds = None
+            if threat_intel_creds[intel]:
+                response = api_validator_obj.validate_threat_intel_key(intel, threat_intel_creds[intel])
+                if not response[0]:
+                    is_key_valid = False
+                    invalid.append(intel)
+                    errors[intel] = "This threat intel api key is invalid!"
+                else:
+                    existing_creds = db.session.query(ThreatIntelCredentials).filter(
+                        ThreatIntelCredentials.intel_name == intel).first()
+                if not response[1] is None:
+                    try:
+                        body = response[1].json()
+                        if 'message' in body:
+                            errors[intel] = body['message']
+                        elif 'error' in body:
+                            errors[intel] = body['error']
+                    except:
+                        errors[intel] = response[1].text
+                if is_key_valid:
+                    if existing_creds:
+                        existing_creds.credentials = threat_intel_creds[intel]
+                        db.session.add(existing_creds)
+                    else:
+                        ThreatIntelCredentials.create(intel_name=intel, credentials=threat_intel_creds[intel])
+        db.session.commit()
+        API_KEYS = {}
+        threat_intel_credentials = ThreatIntelCredentials.query.all()
+        for threat_intel_credential in threat_intel_credentials:
+            API_KEYS[threat_intel_credential.intel_name] = threat_intel_credential.credentials
+        if not invalid:
+            message = "Threat Intel keys are updated successfully"
+        else:
+            if (passed_keys_count == len(invalid)+1 and 'ibmxforce' not in invalid) or (passed_keys_count == len(invalid)+2 and 'ibmxforce' in invalid):
+                status = 'failure'
+            message = "{} api key(s) provided is/are invalid!".format(','.join(invalid))
+        current_app.logger.info("Threat Intel keys are updated")
+        return marshal({'status': status, 'message': message, 'data': API_KEYS, 'errors': errors}, parentwrapper.common_response_with_errors_wrapper, skip_none=True)
 
     @ns.doc(body=parser_get)
     @ns.expect(parser_get)
     def get(self):
-        """Returns Threat Intel API keys"""
+        """
+        Returns Threat Intel API keys
+        """
         API_KEYS = {}
         threat_intel_credentials = ThreatIntelCredentials.query.all()
         for threat_intel_credential in threat_intel_credentials:
@@ -229,7 +174,7 @@ class VirusTotalAvEngineUpdate(Resource):
     def get(self):
         status="failure"
         data=[]
-        message="virustotal_min_match_count or av engines are not set"
+        message = "virustotal_min_match_count or av engines are not set"
         virustotal_match_count_obj = Settings.query.filter(Settings.name == 'virustotal_min_match_count').first()
         if virustotal_match_count_obj:
             minimum_count = int(virustotal_match_count_obj.setting)
@@ -249,7 +194,7 @@ class VirusTotalAvEngineUpdate(Resource):
             abort(400, "Please provide valid payload")
 
         if minimum_count:
-                if minimum_count>0:
+                if minimum_count > 0:
                     minimum_count_obj = Settings.query.filter(Settings.name == 'virustotal_min_match_count').first()
                     minimum_count_obj.setting = minimum_count
                     minimum_count_obj.update(minimum_count_obj)

@@ -40,7 +40,6 @@ export class AdminAsideComponent implements OnInit {
         this.default_menu_name = localStorage.getItem('menu_name');
         var str = window.location.href;
         var page_name = str.substr(str.lastIndexOf('/') + 1);
-        console.log(page_name)
         if(page_name == "manage"){
             this.titleService.setTitle(this.commonvariable.APP_NAME+"-"+"Dashboard");
         }
@@ -85,12 +84,10 @@ export class AdminAsideComponent implements OnInit {
             }
           });
           if(id === 'live-queries'){
-              console.log(id)
               id = 'Live Queries';
           }else if(id === 'Action'){
             id = 'Response Action';
           }
-
         // document.getElementById(default_menu_name).classList.add(active);
         this.titleService.setTitle(this.commonvariable.APP_NAME+"-"+ id.replace('-', ' ') );
         var elems = document.querySelectorAll("." + active);

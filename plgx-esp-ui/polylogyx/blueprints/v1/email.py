@@ -41,7 +41,7 @@ class ConfigureEmailRecipientAndSender(Resource):
             data = is_payload_valid[1]
             current_app.logger.info("Email configuration is updated")
         else:
-            message = "The requested settings for the details provided are not valid!"
+            message = "Please check the smtp settings and credentials provided and also provider's additional security verifications needed"
             status = "failure"
             data = None
         return marshal(respcls(message,status,data), parentwrapper.common_response_wrapper)
@@ -74,9 +74,9 @@ def configure_email_recipient_and_sender(request_json):
         current_app.config['MAIL_PORT'] = int(request_data['smtpPort'])
 
         settings = json.loads(settings.setting)
-        return (True, settings)
+        return True, settings
     else:
-        return (False, None)
+        return False, None
 
 
 @require_api_key
@@ -105,7 +105,7 @@ class TestEmailRecipientAndSender(Resource):
             message = "Successfully sent the email to recipients for the existing configuration!"
             status = "success"
         else:
-            message = "Mail credentials are not valid or SMTP settings might be wrong!"
+            message = "Please check the smtp settings and credentials provided and also complete the provider's additional security verifications needed"
             status = "failure"
 
         return marshal(respcls(message, status), parentwrapper.common_response_wrapper, skip_none=True)

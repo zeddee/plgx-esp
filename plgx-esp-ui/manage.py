@@ -17,10 +17,9 @@ from flask_socketio import leave_room
 from flask_sockets import Sockets
 
 from polylogyx import create_app, db
-from polylogyx.models import ThreatIntelCredentials, OsquerySchema
-from polylogyx.settings import CurrentConfig, RABBITMQ_HOST
-import time, json
-
+from polylogyx.models import ThreatIntelCredentials
+from polylogyx.settings import CurrentConfig, RABBITMQ_HOST, RABBIT_CREDS, RabbitConfig
+import json
 import socketio
 
 from polylogyx.utils import validate_osquery_query
@@ -33,6 +32,7 @@ async_mode = 'gevent'
 sio = socketio.Server(logger=True, async_mode=async_mode)
 sockets = Sockets(app)
 app.wsgi_app = socketio.Middleware(sio, app.wsgi_app)
+
 with app.app_context():
     validate_osquery_query('select * from processes;')
 
@@ -42,11 +42,11 @@ def _make_context():
 
 
 class SSLServer(Command):
+
     def run_server(self):
             from gevent import pywsgi
             from werkzeug.debug import DebuggedApplication
             from geventwebsocket.handler import WebSocketHandler
-
 
             validate_osquery_query('select * from processes;')
             pywsgi.WSGIServer(('', 5000), DebuggedApplication(app),
@@ -126,31 +126,6 @@ def extract_ddl(specs_dir, export_type):
     app.logger.info('Osquery Schema is exported to the file {} successfully'.format(opath))
 
 
-@manager.option('--file_path', default='polylogyx/resources/osquery_schema.json')
-def update_osquery_schema(file_path):
-    from polylogyx.models import OsquerySchema
-    try:
-        f = open(file_path, "r")
-    except FileNotFoundError:
-        print("File is not present for the path given!")
-        exit(0)
-    except Exception as e:
-        print(str(e))
-        exit(0)
-
-    file_content = f.read()
-    schema_json = json.loads(file_content)
-    for table_dict in schema_json:
-        table = OsquerySchema.query.filter(OsquerySchema.name == table_dict['name']).first()
-        if table:
-            table.update(schema=table_dict['schema'], description=table_dict['description'], platform=table_dict['platform'])
-        else:
-            if not table_dict['platform'] == ['freebsd'] and not table_dict['platform'] == ['posix']:
-                OsquerySchema.create(name=table_dict['name'], schema=table_dict['schema'], description=table_dict['description'], platform=table_dict['platform'])
-    app.logger.info('Osquery Schema is updated to postgres through the file input {} successfully'.format(file_path))
-    exit(0)
-
-
 @manager.option('--IBMxForceKey')
 @manager.option('--IBMxForcePass')
 @manager.option('--VT_API_KEY')
@@ -162,14 +137,14 @@ def add_api_key(IBMxForceKey, IBMxForcePass, VT_API_KEY):
     if vt_credentials :
         app.logger.info('Virus Total Key already exists')
     else:
-        credentials={}
+        credentials = {}
         credentials['key'] = VT_API_KEY
         ThreatIntelCredentials.create(intel_name='virustotal', credentials=credentials)
-    OTX_API_KEY=None
+    OTX_API_KEY = None
     try:
-        OTX_API_KEY=os.environ.get('ALIENVAULT_OTX_KEY')
+        OTX_API_KEY = os.environ.get('ALIENVAULT_OTX_KEY')
     except Exception as e:
-        print ("Alienvault OTX key not provided")
+        print("Alienvault OTX key not provided")
     if OTX_API_KEY:
         otx_credentials = ThreatIntelCredentials.query.filter(ThreatIntelCredentials.intel_name == 'alienvault').first()
         if otx_credentials :
@@ -192,17 +167,96 @@ def add_api_key(IBMxForceKey, IBMxForcePass, VT_API_KEY):
 
 @sockets.route('/distributed/result')
 def echo_socket(ws):
+    """Websocket URL to fetch the results of LiveQuery published from ESP container"""
     while not ws.closed:
         message = str(ws.receive())
         if not  ws.closed:
-            declare_queue(message,ws,None)
-            ws.send('Fetching results for query with query id : ' + message)
+            ws.send('Fetching results for query with query id : {}'.format(message))
+            client = ConsumerThread("live_query", message, ws, None)
+            try:
+                client.start()
+            except Exception as e:
+                current_app.logger.error(e)
+
+
+class ConsumerThread(threading.Thread):
+    """Consumes the messages from rabbitmq exchange and closes the exchange and queue
+            after the time interval(max_wait_time) set
+    Pushes the actual query results to the websocket
+    """
+    def __init__(self, type, ObjectID, ws, sid, *args, **kwargs):
+        super(ConsumerThread, self).__init__(*args, **kwargs)
+        self._is_interrupted = False
+        self.ObjectID = ObjectID
+        self.ws = ws
+        self.sid = sid
+        self.type = type
+        self.exchange_name = "{}_{}".format(self.type, self.ObjectID)
+        self.current_time_elapsed = 0
+
+    def stop(self):
+        self._is_interrupted = True
+
+    def run(self):
+        """Consumes the messages from rabbitmq exchange and closes the exchange and queue
+        after the time interval(max_wait_time) set"""
+
+        connection = pika.BlockingConnection(pika.ConnectionParameters(
+            host=RABBITMQ_HOST, credentials=RABBIT_CREDS))
+        channel = connection.channel()
+        try:
+            for message in channel.consume(self.exchange_name, inactivity_timeout=RabbitConfig.inactivity_timeout):
+                method, properties, body = message
+                if not body:
+                    self.current_time_elapsed += RabbitConfig.inactivity_timeout
+                    if self.current_time_elapsed >= RabbitConfig.max_wait_time:
+                        channel.stop_consuming()
+                        channel.exchange_delete(self.exchange_name)
+                        channel.queue_delete(self.exchange_name)
+                        connection.close()
+                    continue
+
+                self.push_results_to_websocket(body)
+                print(body)
+
+        except pika.exceptions.ConnectionClosed as e:
+            channel.stop_consuming()
+            connection.close()
+            print('Connection already closed {0}'.format(self.exchange_name))
+
+        except pika.exceptions.ChannelClosed as e:
+            channel.stop_consuming()
+            connection.close()
+        connection.close()
+
+    def push_results_to_websocket(self, resultstr):
+        """Pushes the results to the websocket end, connected to fetch results of LiveQuery"""
+        with app.app_context():
+            try:
+                results = ast.literal_eval(str(resultstr.decode("utf-8")))
+                if self.ws:
+                    try:
+                        self.ws.send(resultstr)
+                    except:
+                        current_app.logger.info('Websocket connection closed.')
+                elif self.sid:
+                    try:
+                        sio.emit('message', results, room=self.sid,
+                                 namespace='/test')
+                    except:
+                        current_app.logger.info('Websocket connection closed. Sending over ui')
+            except:
+                current_app.logger.error('Error parsing results')
 
 
 @sio.on('message', namespace='/test')
 def message(sid, message):
     print(' mapping query ' + str(message) + ' to session ' + str(sid))
-    declare_queue(message,None,sid)
+    client = ConsumerThread("live_query", message, None, sid)
+    try:
+        client.start()
+    except Exception as e:
+        current_app.logger.error(e)
 
 
 @sio.on('disconnect request', namespace='/test')
@@ -218,9 +272,6 @@ def test_connect(sid, environ):
 @sio.on('disconnect', namespace='/test')
 def test_disconnect(sidDisconnected):
     room = sidDisconnected
-    # for dqid, sid in clients.items():
-    #     if sid == room:
-    #         close_queue(dqid)
     with app.app_context():
         try:
             leave_room(room)
@@ -229,110 +280,19 @@ def test_disconnect(sidDisconnected):
         print('Client disconnected')
 
 
-def push_results_to_websocket(resultstr, queryId,ws,sid):
-    with app.app_context():
+def declare_queue(ObjectID, type='live_query'):
+    """Creates exchange, queue(non-exclusive) and binds the the exchange to the queue"""
+    exchange_name = "{}_{}".format(type, ObjectID)
 
-        try:
-            results = ast.literal_eval(str(resultstr.decode("utf-8")))
-            if ws:
-                try:
-                    ws.send(resultstr)
-                except:
-                    current_app.logger.info('Websocket connection closed.')
-            elif sid:
-                try:
-                    sio.emit('message', results, room=sid,
-                             namespace='/test')
-                except:
-                    current_app.logger.info('Websocket connection closed. Sending over ui')
-
-
-                current_app.logger.info('sending message to session ' + ' for distributed query ' + str(
-                    queryId))
-        except:
-            current_app.logger.error('Error parsing results')
-
-
-def declare_queue(distributedQueryId,ws,sid):
-
-    client = ConsumerThread( int(distributedQueryId),ws,sid)
-    try:
-        client.start()
-    except Exception as e:
-        current_app.logger.error(e)
-
-
-class ConsumerThread(threading.Thread):
-    def __init__(self,query_id,ws,sid, *args, **kwargs):
-        super(ConsumerThread, self).__init__(*args, **kwargs)
-        self._is_interrupted = False
-
-        self._query_id = str(query_id)
-        self.ws = ws
-        self.sid = sid
-        self.max_wait_time=60*10
-        self.inactivity_timeout=30
-        self.current_time_elapsed=0
-
-
-        self.query_string="live_query_"+str(self._query_id)
-
-    def stop(self):
-        self._is_interrupted = True
-
-    # Not necessarily a method.
-    def callback_func(self, channel, method, properties, body):
-        push_results_to_websocket(body, self._query_id,self.ws,self.sid)
-
-        print("{} received '{}'".format(self._query_id, body))
-
-    def run(self):
-        credentials = pika.PlainCredentials("guest", "guest")
-
-        connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host=RABBITMQ_HOST, credentials=credentials))
-        channel = connection.channel()
-        channel.exchange_declare(exchange=self.query_string)
-
-        result = channel.queue_declare(queue=self.query_string, exclusive=True,
-                                       arguments={'x-message-ttl': self.max_wait_time * 1000,
-                                                  'x-expires': self.max_wait_time * 1000})
-        queue_name = result.method.queue
-
-        channel.queue_bind(exchange=self.query_string, queue=queue_name)
-
-        try:
-            for message in channel.consume(self.query_string, inactivity_timeout=self.inactivity_timeout):
-
-                method, properties, body = message
-                if not body:
-                    self.current_time_elapsed += self.inactivity_timeout
-                    if self.current_time_elapsed >= self.max_wait_time:
-                        channel.stop_consuming()
-                        connection.close()
-                    continue
-
-                self.callback_func(channel, method, properties, body)
-                print(body)
-        except pika.exceptions.ConnectionClosed as e:
-            channel.stop_consuming()
-            connection.close()
-
-            print('Connection already closed {0}'.format(self.query_string))
-        except pika.exceptions.ChannelClosed as e:
-            channel.stop_consuming()
-            connection.close()
-
-            print('Channel already closed {0}'.format(self.query_string))
-        print('Exiting thread for query id : {}'.format(self._query_id))
-
-
-def close_queue(distributedQueryId):
-    pass
-    channel = distributedQueryId
-    # pubsub = r.pubsub()
-    # pubsub.unsubscribe(channel)
-    print ('closing {channel}'.format(**locals()))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST, credentials=RABBIT_CREDS))
+    channel = connection.channel()
+    channel.exchange_declare(exchange=exchange_name)
+    result = channel.queue_declare(queue=exchange_name, exclusive=False,
+                                   arguments={'x-message-ttl': RabbitConfig.max_wait_time * 1000,
+                                              'x-expires': RabbitConfig.max_wait_time * 1000})
+    queue_name = result.method.queue
+    channel.queue_bind(exchange=exchange_name, queue=queue_name)
+    print("A Queue and Echange are declared with name: {}".format(queue_name))
 
 
 @app.after_request

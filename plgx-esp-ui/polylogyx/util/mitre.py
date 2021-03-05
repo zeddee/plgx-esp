@@ -57,8 +57,6 @@ class TestMail:
 
         subject = "Sent from PolyLogyx"
 
-
-
         try:
             msg = MIMEText(content, text_subtype)
             msg['Subject'] = subject

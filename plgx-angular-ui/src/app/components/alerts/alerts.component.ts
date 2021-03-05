@@ -57,10 +57,13 @@ export class AlertsComponent implements AfterViewInit, OnDestroy, OnInit {
   @ViewChildren(DataTableDirective)
   dtElements: QueryList<DataTableDirective>;
   activeAlerts: any;
+
   fetched = {};
   aggregated_data:any={};
   alert_selectedItem:any;
   datepicker_date = {};
+  aggregate_tab=[];
+  purge_data_duration:any;
   constructor(
     private commonapi: CommonapiService,
     private http: HttpClient,
@@ -81,7 +84,7 @@ export class AlertsComponent implements AfterViewInit, OnDestroy, OnInit {
     $('#hidden_button').bind('click', (event, source) => {
       this.toggleDisplay(source);
     });
-    // this.getDate()
+    this.get_Platform_settings();
     this.commonapi.alerts_source_count_api().subscribe((res: any) => {
       var alerttype = ['rule', 'virustotal','ioc', 'alienvault', 'ibmxforce']
       var sort_alert_type = []
@@ -132,7 +135,7 @@ export class AlertsComponent implements AfterViewInit, OnDestroy, OnInit {
 
   get_options(source) {
     var that=this;
-    
+
     return {
       pagingType: 'full_numbers',
       pageLength: 10,
@@ -140,6 +143,8 @@ export class AlertsComponent implements AfterViewInit, OnDestroy, OnInit {
       processing: true,
       searching: true,
       destroy: true,
+      InfoPostFix:false,
+      InfoFiltered:false,
       dom: '<"pull-right"B><"pull-right"f><"pull-left"l>tip',
       buttons: [
         {
@@ -150,8 +155,12 @@ export class AlertsComponent implements AfterViewInit, OnDestroy, OnInit {
         }
       ],
       "language": {
-        "search": "Search: "
+        "search": "Search: ",
+        "sInfoFiltered": "",
       },
+      // "oLanguage": {
+      //          "sInfoFiltered": "",
+      //       },
       ajax: (dataTablesParameters: any, callback) => {
         var body = dataTablesParameters;
         body['limit'] = body['length'];
@@ -221,7 +230,18 @@ export class AlertsComponent implements AfterViewInit, OnDestroy, OnInit {
           } else {
 
             if (!searching) {
-              this.errorMessage[source] = "No Data Found";
+              if((source == "virustotal" && this.virusTotalCount > 0 )
+                 || (source == "ibmxforce" && this.IBMForceTotalCount > 0 )
+                 || (source == "alienvault" && this.AlientTotalVault > 0 )
+                 || (source == "ioc" && this.IOCTotalCount > 0 )
+                 || (source == "rule" && this.RuleTotalCount > 0 )
+                ){
+                this.errorMessage[source] = "No alerts found for the selected duration";
+              }
+              else{
+                this.errorMessage[source] = "No alerts found";
+              }
+
 
               $('#'+source+'_table_paginate').hide();
               $('#'+source+'_table_info').hide();
@@ -242,6 +262,35 @@ export class AlertsComponent implements AfterViewInit, OnDestroy, OnInit {
       columns: [{data: 'hostname'}]
     }
   }
+
+  // getAlertData(source) {
+  //   var today = new Date();
+  //   if(this.dtTrigger[source] == undefined) {
+  //     this.dtTrigger[source] = new Subject<any>();
+  //     this.datepicker_date[source]=today;
+  //     this.options[source] = {
+  //       minYear: 1970,
+  //       maxYear: 2030,
+  //       displayFormat: 'MMM D[,] YYYY',
+  //       barTitleFormat: 'MMMM YYYY',
+  //       dayNamesFormat: 'dd',
+  //       firstCalendarDay: 0, // 0 - Sunday, 1 - Monday
+  //       maxDate: today,  // Maximal selectable date
+  //       barTitleIfEmpty: 'Click to select a date',
+  //       placeholder: 'Click to select a date', // HTML input placeholder attribute (default: '')
+  //       addClass: 'form-control', // Optional, value to pass on to [ngClass] on the input field
+  //       addStyle: {}, // Optional, value to pass to [ngStyle] on the input field
+  //       fieldId: 'datepicker_' + source, // ID to assign to the input field. Defaults to datepicker-<counter>
+  //       useEmptyBarTitle: false, // Defaults to true. If set to false then barTitleIfEmpty will be disregarded and a date will always be shown
+  //     };
+
+  //   }
+
+  //   this.all_options[source] = this.get_options(source);
+
+
+  // }
+
   ngAfterViewInit(): void {
   }
 
@@ -367,7 +416,7 @@ export class AlertsComponent implements AfterViewInit, OnDestroy, OnInit {
   toggleDisplay(source) {
     this.fetched[source] = true;
     this.dtTrigger[source].next();
-    }
+  }
     show_hide_div(name: any) {
       $('.nav-link-active').removeClass("active");
       $('#' + name).addClass("active");
@@ -402,10 +451,11 @@ export class AlertsComponent implements AfterViewInit, OnDestroy, OnInit {
   update_graph(source: any) {
     this.myHandler( source);
   }
-  
+
     /*  Export csv file for all the alert type*/
   exportAlerts(source){
-    var payloadDict = {"source": source, "duration": $('#duration_' + "rule").val(), "type": $('#type_' + "rule").val(), "date": this.datepicker_date[source]}
+    var payloadDict = {"source": source, "duration": $('#duration_' + source).val(), "type": $('#type_' + source).val(), "date":this.convertDate(this.datepicker_date[source])}
+
     var alert_name = JSON.stringify(payloadDict);
     var token_val = localStorage.getItem('JWTkey');
     var today = new Date();
@@ -447,12 +497,15 @@ export class AlertsComponent implements AfterViewInit, OnDestroy, OnInit {
 // Start Aggregated alerts
 get_alerts_aggregated_data(id){
   this.aggregated_data={}
+  this.aggregate_tab = [];
   this.commonapi.get_alerts_aggregated_data(id).subscribe((res: any) => {
    for(const i in res.data){
      if (!this.aggregated_data.hasOwnProperty(res.data[i].name)){
       this.aggregated_data[res.data[i].name]=[]
+      this.aggregate_tab.push(res.data[i].name)
        }
        this.aggregated_data[res.data[i].name].push(res.data[i].columns)
+
     }
     if(res.data.length!=0){
       this.alerts_aggregated_data(res.data[0].name)
@@ -534,7 +587,6 @@ alerts_aggregated_data(key){
       grabNewDataBasedOnDate(source, duration, type) {
       this.getAlertData(source);
     }
-
     convert(str) {
       var date = new Date(str),
         mnth = ("0" + (date.getMonth() + 1)).slice(-2),
@@ -553,9 +605,15 @@ alerts_aggregated_data(key){
       var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
       if(this.dtTrigger[source] == undefined) {
         this.dtTrigger[source] = new Subject<any>();
-        this.datepicker_date[source]=date;
+        this.datepicker_date[source]=today;
       }
       this.all_options[source] = this.get_options(source);
     }
-  // End datepicker
+    // End datepicker
+
+    get_Platform_settings(){
+      this.commonapi.getConfigurationSettings().subscribe(res => {
+        this.purge_data_duration=res.data.purge_data_duration;
+      });
+    }
 }

@@ -56,17 +56,17 @@
                       Back
                     </a>
                   </div>
-                </div>        
+                </div>
           </div>
           <div class="kt-portlet__body">
             <div class="" style="margin-bottom: 60px;" >
               <!--begin: Datatable -->
-                  <button type="button" (click)="get_csv_data(id)" class="btn btn-secondary export_button">Export</button>
+                  <!-- <button type="button" (click)="get_csv_data(id)" class="btn btn-secondary export_button">Export</button> -->
               <table datatable [dtOptions]="dtOptions" [dtTrigger]="dtTrigger" class="table table-hover table-checkable" style="text-align: center;" >
                 <thead>
                   <tr>
                     <th  style="text-align:center">
-                      <input type="checkbox" [(ngModel)]="masterSelected" name="list_name" value="m1" (change)="checkUncheckAll()"/>        
+                      <input type="checkbox" [(ngModel)]="masterSelected" name="list_name" value="m1" (change)="checkUncheckAll()"/>
                       <div class="dropdown-btn-1" style="width: 60px; text-align:right;">
                         <div class="dropdown-toggle" data-toggle="dropdown" title="Select" aria-haspopup="true" aria-expanded="false">
                           <div class="dropdown-menu" >
@@ -97,28 +97,26 @@
                           <span *ngIf="alrowdata.severity == 'INFO'" class='logo-color menu-icon' style='font-weight: 400;' data-toggle='kt-tooltip' data-placement='top' title='INFO'><img alt='' src='./assets/media/icons/info.svg'  height="35" width="35" alt="" /></span>
                           <span *ngIf="alrowdata.severity == 'WARNING'" class='logo-color menu-icon' style='font-weight: 400;' data-toggle='kt-tooltip' data-placement='top' title='WARNING'><img alt='' src='./assets/media/icons/warning.svg'  height="35" width="35" alt="" /></span>
                           <span *ngIf="alrowdata.severity == 'LOW'" class='logo-color menu-icon' style='font-weight: 400;' data-toggle='kt-tooltip' data-placement='top' title='LOW'><img alt='' src='./assets/media/icons/info.svg'  height="35" width="35" alt="" /></span>
-                        
+
                         </td>
                         <td style="vertical-align:middle;">
                           {{alrowdata["created_at"] | dateAgo}}
                         </td>
-                      
+
                         <td style="vertical-align:middle;">
-                          <a  [routerLink]="['/rules/',alrowdata.rule?.id,'edit']" class="active"  data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="click -> Rule Details" style='font-weight: 600;color: #5867dd;'><code>{{alrowdata.rule.name}}</code></a>
-                        </td> 
+                          <a  [routerLink]="['/rules', alrowdata.rule?.id,'edit']" class="active"  data-skin="dark" data-toggle="kt-tooltip" data-placement="top" title="click -> Rule Details" style='font-weight: 600;color: #5867dd;'><code>{{alrowdata.rule.name}}</code></a>
+                        </td>
                         <td style="vertical-align:middle;">
                           <span class='logo-color menu-icon' style='font-weight: 400; cursor: pointer;' data-toggle='modal' data-target="#myModal" data-placement='top' (click)="showdata(alrowdata.alerted_entry, 'alert_entry')" title='View Alerted Entry'><img alt='' src='./assets/media/viewfile.svg'  height="25px" width="25px" alt="" /></span>
                         </td>
-                        <td>
-                          <a  data-toggle="modal" href="#Agg_alerts" (click)="get_alerts_aggregated_data(alrowdata.id)">{{alrowdata.aggregated_events_count}}</a>
-                        </td>
-                        <td style="vertical-align:middle;">      
+                        <td> <a  data-toggle="modal" href="#Agg_alerts" (click)="get_alerts_aggregated_data(alrowdata.id)">{{alrowdata.aggregated_events_count}}</a></td>
+                        <td style="vertical-align:middle;">
                           <button class="btn btn-outline-secondary btn-sm" style="color:#5867dd"  (click) ="resolveAlert(alrowdata.id)"> RESOLVE </button>
-                        </td>                    
-                      </tr>  
-                </tbody>           
+                        </td>
+                      </tr>
+                </tbody>
               </table>
-              <div *ngIf="alert_data == undefined" >
+              <div *ngIf="alert_data?.length == 0" >
                 <span style=" text-align: center; padding-left: 450px;font-size: larger;font-weight: 600;">
                  {{this.errorMessage}}
                 </span>
@@ -164,4 +162,3 @@
       </div>
     </div>
   </div>
-  

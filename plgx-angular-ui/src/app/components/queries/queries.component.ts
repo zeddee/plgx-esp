@@ -48,7 +48,7 @@ export class QueriesComponent implements OnInit {
             if (this.query_data.platform==null){
               this.query_data.platform="all"
             }
-            
+
           }
       }
    }
@@ -61,12 +61,12 @@ export class QueriesComponent implements OnInit {
             if (this.query_data.platform==null){
               this.query_data.platform="all"
             }
-            
+
           }
       }
    }
    getfirst_data(any){
-    
+
            this.query_data = any;
            this.selectedItem = this.query_data.id;
            this.queryid=this.query_data.id
@@ -84,7 +84,7 @@ export class QueriesComponent implements OnInit {
     this.commonapi.queries_removetags_api(query_id,event).subscribe(res => {
       this.queries_removetags_val = res ;
     });
-  
+
   }
 
     runAdHoc(queryId){
@@ -94,12 +94,12 @@ export class QueriesComponent implements OnInit {
     type_query(data,id_of_packs){
      this.id_to_get_particular_queries=id_of_packs
       this.sorted_pack_data_name_id=[];
-      
+
     let dataval_sort=[];
       for (const i in data){
         var l = data[i].name
         dataval_sort.push(l.toLowerCase())
-       
+
       }
       if(id_of_packs == 'all_queries_id' && dataval_sort.length ==0){
         $('.no_data_all').show();
@@ -114,7 +114,7 @@ export class QueriesComponent implements OnInit {
         $('.no_data').hide();
         $('.no_data_all').hide();
         $('.present_data').show();
-        $('.queries_body').show(); 
+        $('.queries_body').show();
         $('.queries_body2').hide();
       }
      let  dataval_sorted=[];
@@ -130,13 +130,13 @@ export class QueriesComponent implements OnInit {
             sorted_name_id.push(data[i].id)
             this.sorted_pack_data_name_id.push(sorted_name_id)
         }
-  
+
         }
       }
       for(const i in data){
         let name = data[i].name
        if(name.toLowerCase() == dataval_sorted[0]){
-        
+
         this.first_data=data[i]
       }
      }
@@ -148,21 +148,21 @@ export class QueriesComponent implements OnInit {
     this.sub = this._Activatedroute.paramMap.subscribe(params => {
       this.id = params.get('id');
     });
-    $('.present_data').show();         
+    $('.present_data').show();
     $('.queries_body').hide();
     this.commonapi.queries_api().subscribe((res: any) => {
             this.queries = res;
             $('.queries_body2').hide()
             if( this.queries.data.count ==0){
               $('.no_data').show()
-              $('.present_data').hide()         
+              $('.present_data').hide()
             }else{
               $('.no_data').hide();
             }
-   
+
             this.dataval_all = this.queries.data.results;
-            console.log(this.dataval_all,"this.dataval_all")
             
+
     }
   );
   this.commonapi.associated_api().subscribe((res: any) => {
@@ -170,29 +170,28 @@ export class QueriesComponent implements OnInit {
             $('.present_data').show();
             $('.queries_body2').hide()
             this.dataval_packs = this.associated_data.data.results;
-            console.log( this.associated_data," this.associated_data")
 
             if( this.associated_data.data.count ==0){
               $('.no_data').show()
-              $('.present_data').hide()         
+              $('.present_data').hide()
             }else{
-              $('.no_data').hide();         
+              $('.no_data').hide();
               $('.queries_body').show();
             }
-           
+
             this.sorted_pack_data_name_id=[];
             let dataval_sort=[]
             for (const i in this.associated_data.data.results){
               var name = this.associated_data.data.results[i].name
               // var dataval_sorted =[]
               dataval_sort.push(name.toLowerCase())
-             
+
             }
             let  dataval_sorted=[];
             dataval_sorted=dataval_sort.sort()
-           
+
             dataval_sorted = dataval_sorted.filter((el, i, a) => i === a.indexOf(el))
-            console.log(dataval_sorted,"dataval_sorted")
+
 
             for(const j in dataval_sorted){
              for(const i in this.associated_data.data.results){
@@ -203,24 +202,24 @@ export class QueriesComponent implements OnInit {
                   sorted_name_id.push(this.associated_data.data.results[i].id)
                   this.sorted_pack_data_name_id.push(sorted_name_id)
               }
-        
+
               }
             }
 
             for(const i in this.associated_data.data.results){
               let name = this.associated_data.data.results[i].name
              if(name.toLowerCase() == dataval_sorted[0]){
-              
+
               this.first_data=this.associated_data.data.results[i]
             }
            }
-          
-           console.log(this.first_data)
+
+
            this.getfirst_data(this.first_data);
-           this.id_to_get_particular_queries="associated_packs_id" 
-                 
+           this.id_to_get_particular_queries="associated_packs_id"
+
           });
-        
+
   }
   deleteQueries(query_id, query_name){
     swal({
@@ -249,5 +248,3 @@ export class QueriesComponent implements OnInit {
   })
   }
 }
-
-

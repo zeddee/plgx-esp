@@ -86,27 +86,31 @@ class TaggedList(Resource):
         from polylogyx.dao.v1 import queries_dao, hosts_dao, packs_dao
         from polylogyx.wrappers.v1 import pack_wrappers
         args = self.parser.parse_args()
-        tags = args['tags'].split(',')
+        tag_names = args['tags'].split(',')
+        tags = dao.get_tags_by_names(tag_names)
+        if tags:
+            hosts = [node.get_dict() for node in hosts_dao.get_tagged_nodes(tag_names) if node.state != node.DELETED and node.state != node.REMOVED]
 
-        hosts = [node.get_dict() for node in hosts_dao.get_tagged_nodes(tags) if node.state != node.DELETED and node.state != node.REMOVED]
+            packs_queryset = packs_dao.get_tagged_packs(tag_names)
+            packs = marshal(packs_queryset, pack_wrappers.pack_wrapper)
+            for index in range(len(packs)):
+                packs[index]['tags'] = [tag.to_dict() for tag in packs_queryset[index].tags]
+                packs[index]['queries'] = marshal(packs_queryset[index].queries, query_wrappers.query_wrapper)
+                for query_index in range(len(packs_queryset[index].queries)):
+                    packs[index]['queries'][query_index]['tags'] = [tag.to_dict() for tag in
+                                                                   packs_queryset[index].queries[query_index].tags]
+                    packs[index]['queries'][query_index]['packs'] = [pack.name for pack in
+                                                                    packs_queryset[index].queries[query_index].packs]
 
-        packs_queryset = packs_dao.get_tagged_packs(tags)
-        packs = marshal(packs_queryset, pack_wrappers.pack_wrapper)
-        for index in range(len(packs)):
-            packs[index]['tags'] = [tag.to_dict() for tag in packs_queryset[index].tags]
-            packs[index]['queries'] = marshal(packs_queryset[index].queries, query_wrappers.query_wrapper)
-            for query_index in range(len(packs_queryset[index].queries)):
-                packs[index]['queries'][query_index]['tags'] = [tag.to_dict() for tag in
-                                                               packs_queryset[index].queries[query_index].tags]
-                packs[index]['queries'][query_index]['packs'] = [pack.name for pack in
-                                                                packs_queryset[index].queries[query_index].packs]
+            queries_qs = queries_dao.get_tagged_queries(tag_names)
+            queries = marshal(queries_qs, query_wrappers.query_wrapper)
+            for i in range(len(queries)):
+                queries[i]['tags'] = [tag.to_dict() for tag in queries_qs[i].tags]
+                queries[i]['packs'] = [pack.name for pack in queries_qs[i].packs]
 
-        queries_qs = queries_dao.get_tagged_queries(tags)
-        queries = marshal(queries_qs, query_wrappers.query_wrapper)
-        for i in range(len(queries)):
-            queries[i]['tags'] = [tag.to_dict() for tag in queries_qs[i].tags]
-            queries[i]['packs'] = [pack.name for pack in queries_qs[i].packs]
-
-        message = "All hosts, queries, packs for the tag provided!"
-        status = "success"
-        return marshal(respcls(message, status, {"hosts":hosts, "packs":packs, "queries":queries}), parentwrapper.common_response_wrapper, skip_none=True)
+            message = "All hosts, queries, packs for the tag provided!"
+            status = "success"
+            return marshal(respcls(message, status, {"hosts":hosts, "packs":packs, "queries":queries}), parentwrapper.common_response_wrapper, skip_none=True)
+        else:
+            return marshal(respcls("Tag(s) doesn't exists for the value(s) provided", "failure"),
+                           parentwrapper.common_response_wrapper, skip_none=True)

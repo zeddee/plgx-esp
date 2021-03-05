@@ -99,6 +99,7 @@ def purge_old_data():
                     current_app.logger.info("Purged {0} records".format(actual_delete_count))
                     time.sleep(2)
                 except Exception as e:
+                    db.session.commit()
                     current_app.logger.error("Error in Purge : {0}".format(e))
 
             current_app.logger.info("Purging the Status Logs beyond the purge duration")
@@ -172,7 +173,7 @@ def send_pending_node_emails(node, db):
                 {'status': 'PENDING'})
             db.session.commit()
             send_email(node, body, db)
-        except Exception  as e:
+        except Exception as e:
             current_app.logger.error(e.message)
 
 
@@ -186,4 +187,3 @@ def send_email(node, body, db):
         db.session.commit()
     except Exception  as e:
         current_app.logger.error(e.message)
-

@@ -9,8 +9,6 @@ export const environment = {
   api_url:"https://localhost:5000/services/api/v1",
   socket_url: 'wss://localhost:5000/distributed/result'
 
-  // api_url:"https://localhost:5000/services/api/v0",
-  // socket_url: 'wss://localhost:5000/distributed/result'
 };
 
 /*'https://13.234.136.159:5000/services/api/v0'

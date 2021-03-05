@@ -48,8 +48,8 @@ import { Subject } from 'rxjs';
         serverSide: true,
         processing: true,
         searching: true,
-        scrollX: true,
-        "scrollY": '470px',
+        // scrollX: true,
+        // "scrollY": '470px',
         "language": {
           "search": "Search: "
         },

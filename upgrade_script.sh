@@ -86,6 +86,7 @@ makeFlagsFile(){
 copyCert(){
     cp -r "${OLD_PLGX_DIR_PATH}"nginx/certificate.crt ./nginx/
     cp -r "${OLD_PLGX_DIR_PATH}"nginx/private.key ./nginx/
+    sh ./resources-add.sh
     echo "Certificates copied successfully."
 }
 

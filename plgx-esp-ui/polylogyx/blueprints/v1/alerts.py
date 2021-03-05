@@ -31,7 +31,10 @@ class AlertSourceCount(Resource):
         start_date = None
         end_date = None
         if args['date']:
-            start_date, end_date = get_start_dat_end_date(args)
+            try:
+                start_date, end_date = get_start_dat_end_date(args)
+            except:
+                return abort(400, {'message': 'Date format passed is invalid!'})
         node = node_dao.get_node_by_host_identifier(args['host_identifier'])
         alert_source_tuple_list = alerts_dao.get_distinct_alert_source(args['resolved'], start_date, end_date, node, args['rule_id'])
         source_names = ['virustotal', 'rule', 'ibmxforce', 'alienvault', 'ioc']
@@ -73,35 +76,40 @@ class AlertsData(Resource):
     def post(self):
         """ Display Alerts by source table content. """
         from polylogyx.dao.v1.hosts_dao import get_node_by_host_identifier
-
+        from polylogyx.dao.v1.queries_dao import get_query_by_name
+        from polylogyx.dao.v1.rules_dao import get_rule_by_id
         args = self.parser.parse_args()
         source = args['source']
         start = args['start']
         limit = args['limit']
         resolved = args['resolved']
         event_ids = args['event_ids']
-
-        results = get_results_by_alert_source(start, limit, source, args['searchterm'], resolved, event_ids)
-        node_id = None
-        if args['host_identifier']:
-            node = get_node_by_host_identifier(args['host_identifier'])
-            if node:
-                node_id = node.id
         query_name = args['query_name']
         rule_id = args['rule_id']
         start_date = None
         end_date = None
+        node_id = None
+
+        if args['host_identifier']:
+            node = get_node_by_host_identifier(args['host_identifier'])
+            if not node:
+                return marshal(respcls("No Host present for the host identifier given!", "failure"), parentwrapper.common_response_wrapper, skip_none=True)
+            node_id = node.id
+        if query_name and not get_query_by_name(query_name):
+            return marshal(respcls("No Query present for the query name given!", "failure"),
+                               parentwrapper.common_response_wrapper, skip_none=True)
+        if rule_id and not get_rule_by_id(rule_id):
+            return marshal(respcls("No Rule present for the rule id given!", "failure"),
+                           parentwrapper.common_response_wrapper, skip_none=True)
         if args['date']:
-            start_date, end_date = get_start_dat_end_date(args)
+            try:
+                start_date, end_date = get_start_dat_end_date(args)
+            except:
+                return abort(400, {'message': 'Date format passed is invalid!'})
 
         results = get_results_by_alert_source(start, limit, source, args['searchterm'], resolved, event_ids, start_date, end_date, node_id, query_name, rule_id, args['events_count'])
-
-        if results['results']:
-            message = "Data is fetched successfully"
-            status = 'success'
-        else:
-            message = 'Alerts data is not present'
-            status = 'failure'
+        message = "Data is fetched successfully"
+        status = "success"
         return marshal(respcls(message, status, results), parentwrapper.common_response_wrapper, skip_none=True)
 
     @ns.expect(put_parser)
@@ -165,12 +173,12 @@ class AlertAggregatedEvents(Resource):
 @ns.route('/alert_source/export', endpoint='export_alert')
 @ns.doc(params={'source': 'source name'})
 class ExportCsvAlerts(Resource):
-    parser = requestparse(['source', 'duration', 'type', 'date', 'host_identifier', 'rule_id'],
-                          [str, int, int, str, str, int],
-                          ['source name', 'duration', 'type', 'date', 'host identifier', 'rule id'],
-                          [True, False, False, False, False, False],
-                          [None, [1, 2, 3, 4], [1, 2], None, None, None],
-                          [None, 3, 2, None, None, None])
+    parser = requestparse(['source', 'duration', 'type', 'date', 'host_identifier', 'rule_id', 'event_ids'],
+                          [str, int, int, str, str, int, list],
+                          ['source name', 'duration', 'type', 'date', 'host identifier', 'rule id', 'event_ids'],
+                          [True, False, False, False, False, False, False],
+                          [None, [1, 2, 3, 4], [1, 2], None, None, None, None],
+                          [None, 3, 2, None, None, None, None])
 
     @ns.expect(parser)
     def post(self):
@@ -179,7 +187,10 @@ class ExportCsvAlerts(Resource):
         start_date = None
         end_date = None
         if args['date']:
-            start_date, end_date = get_start_dat_end_date(args)
+            try:
+                start_date, end_date = get_start_dat_end_date(args)
+            except:
+                return abort(400, {'message': 'Date format passed is invalid!'})
         node = node_dao.get_node_by_host_identifier(args['host_identifier'])
-        results = alerts_dao.get_alert_source(source, start_date, end_date, node, args['rule_id'])
+        results = alerts_dao.get_alert_source(source, start_date, end_date, node, args['rule_id'], args['event_ids'])
         return get_response(results)

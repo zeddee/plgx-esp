@@ -131,7 +131,10 @@ def get_hosts_filtered_status_platform_count():
 
 def get_hosts_paginated(status, platform, searchterm="", enabled=True, alerts_count=False):
     import sqlalchemy
-    from polylogyx.blueprints.v1.utils import node_is_active
+
+    checkin_interval = current_app.config['POLYLOGYX_CHECKIN_INTERVAL']
+    online_filter = or_(Node.is_active, dt.datetime.utcnow() - Node.last_checkin < checkin_interval)
+    offline_filter = and_(not_(Node.is_active), dt.datetime.utcnow() - Node.last_checkin > checkin_interval)
 
     filter = []
     if platform == 'linux':
@@ -139,7 +142,6 @@ def get_hosts_paginated(status, platform, searchterm="", enabled=True, alerts_co
     else:
         filter.append(Node.platform == platform)
 
-    checkin_interval = current_app.config['POLYLOGYX_CHECKIN_INTERVAL']
     if alerts_count:
         query_set = db.session.query(Node, db.func.count(Alerts.id)).outerjoin(Alerts, and_(Alerts.node_id == Node.id, or_(Alerts.status == None, Alerts.status != Alerts.RESOLVED)))
     else:
@@ -162,12 +164,12 @@ def get_hosts_paginated(status, platform, searchterm="", enabled=True, alerts_co
         )
     if status is not None:
         if status:
-            query_set = query_set.filter(or_(Node.is_active,dt.datetime.utcnow() - Node.last_checkin < checkin_interval))
+            query_set = query_set.filter(online_filter)
         else:
-            query_set = query_set.filter(and_(not_(Node.is_active),dt.datetime.utcnow() - Node.last_checkin > checkin_interval))
+            query_set = query_set.filter(offline_filter)
     if alerts_count:
         query_set = query_set.group_by(Node)
-    return query_set.order_by(desc(Node.is_active or node_is_active(Node)), desc(Node.id))
+    return query_set.order_by(desc(online_filter), desc(Node.id))
 
 
 def get_hosts_total_count(status, platform, enabled=True):

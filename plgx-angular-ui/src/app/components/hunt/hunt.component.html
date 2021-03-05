@@ -74,7 +74,10 @@
           <h6>Upload indicators using file, separated by newline to search across the entire collected endpoint data:</h6>
         </div>
         <div class="col-5 col-form-label">
-          <input type="file" class="custom-input-file" formControlName="indicator_file" (change)="uploadFile($event)"  name="indicator_file" id="indicator_file_md5" style="cursor: pointer;">
+          <input type="file" class="custom-input-file" formControlName="indicator_file" (change)="uploadFile($event)"  name="indicator_file" id="indicator_file_md5" style="cursor: pointer;" [ngClass]="{ 'is-invalid': submitted && f.indicator_file.errors }">
+          <div *ngIf="submitted && f.indicator_file.errors" class="invalid-feedback">
+            <div *ngIf="f.indicator_file.errors.required">Please provide the File</div>
+            </div>
         </div>
         <div class="col-2 col-form-label">
                     <button type="submit" class="btn btn-primary submit">
@@ -130,7 +133,7 @@
                     {{subhostdata.key}}
                     {{":"}}
 
-                    <a target="_blank" onclick="window.open(this.href,'_blank');return false;"  href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
+                    <a onclick="window.open(this.href,'_blank');return false;" target="_blank"  href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
                     </dl>
 
                     <!--domain_name-->
@@ -139,7 +142,7 @@
                     {{subhostdata.key}}
                     {{":"}}
 
-                    <a target="_blank" onclick="window.open(this.href,'_blank');return false;" href="https://www.virustotal.com/#/domain/{{subhostdata.value}}" >{{subhostdata.value}}</a>
+                    <a onclick="window.open(this.href,'_blank');return false;" target="_blank" href="https://www.virustotal.com/#/domain/{{subhostdata.value}}" >{{subhostdata.value}}</a>
                     </dl>
 
                     <!--sha256-->
@@ -148,7 +151,7 @@
                     {{subhostdata.key}}
                     {{":"}}
 
-                    <a target="_blank" onclick="window.open(this.href,'_blank');return false;" href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
+                    <a onclick="window.open(this.href,'_blank');return false;" target="_blank" href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
                     </dl>
 
 

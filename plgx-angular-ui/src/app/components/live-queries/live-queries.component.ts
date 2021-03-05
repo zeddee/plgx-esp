@@ -321,6 +321,7 @@ export class LiveQueriesComponent implements AfterViewInit, OnInit,OnDestroy {
   }
 
   ngOnInit() {
+    $.fn.dataTable.ext.errMode = 'none';
     let bodyTemp = document.getElementsByTagName("BODY")[0];
     bodyTemp.classList.add("kt-aside--minimize");
     $.fn.dataTable.ext.errMode = 'none';
@@ -732,7 +733,7 @@ export class LiveQueriesComponent implements AfterViewInit, OnInit,OnDestroy {
 
     $('#accordion_search_bar').on('change keyup paste click', function () {
       searchTerm = $(this).val();
-      $('#accordion > .panel').each(function () {
+      $('.panel > .card-header').each(function () {
         panelContainerId = '#' + $(this).attr('id');
         $(panelContainerId + ':not(:containsCaseInsensitive(' + searchTerm + '))').hide();
         $(panelContainerId + ':containsCaseInsensitive(' + searchTerm + ')').show();

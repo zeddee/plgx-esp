@@ -115,7 +115,7 @@ class EditQueryById(Resource):
             if query:
                 if validate_osquery_query(args['query']):
                     query = dao.edit_query_by_id(query, args)
-                    return marshal(respcls("Successfully fecthed the query info for the given id","success",marshal(query,wrapper.query_wrapper)) , parentwrapper.common_response_wrapper)
+                    return marshal(respcls("Successfully updated the query for the given id", "success", marshal(query, wrapper.query_wrapper)), parentwrapper.common_response_wrapper)
                 else:
                     message = "Query is not a valid SQL!"
             else:
