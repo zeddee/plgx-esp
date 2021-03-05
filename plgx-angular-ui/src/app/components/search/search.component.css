@@ -105,6 +105,9 @@ table.dataTable thead th, table.dataTable thead td {
 ::ng-deep .table.dataTable.no-footer  {
   border-bottom: 1px solid #ebedf2;
 }
+::ng-deep .q-tree-container .q-tree .q-rule select{
+  cursor:pointer;
+}
 
 .dataTables_wrapper .dataTable th {
   color: #595d6e;
@@ -119,4 +122,7 @@ table.dataTable thead th, table.dataTable thead td {
 .show_1{
   overflow: visible_1;
   height: auto;
+}
+::ng-deep .ngx-datepicker-container{
+  z-index: 999;
 }

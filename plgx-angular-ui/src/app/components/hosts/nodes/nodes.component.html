@@ -256,11 +256,6 @@
                             {{hostDetails['extension_version']}}
                           </div>
 
-                          <!-- <i class="fa fa-calendar enrolled" aria-hidden="true" data-toggle="tooltip" title="Agent Enrolled"></i>
-                          <div class="col-md-2 col-form-label form--p" data-toggle="tooltip" title="Agent Enrolled">
-                            Enrolled<b>:</b> {{this.enrolled | date}}
-                          </div> -->
-
                          <i class="fa fa-clock lastseen" aria-hidden="true" ></i>
                          <div class="dropdown" style='width: 205px;'>
                           <div class="col-md-12 col-form-label form--p" >
@@ -856,7 +851,7 @@
                           <th>Connection_status</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody *ngIf="network_info !=null">
                         <tr *ngFor="let networkdata of network_info">
                           <td> {{networkdata.mac}} </td>
                           <td> {{networkdata.mask}} </td>
@@ -869,6 +864,7 @@
                         </tr>
                       </tbody>
                     </table>
+                    <div *ngIf="network_info ==null" style="text-align: center;">No results</div>
                   </div>
                   <!--end:: Network Information -->
                 </div>

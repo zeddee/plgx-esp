@@ -22,6 +22,9 @@ export class CommonapiService {
   public alerts_graph_api(source,duration,type,date){
     return this.http.get(environment.api_url+"/alerts/graph?source="+source+"&duration="+duration+"&type="+type+"&date="+date);
 }
+public alerts_graph_api_filter_with_Host_identifier(source,duration,type,date,host_identifier){
+  return this.http.get(environment.api_url+"/alerts/graph?source="+source+"&duration="+duration+"&type="+type+"&date="+date+"&host_identifier="+host_identifier);
+}
   public alerts_source_count_api(){
     return this.http.get(environment.api_url+"/alerts/count_by_source");
   }

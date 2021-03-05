@@ -21,10 +21,10 @@ export class IntelKeysComponent implements OnInit {
   error: any;
   Updated = false;
   apikey_data: any;
-  ibmkey: any;
-  ibmpass: any;
-  virustotalkey: any;
-  alienvaultkey: any;
+  ibmkey= '';
+  ibmpass= '';
+  virustotalkey='';
+  alienvaultkey= '';
   Apikeypost_data: any;
   ibmxforcekeyError: any
   virustotalError: any;
@@ -42,7 +42,6 @@ export class IntelKeysComponent implements OnInit {
 
   ngOnInit() {
     this.titleService.setTitle(this.commonvariable.APP_NAME+"-"+"Threat Intel Keys" );
-
     this.intelKeys = this.fb.group({
       ibmkey: '',
       ibmpass: '',
@@ -51,21 +50,20 @@ export class IntelKeysComponent implements OnInit {
     });
     this.commonapi.Apikey_data().subscribe(res => {
       this.apikey_data = res;
-      console.log(this.apikey_data);
+      if(this.apikey_data.data){
       if(this.apikey_data.data.ibmxforce){
         this.ibmkey = this.apikey_data.data.ibmxforce.key;
         this.ibmpass = this.apikey_data.data.ibmxforce.pass;
-      }else{
-        this.ibmkey = ''
-        this.ibmpass =''
       }
       if(this.apikey_data.data.virustotal){
       this.virustotalkey = this.apikey_data.data.virustotal.key;
-    } else{this.virustotalkey=''}
+      }
       if(this.apikey_data.data.alienvault){
         this.alienvaultkey = this.apikey_data.data.alienvault.key;
-      }else{this.alienvaultkey=''}
+      }
+    }
     })
+
   }
   get f() { return this.intelKeys.controls; }
   onSubmit() {
@@ -102,21 +100,19 @@ export class IntelKeysComponent implements OnInit {
               text: this.Apikeypost_data.message,
             })
           } else {
-            swal({
+            Swal.fire({
               icon: 'success',
               title: this.Apikeypost_data.status,
               text: this.Apikeypost_data.message,
-              buttons: [false],
-              timer: 2000
-
-            })
+              showConfirmButton: true,
+           })
 
           }
           if(this.Apikeypost_data.errors){
-          this.Apikeypost_data.errors.ibmxforce ? this.ibmxforcekeyError = this.Apikeypost_data.errors.ibmxforce : null;
-          this.Apikeypost_data.errors.ibmxforce ? this.ibmxforcepassError = this.Apikeypost_data.errors.ibmxforce : null;
-          this.Apikeypost_data.errors.virustotal ? this.virustotalError = this.Apikeypost_data.errors.virustotal : null;
-          this.Apikeypost_data.errors.alienvault ? this.alienvaultkeyError = this.Apikeypost_data.errors.alienvault : null;
+              this.Apikeypost_data.errors.ibmxforce ? this.ibmxforcekeyError = this.Apikeypost_data.errors.ibmxforce : null;
+              this.Apikeypost_data.errors.ibmxforce ? this.ibmxforcepassError = this.Apikeypost_data.errors.ibmxforce : null;
+              this.Apikeypost_data.errors.virustotal ? this.virustotalError = this.Apikeypost_data.errors.virustotal : null;
+              this.Apikeypost_data.errors.alienvault ? this.alienvaultkeyError = this.Apikeypost_data.errors.alienvault : null;
           }
         });
       }
@@ -131,10 +127,8 @@ export class IntelKeysComponent implements OnInit {
     this._location.back();
   }
   removeError(value){
-    if(value === 'ibmxforcekeyError' && this.ibmxforcekeyError !== null){
+    if((value === 'ibmxforcekeyError' || value === 'ibmxforcepassError') && (this.ibmxforcekeyError !== null || this.ibmxforcepassError !== null)){
       this.ibmxforcekeyError = null;
-    }
-    if(value === 'ibmxforcepassError' && this.ibmxforcepassError !== null){
       this.ibmxforcepassError = null;
     }
     if(value === 'virustotalError' && this.virustotalError !== null){

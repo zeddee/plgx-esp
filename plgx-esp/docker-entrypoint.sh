@@ -140,6 +140,8 @@ exec `tmux send -t plgx_celery 'python manage.py add_default_vt_av_engines --fil
 
 exec `tmux send -t plgx_celery 'python manage.py  update_vt_match_count --vt_min_match_count '"$VT_MIN_MATCH_COUNT" ENTER`
 
+echo "Updating OSQuery Schema from polylogyx/resources/osquery_schema.json ..."
+exec `tmux send -t plgx_celery "python manage.py update_osquery_schema --file_path polylogyx/resources/osquery_schema.json " ENTER`
 
 exec `tmux send -t plgx_celery "celery worker -A polylogyx.worker:celery --concurrency=$WORKERS_CELERY -Q default_queue_tasks -l INFO &" ENTER`
 

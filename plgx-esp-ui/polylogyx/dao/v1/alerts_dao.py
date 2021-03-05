@@ -14,7 +14,7 @@ def get_alert_by_id(alert_id):
     return Alerts.query.filter_by(id=alert_id).first()
 
 
-def get_alert_source(source, start_date, end_date, node, rule_id):
+def get_alert_source(source, start_date, end_date, node, rule_id, event_ids):
     qs = db.session.query(Alerts.message).filter(Alerts.source == source)
     if node:
         qs = qs.filter(Alerts.node_id == node.id)
@@ -22,6 +22,8 @@ def get_alert_source(source, start_date, end_date, node, rule_id):
         qs = qs.filter(Alerts.rule_id == rule_id)
     if start_date and end_date:
         qs = qs.filter(Alerts.created_at >= start_date).filter(Alerts.created_at <= end_date)
+    if event_ids:
+        qs = qs.filter(Alerts.id.in_(event_ids))
     return qs.order_by(desc(Alerts.id)).all()
 
 

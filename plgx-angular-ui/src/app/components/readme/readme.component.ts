@@ -14,7 +14,14 @@ export class ReadmeComponent implements OnInit {
   route: string;
   currentURL='';
   Version=this.commonvariable.version_in_readme_content
-
+  Windows_plgx_cpt_exe=this.commonvariable.Windows_plgx_cpt_exe
+  Linux_plgx_cpt=this.commonvariable.Linux_plgx_cpt
+  Darwin_plgx_cpt_sh=this.commonvariable.Darwin_plgx_cpt_sh
+  Windows_x64_plgx_osqueryd_exe=this.commonvariable.Windows_x64_plgx_osqueryd_exe
+  Windows_x64_plgx_win_extension_ext_exe=this.commonvariable.Windows_x64_plgx_win_extension_ext_exe
+  Windows_x86_plgx_osqueryd_exe=this.commonvariable.Windows_x86_plgx_osqueryd_exe
+  Linux_plgx_osqueryd=this.commonvariable.Linux_plgx_osqueryd
+  Linux_plgx_linux_extension_ext=this.commonvariable.Linux_plgx_linux_extension_ext
   constructor(
     private _Activatedroute:ActivatedRoute,
     private router: Router,

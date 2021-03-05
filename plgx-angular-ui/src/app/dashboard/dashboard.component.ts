@@ -141,9 +141,17 @@ export class DashboardComponent implements OnInit {
 // Start Platform distribution chart
 var platform_distibution = []
 var platform_distibution_count=[]
+var backgrund_colour=[]
 for(const i in distributionval){
    platform_distibution.push(distributionval[i].os_name)
    platform_distibution_count.push(distributionval[i].count)
+   if(distributionval[i].os_name=="windows"){
+     backgrund_colour.push('#800080')
+   }else if(distributionval[i].os_name=="darwin"){
+     backgrund_colour.push('#f90')
+   }else{
+     backgrund_colour.push('#36c')
+   }
 }
 if(platform_distibution_count.length==0){
    $(document.getElementById('no-data-platform-distribution-chart')).append("No data");
@@ -154,9 +162,7 @@ if(platform_distibution_count.length==0){
           labels: platform_distibution,
           datasets: [{
               data: platform_distibution_count,
-              backgroundColor: [
-                "green", "#dc3912","#f90","#1e60a6","#909"
-              ],
+              backgroundColor: backgrund_colour
           }]
       },
       options: {
@@ -276,6 +282,7 @@ var myChart1 = new Chart('bar-chart-top_5_alerted_hosts', {
     },
     scales: {
       xAxes: [{
+        barThickness: 30,
         gridLines: {
             offsetGridLines: true,
             display : false,
@@ -290,6 +297,7 @@ var myChart1 = new Chart('bar-chart-top_5_alerted_hosts', {
     }],
     yAxes: [{
       ticks: {
+          beginAtZero: true,
           display: false,
       },
       gridLines: {
@@ -340,6 +348,7 @@ var myChart1 = new Chart('bar-chart-top_5_alerted_categries', {
     },
     scales: {
       xAxes: [{
+        barThickness: 30,
         gridLines: {
             offsetGridLines: true,
             display : false,
@@ -354,6 +363,7 @@ var myChart1 = new Chart('bar-chart-top_5_alerted_categries', {
     }],
     yAxes: [{
       ticks: {
+          beginAtZero: true,
           display: false,
       },
       gridLines: {
@@ -404,6 +414,7 @@ var myChart1 = new Chart('bar-chart-top_5_alerted_rules', {
     scales: {
       offset:false,
       xAxes: [{
+        barThickness: 30,
         gridLines: {
             offsetGridLines: true,
             display : false,
@@ -418,6 +429,7 @@ var myChart1 = new Chart('bar-chart-top_5_alerted_rules', {
     }],
     yAxes: [{
       ticks: {
+          beginAtZero: true,
           display: false,
       },
       gridLines: {

@@ -3,7 +3,7 @@
 #
 # Simple Shell script to clean/remove all container/images
 #
-# The script will 
+# The script will
 #  - first stop all running containers (if any),
 #  - remove containers
 #  - remove images

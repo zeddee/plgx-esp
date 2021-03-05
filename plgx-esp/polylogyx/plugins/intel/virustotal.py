@@ -120,7 +120,7 @@ class VTIntel(AbstractIntelPlugin):
                                                     newReputations[self.name + "_detected"] = True
                                                     detected=True
                                                     break
-                                            if detected==False and scan_reports['positives'] >= int(min_match_count.setting):
+                                            if detected==False and scan_report['positives'] >= int(min_match_count.setting):
                                                 newReputations[self.name + "_detected"] = True
                                         else:
                                             newReputations[self.name + "_detected"] = False

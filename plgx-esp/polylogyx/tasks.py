@@ -201,11 +201,12 @@ def send_queries(node, db):
             if not platform == "windows" and not platform == "darwin" and not platform == "freebsd":
                 platform = "linux"
             default_query = DefaultQuery.query.filter(DefaultQuery.name == key).filter(DefaultQuery.platform == platform).first()
-            query = DistributedQuery.create(sql=default_query.sql,
-                                            description=value
-                                            )
-            task = DistributedQueryTask(node=node, distributed_query=query, save_results_in_db=True)
-            db.session.add(task)
+            if default_query:
+                query = DistributedQuery.create(sql=default_query.sql,
+                                                description=value
+                                                )
+                task = DistributedQueryTask(node=node, distributed_query=query, save_results_in_db=True)
+                db.session.add(task)
 
         db.session.commit()
 

@@ -53,6 +53,7 @@ export class ActivityComponent implements AfterViewInit, OnDestroy, OnInit {
     private http: HttpClient,
     private _location: Location,
     private titleService: Title,
+    private router: Router,
 
   ) { }
 
@@ -66,10 +67,15 @@ export class ActivityComponent implements AfterViewInit, OnDestroy, OnInit {
       this.id = params.get('id');
      this.commonapi.host_name_api(this.id).subscribe(res => {
         this.activitydata = res;
+        if(this.activitydata.status == "failure"){
+          this.pagenotfound();
+        }
+        else{
         this.host_identifier = this.activitydata.data.host_identifier
         if (this.activitydata.data.id == this.id) {
           this.nodes = this.activitydata.data.node_info.computer_name;
         }
+      }
       });
 
       this.commonapi.recent_activity_count_api(this.id).subscribe(res => {
@@ -90,6 +96,10 @@ export class ActivityComponent implements AfterViewInit, OnDestroy, OnInit {
       });
 
     });
+  }
+
+  pagenotfound() {
+      this.router.navigate(['/pagenotfound']);
   }
 
   getFromActivityData() {
@@ -131,7 +141,7 @@ export class ActivityComponent implements AfterViewInit, OnDestroy, OnInit {
         this.http.post<DataTablesResponse>(environment.api_url + "/hosts/recent_activity", body, {headers: { 'Content-Type': 'application/json','x-access-token': localStorage.getItem('JWTkey')}}).subscribe(res => {
           this.recentactivitydata = res;
           this.activitydatanode = this.recentactivitydata.data.results;
-          for(const id in this.activitynode){       
+          for(const id in this.activitynode){
             if(this.activitynode[id].name==this.queryname){
               this.activitynode[id].count=res.data['total_count']
             }

@@ -33,7 +33,8 @@ dtElement: DataTableDirective;
 dtTrigger: Subject<any> = new Subject();
 alert_data:any;
 alerted_data_json:any;
-dtOptions: DataTables.Settings = {};
+// dtOptions: DataTables.Settings = {};
+dtOptions:any = {}
 searchText:string;
 errorMessage:any;
 toggle: boolean = false;
@@ -43,10 +44,12 @@ checkedList:any;
 rule_name:string;
 aggregated_data:any={};
 alert_selectedItem:any;
+responsedata:any;
   constructor(
     private _Activatedroute: ActivatedRoute,
     private http: HttpClient,
     private commonapi: CommonapiService,
+    private router: Router,
     private _location: Location,
     private columndefs: Datatablecolumndefs,
   ) { }
@@ -57,12 +60,23 @@ alert_selectedItem:any;
       this.id = params.get('id');
     })
     this.rule_name=localStorage.getItem('rule_name')
+    var that=this;
     this.dtOptions = {
       pagingType: 'full_numbers',
       pageLength: 10,
       serverSide: true,
       processing: false,
       searching: true,
+      dom: '<"pull-right"B><"pull-right"f><"pull-left"l>tip',
+      buttons: [
+        {
+          text: 'Export',
+          action: function ( e, dt, node, config ) {
+            that.exportAlerts(this.id);
+          },
+          className: 'export_button'
+        }
+      ],
       "language": {
         "search": "Search: "
       },
@@ -86,6 +100,11 @@ alert_selectedItem:any;
             'x-access-token': localStorage.getItem('JWTkey')
           }
         }).subscribe(res => {
+          this.responsedata = res;
+          if(this.responsedata.status == "failure"){
+            this.pagenotfound();
+          }
+          else{
           this.alert_data =res.data['results'];
         if(res.data['count'] > 0 && res.data['results'] != undefined)
         {
@@ -118,6 +137,7 @@ alert_selectedItem:any;
             recordsFiltered: res.data['count'],
             data: []
           });
+        }
         });
       },
       ordering: false,
@@ -287,14 +307,6 @@ alerts_aggregated_data(key){
       let values=this.aggregated_data[key]
       var columns = [];
   var keys =  Object.keys(values[0]);
-  // var counter = 0;
-  // keys.forEach(function (key) {
-  //   counter++;
-  //   columns.push({
-  //     data: key,
-  //     title: key
-  //   });
-  // });
 
   var _result = this.columndefs.columnDefs(keys);
   var column_defs = _result.column_defs;
@@ -334,4 +346,50 @@ alerts_aggregated_data(key){
       saveAs(blob,"alert"+"_"+"rule"+'.csv');
     })
   }
+
+
+/*  Export csv file for all the alert type*/
+exportAlerts(id){
+var payloadDict = {"source":'rule',"rule_id":id}
+var alert_name = JSON.stringify(payloadDict);
+var token_val = localStorage.getItem('JWTkey');
+var today = new Date();
+var currentDate = today.getDate()+"-"+(today.getMonth()+1)+"-"+today.getFullYear();
+$.ajax({
+    "url": environment.api_url+"/alerts/alert_source/export",
+    "type": 'POST',
+    "data": alert_name,
+    headers: {
+        "content-type":"application/json",
+        "x-access-token": token_val
+      },
+    "success": function(res, status, xhr) {
+      if(res.status == 'failure'){
+        var csvData = new Blob([res.message], {
+            type: 'text/csv;charset=utf-8;'
+        });
+        var csvURL = window.URL.createObjectURL(csvData);
+        var tempLink = document.createElement('a');
+        tempLink.href = csvURL;
+        tempLink.setAttribute('download', 'alert'+'_'+payloadDict.source+ '_' + currentDate + '.csv');
+        tempLink.click();
+      }
+      else{
+        var csvData = new Blob([res], {
+            type: 'text/csv;charset=utf-8;'
+        });
+        var csvURL = window.URL.createObjectURL(csvData);
+        var tempLink = document.createElement('a');
+        tempLink.href = csvURL;
+        tempLink.setAttribute('download', 'alert'+'_'+payloadDict.source+ '_' + currentDate + '.csv');
+        tempLink.click();
+    }
+      }
+
+});
+return false;
+}
+pagenotfound() {
+    this.router.navigate(['/pagenotfound']);
+}
 }

@@ -36,7 +36,7 @@ export class HuntComponent implements AfterViewInit,OnInit {
   loading = false;
   submitted = false;
   indicator_file:File;
-  indicator:any;
+  // indicator:any;
   dropdownPacknameList = [];
   selectedPacknameItems = [];
   dropdownPacknameSettings = {};
@@ -69,7 +69,7 @@ export class HuntComponent implements AfterViewInit,OnInit {
     };
 
     this.md5form= this.fb.group({
-      indicator_file: [''],
+      indicator_file: ['',Validators.required],
       hunt_type:['',Validators.required]
     });
 
@@ -82,34 +82,19 @@ export class HuntComponent implements AfterViewInit,OnInit {
   uploadFile(event){
     if (event.target.files.length > 0) {
       this.indicator_file = event.target.files;
-      this.indicator=event.target.files
-
       }
 
   }
 onSubmit(){
   this.submitted = true;
-  if(this.f.hunt_type.value !=null){
-    this.huntObj= {   
-      "hunt_type":this.f.hunt_type.value[0].id,
-      }
-  }
   if (this.md5form.invalid) {
       return;
   }
   this.loading = true;
-  this.indicator=this.indicator_file;
-  if(this.indicator==undefined){
-   alert("No valid indicators provided")
-    this.loading = false;
-  }else{
   this.Rerender_datatable()
   $("#table_noresults").hide()
   $('.table_data').show();
-  }
 }
-
-
 
 goBack(){
   this._location.back();
@@ -140,7 +125,7 @@ get_dtOptions( ){
       var body = dataTablesParameters;
       var uploadData = new FormData();
       if(this.indicator_file !=undefined){    
-          uploadData.append('indicator_type', this.huntObj['hunt_type']);
+          uploadData.append('indicator_type', this.f.hunt_type.value[0].id);
           uploadData.append('file', this.indicator_file[0], this.indicator_file[0].name);
           uploadData.append('start', dataTablesParameters.start);
           uploadData.append('limit', body['length']);

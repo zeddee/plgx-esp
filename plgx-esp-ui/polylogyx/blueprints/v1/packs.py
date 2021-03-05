@@ -215,6 +215,7 @@ class PackRemoved(Resource):
 
         if pack:
             current_app.logger.info("Pack {} is requested to delete".format(pack.name))
+            pack_tags = pack.tags
             db.session.delete(pack)
             db.session.commit()
             message = "Successfully removed the Pack"

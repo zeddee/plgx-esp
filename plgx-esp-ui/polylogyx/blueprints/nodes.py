@@ -141,9 +141,6 @@ class NodeScheduleQueryResults(Resource):
         return marshal(respcls(message,status,data), parentwrapper.common_response_wrapper, skip_none=False)
 
 
-
-# Modify Tag section
-
 @require_api_key
 @ns.route('/tag/edit', endpoint='node_tag_edit')
 @ns.doc(params={'host_identifier': 'Host identifier of the Node', 'add_tags':'list of comma separated tags needed to be added for the node', 'remove_tags': 'list of comma separated tags needed to be removed from the node'})

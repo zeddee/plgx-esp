@@ -25,3 +25,7 @@ def create_tag_obj(tag):
 
 def get_tag_by_value(tag):
     return Tag.query.filter(Tag.value == tag).first()
+
+
+def get_tags_by_names(tag_names):
+    return Tag.query.filter(Tag.value.in_(tag_names)).all()

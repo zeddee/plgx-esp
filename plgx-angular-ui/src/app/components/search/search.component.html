@@ -44,7 +44,7 @@
                       <div class="form-group row">
                         <div class="col-2 col-form-label"></div>
                         <div class="col-2" style="padding-left:0px">
-                          <select  value="3" class="form-control" (change)="get_duration($event.target.value)" >
+                          <select  value="3" class="form-control" style="cursor: pointer;" (change)="get_duration($event.target.value)" >
                             <option value="2">1 day</option>
                             <option value="3" selected="selected">1 week</option>
                             <option value="4">1 month</option>
@@ -117,7 +117,7 @@
                             {{subhostdata.key}}
                             {{":"}}
 
-                            <a target="_blank" onclick="window.open(this.href,'_blank');return false;"  href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
+                            <a onclick="window.open(this.href,'_blank');return false;" target="_blank" target="_blank"  href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
                             </dl>
 
                             <!--domain_name-->
@@ -126,7 +126,7 @@
                             {{subhostdata.key}}
                             {{":"}}
 
-                            <a target="_blank" onclick="window.open(this.href,'_blank');return false;" href="https://www.virustotal.com/#/domain/{{subhostdata.value}}" >{{subhostdata.value}}</a>
+                            <a onclick="window.open(this.href,'_blank');return false;" target="_blank" href="https://www.virustotal.com/#/domain/{{subhostdata.value}}" >{{subhostdata.value}}</a>
                             </dl>
 
                             <!--sha256-->
@@ -135,7 +135,7 @@
                             {{subhostdata.key}}
                             {{":"}}
 
-                            <a target="_blank" onclick="window.open(this.href,'_blank');return false;" href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
+                            <a onclick="window.open(this.href,'_blank');return false;" target="_blank" href="https://www.virustotal.com/#/file/{{subhostdata.value}}/detection" >{{subhostdata.value}}</a>
                             </dl>
 
 

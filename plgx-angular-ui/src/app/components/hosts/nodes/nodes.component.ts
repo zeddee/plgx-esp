@@ -125,76 +125,84 @@ export class NodesComponent implements AfterViewInit, OnInit, OnDestroy {
     localStorage.setItem('hostid', this.id);
     let products=this.commonapi.host_name_api(this.id).subscribe(res => {
     this.data = res;
-    if(this.data.data.id == this.id){
-        this.nodes = this.data.data;
-        this.node_id = this.nodes.id;
-        this.network_info = this.nodes.network_info;
-        this.host_identifier = this.nodes.host_identifier
-        this.os_platform = this.nodes.os_info.platform;
-        this.os_name = this.nodes.os_info.name;
-        this.hostDetails = this.nodes.host_details;
-        this.node_info = this.nodes.node_info;
-        this.physical_memory = this.physical_memory_formate(this.nodes.node_info.physical_memory);
-        localStorage.setItem("hostidentifier",this.host_identifier)
-        localStorage.setItem("Hostname",this.node_info.computer_name)
-        this.currentdate = new Date();
+    if(this.data.status == "failure"){
+      this.pagenotfound();
+    }
+    else{
+      if(this.data.data.id == this.id){
+          this.nodes = this.data.data;
+          this.node_id = this.nodes.id;
+          this.network_info = this.nodes.network_info;
+          this.host_identifier = this.nodes.host_identifier
+          if(this.nodes.os_info != null){
+          this.os_platform = this.nodes.os_info.platform;
+          this.os_name = this.nodes.os_info.name;
+          }
+          this.hostDetails = this.nodes.host_details;
+          this.node_info = this.nodes.node_info;
+          this.physical_memory = this.physical_memory_formate(this.nodes.node_info.physical_memory);
+          this.currentdate = new Date();
 
-        if(!this.hostDetails){
-          this.hostDetails={};
-        }
+          if(!this.hostDetails){
+            this.hostDetails={};
+          }
 
-        if(!this.hostDetails['osquery_version']){
-          this.hostDetails['osquery_version'] = "-";
-        }
+          if(!this.hostDetails['osquery_version']){
+            this.hostDetails['osquery_version'] = "-";
+          }
 
-        if(!this.hostDetails['extension_version']){
-          this.hostDetails['extension_version'] = "-";
-        }
+          if(!this.hostDetails['extension_version']){
+            this.hostDetails['extension_version'] = "-";
+          }
 
-        if(this.nodes.last_checkin==null){
-          this.lastcheckin=''
-        }else{
-          this.lastcheckin = new Date(this.nodes.last_checkin);
-        }
+          if(this.nodes.last_checkin==null){
+            this.lastcheckin=''
+          }else{
+            this.lastcheckin = new Date(this.nodes.last_checkin);
+          }
 
 
-        if(this.nodes.enrolled_on==null){
-          this.enrolled=''
-        }else{
-          this.enrolled = new Date(this.nodes.enrolled_on);
-        }
+          if(this.nodes.enrolled_on==null){
+            this.enrolled=''
+          }else{
+            this.enrolled = new Date(this.nodes.enrolled_on);
+          }
 
-        if(this.nodes.last_status==null){
-          this.laststatus=''
-        }else{
-          this.laststatus = new Date(this.nodes.last_status);
-        }
+          if(this.nodes.last_status==null){
+            this.laststatus=''
+          }else{
+            this.laststatus = new Date(this.nodes.last_status);
+          }
 
-        if(this.nodes.last_result==null){
-          this.lastresult=''
-        }else{
-          this.lastresult = new Date(this.nodes.last_result);
-        }
+          if(this.nodes.last_result==null){
+            this.lastresult=''
+          }else{
+            this.lastresult = new Date(this.nodes.last_result);
+          }
 
-        if(this.nodes.last_config==null){
-          this.lastconfig=''
-        }else{
-          this.lastconfig = new Date(this.nodes.last_config);
-        }
+          if(this.nodes.last_config==null){
+            this.lastconfig=''
+          }else{
+            this.lastconfig = new Date(this.nodes.last_config);
+          }
 
-        if(this.nodes.last_query_read==null){
-          this.lastqueryread=''
-        }else{
-          this.lastqueryread = new Date(this.nodes.last_query_read);
-        }
-        if(this.nodes.last_query_write==null){
-          this.lastquerywrite=''
-        }else{
-          this.lastquerywrite = new Date(this.nodes.last_query_write);
-        }
+
+          if(this.nodes.last_query_read==null){
+            this.lastqueryread=''
+          }else{
+            this.lastqueryread = new Date(this.nodes.last_query_read);
+          }
+          if(this.nodes.last_query_write==null){
+            this.lastquerywrite=''
+          }else{
+            this.lastquerywrite = new Date(this.nodes.last_query_write);
+          }
+      }
     }
 
+
       });
+
       this.interval = setInterval(() => {
     //  if(this.titleService.getTitle() == this.commonvariable.APP_NAME+'-'+'Hosts'){
         this.refreshData();
@@ -280,6 +288,7 @@ export class NodesComponent implements AfterViewInit, OnInit, OnDestroy {
           scales: {
             offset:false,
             xAxes: [{
+              barThickness: 30,
               gridLines: {
                   offsetGridLines: true,
                   display : false,
@@ -294,6 +303,7 @@ export class NodesComponent implements AfterViewInit, OnInit, OnDestroy {
           }],
           yAxes: [{
             ticks: {
+                beginAtZero: true,
                 display: false,
             },
             gridLines: {
@@ -562,6 +572,10 @@ close() {
      this.showdata(undefined);
     }
    }
+  pagenotfound() {
+      this.router.navigate(['/pagenotfound']);
+  }
+
 
 
 }
