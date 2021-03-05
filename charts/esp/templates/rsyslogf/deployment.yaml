@@ -37,13 +37,17 @@ spec:
           name: tcp
         volumeMounts:
         - name: config-volume
-          mountPath: /etc/
+          mountPath: /etc/rsyslogd.conf
+          subPath: rsyslogd.conf
         - name: log-volume
           mountPath: /var/log
       volumes:
       - name: config-volume
         configMap:
           name: {{ template "polylogyx.fullname" . }}-rsyslogf-cfg
+          items:
+          - key: rsyslogd.conf
+            path: rsyslogd.conf
       - name: log-volume
         {{- if .Values.plgx.rsyslogf.persistence.enabled }}
         persistentVolumeClaim:
