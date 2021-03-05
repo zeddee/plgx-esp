@@ -1,325 +1,110 @@
-# PolyLogyx Endpoint Security Platform (ESP) - Community Edition
+# Helm Chart for Polylogyx ESP
+
 PolyLogyx ESP leverages the [Osquery](https://osquery.io/) tool, with [PolyLogx Extension](https://github.com/polylogyx/osq-ext-bin) to provide endpoint visibility and monitoring at scale. To get the details of the architecture of the full platform, please read the [platform docs](https://github.com/polylogyx/platform-docs). This repository provides the community release of the platform which focuses on the Osquery based agent management to provide visbility into endpoint activities, query configuration management, a live query interface and alerting capabilities based on security critical events.
 
+## 👋 Hey
+
+> This chart is under heavy development at the moment. We welcome contributions of any kind so feel free to drop us a message at #xdr or create an issue/merge request in the repo.
+
+## TLDR;
+
+```sh
+$ helm repo add @TODO https://@TODO
+$ helm install release-name @TODO
+```
+
+## Installing the Chart (DEV)
+
+To install the chart:
+
+1. Publish the images to a registry. For minikube you can push to minikube's local registry.
+
+2. Install cert-manager and create secrets
+
+```console
+$ kubectl create namespace plgx
+$ ./examples/cert-manager/make_cert.sh plgx polylogyx-ca-tls-secret
+$ kubectl apply -f ./examples/cert-manager/cert-manager-issuer.yaml -n plgx
+$ kubectl apply -f ./examples/cert-manager/certificate.yaml -n plgx
+```
+
 ## Prerequisites
-- git client software
-- Internet connectivity
-- 5000 and 9000 ports should be available and accessible through firewall
-- Docker(18.03.1-CE or above) and [docker-compose (1.21.1 or above)](https://docs.docker.com/compose/install/#install-compose)
-- node and npm
 
-## Build and deploy
+- Kubernetes 1.12+
+- Helm 3.0-beta3+
+- PV provisioner support in the underlying infrastructure
+- ReadWriteMany volumes for deployment scaling
 
+## Resources
 
-### Fresh Installation
+Configure [rabbitmq](https://github.com/bitnami/charts/tree/master/bitnami/rabbitmq)
 
-After you install Docker and Docker Compose, you can install the PolyLogyx
-server. Please ensure that the following commands are executed from a root/administrator privileged terminal.
+Configure [postgress](https://github.com/bitnami/charts/tree/master/bitnami/postgresql)
 
-1.  Clone this repository.
+## Development:
 
-    ```~/Downloads$ git clone https://github.com/polylogyx/plgx-esp.git```
-     ```<snip>
-    Cloning into 'plgx-esp'...
-   
-2.  Switch to the folder where the repository is cloned.
+You can use [minikube](https://github.com/kubernetes/minikube) to develop and test the chart locally.
 
-    ```~/Downloads\$ cd plgx-esp/```
-3.  Enter the certificate-generate.sh script to generate certificates for
-    osquery.  
-    ```~/Downloads/plgx-esp$ sh ./certificate-generate.sh <IP address>```
-    ```x.x.x.x
-    Generating a 2048 bit RSA private key
-    .........................................................................................+++
-    .........................+++
-    writing new private key to 'nginx/private.key'
-    ``` 
-            
-    In the syntax, \<IP address\> is the IP address of the system on which on to host the PolyLogyx server. This will generate 
-    the certificate for osquery (used for provisioning clients) and place the certificate in the nginx folder.
+The easiest way to put local images to minikube is to run
 
-4.  Modify and save the .env file.
+```sh
+make build_images
+```
 
-    1.  Edit the following configuration parameters in the file. In the syntax, replace the values in angle brackets with required values.
-    ```
-    ENROLL_SECRET=<secret value>
-    POLYLOGYX_USER=<user login name> 
-    POLYLOGYX_PASSWORD=<login password> 
-    RSYSLOG_FORWARDING=true
-    VT_API_KEY=<VirusTotal Api Key> 
-    IBMxForceKey=<IBMxForce Key> 
-    IBMxForcePass=<IBMxForce Pass>
-    PURGE_DATA_DURATION=<number of days>  
-    THREAT_INTEL_LOOKUP_FREQUENCY=<number of minutes>
-     ```   
-| Parameter | Description                                                                                                                                                                                  |
-|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ENROLL_SECRET | Specifies the enrollment shared secret that is used for authentication.                                                                                                                              |
-| POLYLOGYX_USER       | Refers to the user login name for the PolyLogyx server.                                                                                                         |
-| POLYLOGYX_PASSWORD       | Indicates to the password for the PolyLogyx server user.                                                                                                              |
-| RSYSLOG_FORWARDING       | Set to true to enable forwarding of osquery and PolyLogyx logs to the syslog receiver by using rsyslog. |                                                                         |  
-| VT_API_KEY       | Represents the VirusTotal API key.                                                                            | 
-| IBMxForceKey       | Represents the IBMxForce key.                                                                            | 
-| IBMxForcePass       | Specifies the IBMxForce pass.                                                                            | 
-| PURGE_DATA_DURATION       | Specifies the frequency (in number of days) for purging the data.                                                                            | 
-| THREAT_INTEL_LOOKUP_FREQUENCY       | Specifies the frequency (in minutes) for fetching threat intelligence data.                                                                            |   
-    2. Save the file.
-    
-5. Generating dist file using angular 8
+to build the images inside minikube's local registry.
 
-    a. Installation of Node.js and Npm:
+This command builds all the images for polylogyx inside the cluster's image registry cache, which means they will be available for local deployments.
+To use the cached images in your containers you will need to provide the
+`imagePullPolicy: Never`
+configuration option in the values file.
 
-        Nodejs version required 10.3 and above
-        npm version required 6.1 and above
-  
+## Docs:
 
-        ==> Installing node on Ubuntu or debian based system
+Enrolling an endpoint:
+If you use the default ingress configs run
 
-        Step 1: If curl is not installed on the system, run the following command to install it:
-		       
-		       sudo apt-get install curl
-		       
-        Step 2: Enabling nodesource repo:
-		    
-		        curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-		        
-        Note: Here,  node.js version 10.x is being installed, if you want to install version 11, replace setup_10.x with setup_11.x.
+```sh
+sudo ./plgx_cpt.sh -p -i <HOST> -port 443
+```
 
-        Step 3: To Install Node.js and NPM to your Ubuntu machine, use the command given below:
-		      
-		        sudo apt-get install -y nodejs
-		       
-        Step 4: Once installed, verify it by checking the installed version using the following command:
-		      
-		        node -v or node -version
-		        npm -v or npm -version	
-				
-    b. Installing angular packages using npm
-	```
-        npm install -g @angular/cli@8.3.19 
-    ```
+Notice that it needs to be TLS encrypted traffic.
 
-    c. cd to the angular folder
-    ```
-        cd plgx-angular-ui
-    ```
+## Parameters:
 
-    d. Install project packages
-    ```
-       sudo npm install
-    ```
+The following table lists the configurable parameters of the Polylogyx ESP chart and their default values.
 
-    e. Installing gzipper to  generate the compressed files
-    ```
-        npm i gzipper@3.7.0 -g
-    ```
+> **Tip**: You can lint the values you provide to the chart by using the `helm lint @TODO[repo_name/esp] -f your_values_file.yaml` command.
 
-    f. Creating dist folder using gzipper 
-    ```
-        ng build --prod --stats-json && sudo gzipper --verbose ../dist
-    ```
-    g. cd to the extracted folder
-    ```
-       cd ../
-    ```
-        
-6.  Run the following command to start building containers using docker-compose.
+| Parameter                 | Description                                     | Default Value                                           |
+| ------------------------- | ----------------------------------------------- | ------------------------------------------------------- |
+| `global.imageRegistry`    | Global Docker image registry                    | `nil`                                                   |
+| `global.imagePullSecrets` | Global Docker registry secret names as an array | `[]` (does not add image pull secrets to deployed pods) |
+| `global.storageClass`     | Global storage class for dynamic provisioning   | `nil`                                                   |
 
-    ```docker-compose -p 'plgx-esp' up -d```
-    
-    Typically, this takes approximately 10-15 minutes. The following lines appear on
-    the screen when Docker starts:
-    ````Starting plgx-esp_rabbit1_1  ... done
-        Starting plgx-esp_postgres_1 ... done
-        Starting plgx-esp_plgx-esp_1     ... done
-        Attaching to plgx-esp_rabbit1_1, plgx-esp_postgres_1, plgx-esp_plgx-esp_1
-        .
-        .
-        .
-        Server is up and running```
+## Internal TODO:
 
-### Upgrade from an existing Installation
+<input type="checkbox" disabled>Deploy an example chart in our cluster
 
-After you install Docker and Docker Compose, you can install the PolyLogyx
-server. Please ensure that the following commands are executed from a root/administrator privileged terminal.
+<input type="checkbox" disabled>How/Where do we provide the helm chart? Do we need a private registry for customers on enterprise edition? What registry are we going to use for the community edition? [Artifact Hub](https://artifacthub.io/) looks like the preferred place to release charts by the community.
 
-1.  Clone this repository into a new directory.
+<input type="checkbox" disabled> Minimum requirements. kubernetes/helm versions and cluster requirements.
 
-    ```~/Downloads$ git clone https://github.com/polylogyx/plgx-esp.git```
-     ```<snip>
-    Cloning into 'plgx-esp'...
-   
-2.  Switch to the folder where the repository is cloned.
+<input type="checkbox" disabled> Configuration options. Should we expose more options through the values.yaml file?
 
-    ```~/Downloads\$ cd plgx-esp/```
-3.  Execute the command to copy existing certs setting up the flags for osquery.
+<input type="checkbox" disabled>Testing. How do we make changes to this chart with confidence that all features work as expected? Do we need a new test suite or can we use an existing one?
 
-    sudo bash upgrade_script.sh --path < Path to the existing installation directory >
+<input type="checkbox" disabled>Automation: Once we know the IP address generate the osquery.flags file with the correct ip/host
 
-4.  Modify and save the .env file.
+<input type="checkbox" disabled> Versioning and support for the chart. How do we make sure this chart stays relevant? Will we offer upgrade paths, support etc?
 
-    1.  Edit the following configuration parameters in the file. In the syntax, replace the values in angle brackets with required values.
-    ```
-    ENROLL_SECRET=<secret value>
-    POLYLOGYX_USER=<user login name> 
-    POLYLOGYX_PASSWORD=<login password> 
-    RSYSLOG_FORWARDING=true
-    VT_API_KEY=<VirusTotal Api Key> 
-    IBMxForceKey=<IBMxForce Key> 
-    IBMxForcePass=<IBMxForce Pass>
-    PURGE_DATA_DURATION=<number of days>  
-    THREAT_INTEL_LOOKUP_FREQUENCY=<number of minutes>
-     ```   
-| Parameter | Description                                                                                                                                                                                  |
-|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ENROLL_SECRET | Specifies the enrollment shared secret that is used for authentication.                                                                                                                              |
-| POLYLOGYX_USER       | Refers to the user login name for the PolyLogyx server.                                                                                                         |
-| POLYLOGYX_PASSWORD       | Indicates to the password for the PolyLogyx server user.                                                                                                              |
-| RSYSLOG_FORWARDING       | Set to true to enable forwarding of osquery and PolyLogyx logs to the syslog receiver by using rsyslog. |                                                                         |  
-| VT_API_KEY       | Represents the VirusTotal API key.                                                                            | 
-| IBMxForceKey       | Represents the IBMxForce key.                                                                            | 
-| IBMxForcePass       | Specifies the IBMxForce pass.                                                                            | 
-| PURGE_DATA_DURATION       | Specifies the frequency (in number of days) for purging the data.                                                                            | 
-| THREAT_INTEL_LOOKUP_FREQUENCY       | Specifies the frequency (in minutes) for fetching threat intelligence data.                                                                            |   
-    2. Save the file.
-    
-5. Generating dist file using angular 8
+<input type="checkbox" disabled> Monitoring. Should we provide prometheus or similar monitoring in the chart?
 
-    a. Installation of Node.js and Npm:
+<input type="checkbox" disabled> Using TLS certificates
 
-        Nodejs version required 10.3 and above
-        npm version required 6.1 and above
-  
+- <input type="checkbox" disabled> Existing certificates
+- <input type="checkbox" disabled> Using cert-manager
+- <input type="checkbox" disabled> Issuing your own
+- <input type="checkbox" disabled> Using lets-encrypt
+- <input type="checkbox" disabled> Persistent Volumes example with a cloud service provider
 
-        ==> Installing node on Ubuntu or debian based system
-
-        Step 1: If curl is not installed on the system, run the following command to install it:
-		       
-		       sudo apt-get install curl
-		       
-        Step 2: Enabling nodesource repo:
-		    
-		        curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-		        
-        Note: Here,  node.js version 10.x is being installed, if you want to install version 11, replace setup_10.x with setup_11.x.
-
-        Step 3: To Install Node.js and NPM to your Ubuntu machine, use the command given below:
-		      
-		        sudo apt-get install -y nodejs
-		       
-        Step 4: Once installed, verify it by checking the installed version using the following command:
-		      
-		        node -v or node -version
-		        npm -v or npm -version	
-				
-    b. Installing angular packages using npm
-	```
-        npm install -g @angular/cli@8.3.19 
-    ```
-
-    c. cd to the angular folder
-    ```
-        cd plgx-angular-ui
-    ```
-
-    d. Install project packages
-    ```
-       sudo npm install
-    ```
-
-    e. Installing gzipper to  generate the compressed files
-    ```
-        npm i gzipper@3.7.0 -g
-    ```
-
-    f. Creating dist folder using gzipper 
-    ```
-        ng build --prod --stats-json && sudo gzipper --verbose ../dist
-    ```
-    g. cd to the extracted folder
-    ```
-       cd ../
-    ```
-
-6.  Run the following command to start building containers using docker-compose.
-
-    ```docker-compose -p 'plgx-esp' up --build -d```
-    
-    Typically, this takes approximately 10-15 minutes. The following lines appear on
-    the screen when Docker starts:
-    ````Starting plgx-esp_rabbit1_1  ... done
-        Starting plgx-esp_postgres_1 ... done
-        Starting plgx-esp_plgx-esp_1     ... done
-        Attaching to plgx-esp_rabbit1_1, plgx-esp_postgres_1, plgx-esp_plgx-esp_1
-        .
-        .
-        .
-        Server is up and running```
-        
-7.  Log on to server using following URL using the latest version of Chrome or
-    Firefox browser.
-    
-    ```https://<ip address>:5000/manage```
-
-    In the syntax, `<IP address>` is the IP address of the system on which the
-    PolyLogyx server is hosted. This is the IP address you specified in step 3.
-
-8.  Ignore the SSL warning, if any.
-
-9.  Log on to the server using the credentials provided above at step 5a.
-
-10.  Provision the clients. For more information, see [Provisioning the PolyLogyx
-    Client for Endpoints](https://github.com/polylogyx/platform-docs/tree/master/03_Provisioning_Polylogyx_Client).
-
-
-### Upgrading the agent
-
-Download the latest CPT (v 1.0.40.2) and choose from the below upgrade options.
-
-1. Shallow Upgrade : plgx_cpt.exe -g s ( Updates extension and binary and keeps the existing data).
-2. Deep Upgrade : plgx_cpt.exe -g d ( Updates extension and binary and cleans the existing data)
-
-
-## Uninstalling the Server 
-------------------------
-
-To uninstall the PolyLogyx server, run the following command to clean-up
-existing Docker images and containers.
-
-```~/Downloads\$ sh ./docker-cleanup.sh```
-
-**Note:** This will clean **all** the images and containers.
-
-## Uninstalling the Agent
--------------------------
-
-Agent from the endpoints can be uninstalled following the [instructions here](https://github.com/polylogyx/platform-docs/tree/master/03_Provisioning_Polylogyx_Client#uninstalling-the-client). If for any reasons these instructions do not work, then a brute force clean could be accomplished on the Windows sytems using _agent_cleanup.bat_ file provided as a part of this repository. The batch file can be downloaded on the target system and invoked from an administrator privileged command prompt.
-
-
-## PolyLogyx ESP Components
-- plgx-esp - Manages requests coming from endpoint
-- plgx-esp-ui - Mangement server for taking actions, modifying properties  of an endpoint.
-- RabbitMQ
-- nginx
-- rSysLogF
-- postgres
-
-## Agent Configuration
-PolyLogyx ESP leverages osquery's TLS configuration, logger, and distributed read/write endpoints and provides a basic set of default configurations to simplify Osquery deployment. The platform also provides a Client Provisioning Tool (CPT) that wraps the agent installation via a thin installer. The CPT tool can be downloaded from the main page on the server UI which also gives the instruction on running the CPT at individual endpoint. For mass deployment, a centralized system like SCCM can be used.
-
-## Supported Endpoints
-Osquery is cross platform agent that supports 64 bit variants of Windows (7 and above), MacOS and all the popular Linux distributions (Ubuntu, Centos, RedHat etc). PolyLogyx ESP's agent is built upon Osquery and therefore the supported endpoints are the ones as supported by Osquery.
-
-## PolyLogyx ESP API SDK
-PolyLogyx ESP can be programatically interacted with using the extensive  [REST API](https://github.com/polylogyx/platform-docs/tree/master/13_Rest_API) interface. This allows for multiple use case like Incident Response, Threat Hunting, Compromise Assessment, Compliance checks etc to be easily served with the platform. This also provides an easy for integration with [SOAR platforms](https://youtu.be/XbpleymXpSg) 
-
-## Integration with Big Data/Analytic systems
-PolyLogyx ESP is packaged with an rSysLog container. This container can be configured to stream the query results and other logs from the endpoint population to the back-end systems like Splunk, ELK, GrayLog etc for cross-product correlation, alert enrichments and other SIEM related use cases.
-
-To configure rsyslog forwarding modify the [rsyslogd.conf](rSysLogF/rsyslogd.conf) and specify the destination address of the server accepting logs in syslog format. In the absense of any destination address, the container may not come up. It can be configured at a later point, although the container will have to be manually started.
-
-## PolyLogyx ESP - Community Edition License
-Please read the [LICENSE](LICENSE) file for details on the license.
-
-## PolyLogyx ESP - Enterprise Edition
-PolyLogyx ESP comes with an enterprise flavor with advanced set of features and dedicated support. More about the enterprise edition of ESP can be learned [here](https://github.com/polylogyx/platform-docs)  or send an email to info@polylogyx.com
+## Troubleshooting

@@ -1,1 +1,0 @@
-{{ prefix | trim }} {{ node.display_name }} Threat Intel : {{ intel_match.intel['source'] }}

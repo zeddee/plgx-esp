@@ -1,4 +1,0 @@
-FLAG_FILE="/etc/plgx_osquery/osquery.flags"
-CONFIG_FILE="/etc/plgx_osquery/osquery.conf"
-LOCAL_PIDFILE="/var/plgx_osquery/osqueryd.pidfile"
-PIDFILE="/var/run/plgx_osqueryd.pidfile"
