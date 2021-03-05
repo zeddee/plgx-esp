@@ -1,0 +1,64 @@
+{{ if .Values.plgx.rsyslogf.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "polylogyx.fullname" . }}-rsyslogf
+  labels: {{- include "polylogyx.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-rsyslogf
+spec:
+  replicas: {{ .Values.plgx.rsyslogf.replicas }}
+  selector:
+    matchLabels: {{- include "polylogyx.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-rsyslogf
+  template:
+    metadata:
+      {{- if .Values.plgx.rsyslogf.podAnnotations }}
+      annotations: {{- toYaml .Values.plgx.rsyslogf.podAnnotations | nindent 8 }}
+      {{- end }}
+      labels: {{- include "polylogyx.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-rsyslogf
+    spec:
+      {{- if .Values.plgx.rsyslogf.pullSecrets }}
+      imagePullSecrets: {{- toYaml .Values.plgx.rsyslogf.pullSecrets | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ template "polylogyx.fullname" . }}-rsyslogf
+        image: {{ template "polylogyx.images.rsyslogf" . }}
+        imagePullPolicy: {{ .Values.plgx.rsyslogf.pullPolicy | quote }}
+        resources: {{ toYaml .Values.plgx.rsyslogf.resources | nindent 12 }}
+        {{- if .Values.plgx.esp.livenessProbe }}
+        livenessProbe: {{- toYaml .Values.plgx.esp.livenessProbe | nindent 12 }}
+        {{- end }}
+        {{- if .Values.plgx.esp.readinessProbe }}
+        readinessProbe: {{- toYaml .Values.plgx.esp.readinessProbe | nindent 12 }}
+        {{- end }}
+        ports:
+        - containerPort: 514
+          name: tcp
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/
+        - name: log-volume
+          mountPath: /var/log
+      volumes:
+      - name: config-volume
+        configMap:
+          name: {{ template "polylogyx.fullname" . }}-rsyslogf-cfg
+      - name: log-volume
+        {{- if .Values.plgx.rsyslogf.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ include "polylogyx.rsyslogf.pvcName" . }}
+        {{- else }}
+        emptyDir: {}
+        {{ end }}
+      restartPolicy: Always
+      {{ if .Values.plgx.rsyslogf.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.plgx.rsyslogf.nodeSelector | nindent 8 }}
+      {{ end }}
+      {{ if .Values.plgx.rsyslogf.tolerations }}
+      tolerations: {{ toYaml .Values.plgx.rsyslogf.tolerations | nindent 8 }}
+      {{ end }}
+      {{ if .Values.plgx.rsyslogf.affinity }}
+      affinity: {{ toYaml .Values.plgx.rsyslogf.affinity | nindent 8 }}
+      {{ end }}
+{{ end }}

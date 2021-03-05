@@ -1,0 +1,185 @@
+# Polylogyx ESP parameters
+plgx:
+  # PostgreSQL config
+
+  # -- The connection url for the postgresql database
+  databaseUrl: ""
+
+  # RabbitMQ Config
+
+  # -- The rabbitMQ instance password
+  rabbitmqPassword: ""
+  # -- The rabbitMQ instance username
+  rabbitmqUser: ""
+
+  # API Keys Config
+  api_keys:
+    # -- VirusTotal API Key
+    vt: ""
+    # -- AlienVault API Key
+    alienvault: ""
+    # -- IBMxForceKey API Key
+    IBMxForceKey: ""
+    # -- IBMxForcePass Password
+    IBMxForcePass: ""
+  
+  # -- Specifies the duration after which data should be purged
+  purge_duration: "7"
+  threatIntel:
+    alertFrequency: "30"
+  # ESP Authorization
+  auth:
+    # -- ESP application username
+    user:
+    # -- ESP application password
+    password:
+    # -- ESP application secret for agent enrollment
+    enroll_secret:
+
+  # ESP Common Persistence parameters
+  persistence:
+    # Persistence configuration for Yara files
+    yara:
+      # -- Enable persistence for Yara files
+      enabled: true
+      # -- Provide an existing `PersistentVolumeClaim` for Yara files
+      existingClaim: null
+      # -- PVC Access Mode for Yara files
+      accessMode: ReadWriteMany
+      # -- PVC Storage Class for Yara files
+      storageClass: null
+      # -- PVC Storage Request for Yara files
+      size: 100Mi
+    # Persistence configuration for Carves files
+    carves:
+      # -- Enable persistence for Carves files
+      enabled: true
+      # -- Provide an existing `PersistentVolumeClaim` for Carves files
+      existingClaim: null
+      # -- PVC Access Mode for Carves files
+      accessMode: ReadWriteMany
+      # -- PVC Storage Class for Carves files
+      storageClass: null
+      # -- PVC Storage Request for Carves files
+      size: 100Mi
+  
+  # ESP Rsyslogf parameters
+  rsyslogf:
+    # -- Set to true to enable the rsyslogf component
+    enabled: true
+    # -- Number of replicas to deploy
+    replicas: 1
+    # -- ESP Rsyslogf image
+    image:
+      registry: "ghcr.io"
+      repository: polylogyx/esp-rsyslogf
+      tag: latest
+
+    # -- Specify an imagePullPolicy. Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    # ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    pullPolicy: Always
+    # -- Specify docker-registry secret names
+    pullSecrets: []
+    # -- ESP Rsyslogf service parameters
+    service:
+      port: 80
+      type: ClusterIP
+    # -- ESP Rsyslogf persistence parameters
+    persistence:
+      # -- Enable persistence for rsyslogf data
+      enabled: true
+      # -- Provide an existing `PersistentVolumeClaim` for rsyslogf data
+      existingClaim: null
+      # -- PVC Access Mode for rsyslogf data
+      accessMode: ReadWriteMany
+      # -- PVC Storage Class for rsyslogf data
+      storageClass: null
+      # -- PVC Storage Request for rsyslogf data
+      size: 500Mi
+
+  # ESP parameters
+  esp:
+    # -- Set to true to enable the esp component
+    enabled: true
+    # -- Number of replicas to deploy
+    replicas: 1
+    # -- ESP image
+    image:
+      registry: ghcr.io
+      repository: polylogyx/esp
+      tag: latest
+    # -- Specify an imagePullPolicy. It is suggested to use 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    # ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    pullPolicy: Always
+    # -- Specify docker-registry secret names
+    pullSecrets: []
+    resources: {}
+    # -- ESP service parameters
+    service:
+      port: 80
+      type: ClusterIP
+
+  # ESP UI Parameters
+  ui:
+    # -- Set to true to enable the ui component
+    enabled: true
+    # -- Number of replicas to deploy
+    replicas: 1
+    # -- ESP UI image
+    image:
+      registry: ghcr.io
+      repository: polylogyx/esp-ui
+      tag: latest
+    # -- Specify an imagePullPolicy. It is suggested to use 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    # ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    pullPolicy: Always
+    # -- Specify docker-registry secret names
+    pullSecrets: []
+    # -- ESP UI service parameters
+    service:
+      port: 80
+      type: ClusterIP
+
+  # ESP Fileserver Parameters
+  fileserver:
+    # -- Set to true to enable the fileserver component
+    enabled: true
+    # -- Number of replicas to deploy
+    replicas: 1
+    # -- ESP Fileserver image
+    image:
+      registry: ghcr.io
+      repository: polylogyx/esp-fileserver
+      tag: latest
+    # -- Specify an imagePullPolicy. It is suggested to use 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    # ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    pullPolicy: Always
+    # -- Specify docker-registry secret names
+    pullSecrets: []
+
+    # -- ESP Fileserver service parameters
+    service:
+      port: 80
+      type: ClusterIP
+
+  # ESP Ingress Parameters
+  ingress:
+    # -- Set to true to enable the ingress
+    enabled: true
+    # -- Default host for the ingress 
+    hostname:
+    # -- Ingress annotations
+    annotations: {}
+    # -- Create ingress TLS section
+    tls:
+      enabled: true
+
+# -- RabbitMQ configuration.
+# @default -- You can find all of the configuration options for [the rabbitmq chart here](https://github.com/bitnami/charts/tree/master/bitnami/rabbitmq)
+rabbitmq:
+  enabled: true
+
+# -- PostgreSQL configuration.
+# @default -- You can find all of the configuration options for [the postgresql chart here](https://github.com/bitnami/charts/tree/master/bitnami/postgresql)
+postgresql:
+  enabled: true

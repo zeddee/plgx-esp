@@ -1,0 +1,73 @@
+{{ if .Values.plgx.ui.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "polylogyx.fullname" . }}-ui
+  labels: {{- include "polylogyx.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-ui
+spec:
+  replicas: {{ .Values.plgx.ui.replicas }}
+  selector:
+    matchLabels: {{- include "polylogyx.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-ui
+  strategy: {{- toYaml .Values.plgx.ui.updateStrategy | nindent 4 }}
+  template:
+    metadata:
+      labels: {{- include "polylogyx.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: {{ template "polylogyx.fullname" . }}-ui
+      {{- if .Values.plgx.ui.podAnnotations }}
+      annotations: {{- toYaml .Values.plgx.ui.podAnnotations | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if .Values.plgx.ui.pullSecrets }}
+      imagePullSecrets: {{- toYaml .Values.plgx.ui.pullSecrets | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ template "polylogyx.fullname" . }}-ui
+          image: {{ template "polylogyx.images.ui" . }}
+          imagePullPolicy: {{ .Values.plgx.ui.pullPolicy | quote }}
+          ports:
+            - containerPort: 5001
+          {{- if .Values.plgx.ui.livenessProbe }}
+          livenessProbe: {{- toYaml .Values.plgx.ui.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.plgx.ui.readinessProbe }}
+          readinessProbe: {{- toYaml .Values.plgx.ui.readinessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.plgx.ui.resources }}
+          resources: {{- toYaml .Values.plgx.ui.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - mountPath: /src/plgx-esp-ui/carves
+              name: carves
+            - mountPath: /src/plgx-esp-ui/yara
+              name: yara
+          envFrom:
+            - secretRef:
+                name: {{ template "polylogyx.fullname" . }}-env-secret
+      restartPolicy: Always
+      {{ if .Values.plgx.ui.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.plgx.ui.nodeSelector | nindent 8 }}
+      {{ end }}
+      {{ if .Values.plgx.ui.tolerations }}
+      tolerations: {{ toYaml .Values.plgx.ui.tolerations | nindent 8 }}
+      {{ end }}
+      {{ if .Values.plgx.ui.affinity }}
+      affinity: {{ toYaml .Values.plgx.ui.affinity | nindent 8 }}
+      {{ end }}
+      volumes:
+        - name: carves
+          {{ if .Values.plgx.persistence.carves.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "polylogyx.carves.pvcName" . }}
+          {{ else }}
+            emptyDir: {}
+          {{ end }}
+        - name: yara
+          {{ if .Values.plgx.persistence.yara.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "polylogyx.yara.pvcName" . }}
+          {{ else }}
+            emptyDir: {}
+          {{ end }}
+{{ end }}

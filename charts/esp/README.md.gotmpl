@@ -1,0 +1,52 @@
+{{ template "chart.header" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+PolyLogyx ESP leverages the [Osquery](https://osquery.io/) tool, with [PolyLogyx Extension](https://github.com/polylogyx/osq-ext-bin) to provide endpoint visibility and monitoring at scale. To get the details of the architecture of the full platform, please read the [platform docs](https://github.com/polylogyx/platform-docs). This repository provides the community release of the platform which focuses on the Osquery based agent management to provide visbility into endpoint activities, query configuration management, a live query interface and alerting capabilities based on security critical events.
+
+## TLDR;
+
+```console
+$ helm repo add polylogyx https://polylogyx.github.io/plgx-esp
+$ helm install my-release polylogyx/polylogyx-esp
+```
+
+{{ template "chart.requirementsSection" . }}
+
+## Installing the Chart
+
+To install the chart with the release name `my-release`:
+
+```console
+$ helm repo add polylogyx https://polylogyx.github.io/plgx-esp
+$ helm install my-release polylogyx/polylogyx-esp
+```
+
+These commands deploy PolyLogyxESP on the Kubernetes cluster with the default configuration. The [configuration](#configuration) section lists the parameters that [can be configured during installation](https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing).
+
+## Configuration
+
+{{ template "chart.valuesTable" . }}
+
+## Installing on Minikube for local development
+
+### 1. [Install minikube](https://minikube.sigs.k8s.io/docs/start/)
+
+### 2. Enable Ingress for Minikube. ([Details](https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/))
+
+```
+$ # Start minikube
+$ minikube start
+$ # enable the NGINX Ingress controller
+$ minikube addons enable ingress
+$ # Verify the installation
+$ kubectl get pods -n kube-system | grep ingress
+```
+
+### 3. Enabling TLS for your Ingress
+
+You can [create your own certificate](https://kubernetes.github.io/ingress-nginx/user-guide/tls/) or
+
+for a more realistic development environment you can follow the guide on how to use cert-manager in the _/charts/examples/cert-manager_ folder.
