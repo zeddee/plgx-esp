@@ -78,8 +78,10 @@ class RsyslogAlerter(AbstractAlerterPlugin):
 
 
         try:
+            rsyslogHostname = os.environ.get('RSYSLOG_HOSTNAME')
+            rsyslogPort = os.environ.get('RSYSLOG_PORT')
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect(("rsyslogf", 514))
+            sock.connect((rsyslogHostname, rsyslogPort))
             bSock = True
             current_app.logger.info("[alert] Socket connected")
         except:

@@ -7,16 +7,16 @@ ENV LANG C.UTF-8
 
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.8/main" >> /etc/apk/repositories \
   && apk add --update \
-              bash \
-	      wget \
-              build-base \
-              git \
-              libffi-dev \
-              musl \
-              runit \
-              postgresql-client \
-              postgresql-dev \
-              tmux \
+  bash \
+  wget \
+  build-base \
+  git \
+  libffi-dev \
+  musl \
+  runit \
+  postgresql-client \
+  postgresql-dev \
+  tmux \
   && pip install --upgrade pip 
 
 
@@ -32,15 +32,8 @@ RUN pip install -r /tmp/requirements.txt
 
 # Add our application to the container
 COPY ./plgx-esp-ui/. /src/plgx-esp-ui/
-COPY ./nginx/private.key /src/plgx-esp-ui/private.key
 COPY ./resources/. /src/plgx-esp-ui/resources/ 
-COPY ./nginx/certificate.crt /src/plgx-esp-ui/resources/certificate.crt
-COPY ./nginx/certificate.crt /src/plgx-esp-ui/resources/windows/x86/certificate.crt
-COPY ./nginx/certificate.crt /src/plgx-esp-ui/resources/windows/x64/certificate.crt
 
 RUN chmod a+x /src/plgx-esp-ui/docker-entrypoint.sh
 
-
 ENTRYPOINT ["/src/plgx-esp-ui/docker-entrypoint.sh"]
-
-
