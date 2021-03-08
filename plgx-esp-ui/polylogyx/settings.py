@@ -9,6 +9,7 @@ RABBITMQ_HOST = "localhost"
 RABBITMQ_PASSWORD = "guest"
 RABBITMQ_USER = "guest"
 
+RABBIT_CREDS = pika.PlainCredentials("guest", "guest")
 
 
 class RabbitConfig:
@@ -21,6 +22,8 @@ try:
         RABBITMQ_HOST = os.environ.get('RABBITMQ_URL')
         RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD')
         RABBITMQ_USER = os.environ.get('RABBITMQ_USER')
+        RABBIT_CREDS = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASSWORD)
+
 except Exception as e:
     print(e)
 
