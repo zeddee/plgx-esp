@@ -2,7 +2,7 @@ name: polylogyx-esp
 description: A Helm Chart for deploying the polylogyx endpoint security platform
 version: 0.0.1
 apiVersion: v2
-appVersion: 2.1.0
+appVersion: 2.1.2
 sources:
 home: https://polylogyx.github.io/plgx-esp
 keywords:
