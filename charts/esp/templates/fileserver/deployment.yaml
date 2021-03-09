@@ -42,8 +42,8 @@ spec:
               mountPath: /resources/yara
             - name: osqueryflags
               mountPath: /app/flags
-            - mountPath: /certificate
-              name: certificate
+            - name: certificate
+              mountPath: /certificate
               readOnly: true
       restartPolicy: Always
       {{ if .Values.plgx.fileserver.nodeSelector }}
