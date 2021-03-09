@@ -42,7 +42,7 @@ spec:
               mountPath: /resources/yara
             - name: osqueryflags
               mountPath: /app/flags
-            - mountPath: "/certificate"
+            - mountPath: /certificate
               name: ssh-key
               readOnly: true
       restartPolicy: Always
