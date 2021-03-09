@@ -43,7 +43,7 @@ spec:
             - name: osqueryflags
               mountPath: /app/flags
             - mountPath: /certificate
-              name: ssh-key
+              name: certificate
               readOnly: true
       restartPolicy: Always
       {{ if .Values.plgx.fileserver.nodeSelector }}
