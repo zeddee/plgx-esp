@@ -77,9 +77,7 @@ spec:
                 path: windows/x64/osquery.flags
               - key: windows.x86.osquery.flags
                 path: windows/x86/osquery.flags
-        {{ if .Values.plgx.ingress.secretName }}
         - name: certificate
           secret:
             secretName: {{ .Values.plgx.ingress.tls.secretName }}
-        {{ end }}
 {{ end }}
