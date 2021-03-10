@@ -195,6 +195,33 @@ entries:
   polylogyx-esp-kubernetes:
   - apiVersion: v2
     appVersion: 2.1.2
+    created: "2021-03-10T15:04:28.986854099Z"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 10.2.0
+    - condition: rabbitmq.enabled
+      name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 8.5.4
+    description: A Helm Chart for deploying the polylogyx endpoint security platform
+    digest: 252be39452a3fd6180178517291d2a902d8f249536e73de1c856e1ed52690ab4
+    home: https://polylogyx.github.io/plgx-esp
+    keywords:
+    - polylogyx
+    - osquery
+    - esp
+    - edr
+    - endpoint security platform
+    - osquery fleet manager
+    - eclecticiq
+    name: polylogyx-esp-kubernetes
+    urls:
+    - https://github.com/polylogyx/plgx-esp/releases/download/polylogyx-esp-kubernetes-0.0.2/polylogyx-esp-kubernetes-0.0.2.tgz
+    version: 0.0.2
+  - apiVersion: v2
+    appVersion: 2.1.2
     created: "2021-03-08T03:55:23.142953876Z"
     dependencies:
     - condition: postgresql.enabled
