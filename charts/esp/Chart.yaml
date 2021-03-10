@@ -1,6 +1,6 @@
 name: polylogyx-esp-kubernetes
 description: A Helm Chart for deploying the polylogyx endpoint security platform
-version: 0.0.1
+version: 0.0.2
 apiVersion: v2
 appVersion: 2.1.2
 sources:
