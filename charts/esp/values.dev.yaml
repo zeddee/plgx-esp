@@ -177,7 +177,7 @@ plgx:
     # -- Create ingress TLS section
     tls:
       enabled: true
-      secretName: polylogyx-tls-secret
+      secretName: polylogyx-ca-tls-secret
 
 # -- RabbitMQ configuration.
 # @default -- You can find all of the configuration options for [the rabbitmq chart here](https://github.com/bitnami/charts/tree/master/bitnami/rabbitmq)
