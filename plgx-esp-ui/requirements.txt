@@ -40,7 +40,7 @@ idna==2.10          # via requests-oauthlib, requests
 importlib-metadata==1.7.0          # via flask-restplus -> jsonschema
 itsdangerous==1.1.0          # via flask
 
-Jinja2==2.11.2          # via flask
+Jinja2==2.11.3          # via flask
 jsonschema==3.2.0          # via flask-restplus
 jsmin==2.2.2
 
