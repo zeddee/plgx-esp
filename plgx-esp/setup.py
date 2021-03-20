@@ -39,7 +39,7 @@ setup(
         'Flask-SQLAlchemy==2.1',
         'Flask-WTF==0.12',
         'itsdangerous==0.24',
-        'Jinja2==2.8',
+        'Jinja2==2.11.3',
         'jsmin==2.2.1',
         'kombu==3.0.35',
         'ldap3==1.3.1',
