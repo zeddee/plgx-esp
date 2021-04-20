@@ -62,7 +62,7 @@ pika==0.13.0          # via pyamqp
 pluggy==0.13.1          # via pyamqp -> pytest
 psycopg2==2.8
 psycopg2-binary==2.8
-py==1.9.0          # via pyamqp -> pytest
+py==1.10.0          # via pyamqp -> pytest
 PyAMQP==0.1.0.7
 pyasn1==0.4.8          # via flask-ldap3 -> ldap3
 pycparser==2.20          # via flask-bcrypt -> bcrypt -> cffi
