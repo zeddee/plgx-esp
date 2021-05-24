@@ -145,11 +145,11 @@ for(const i in distributionval){
    platform_distibution.push(distributionval[i].os_name)
    platform_distibution_count.push(distributionval[i].count)
    if(distributionval[i].os_name=="windows"){
-     backgrund_colour.push('#800080')
+     backgrund_colour.push('#2A6D7C')
    }else if(distributionval[i].os_name=="darwin"){
-     backgrund_colour.push('#f90')
+     backgrund_colour.push('#F79750')
    }else{
-     backgrund_colour.push('#36c')
+     backgrund_colour.push('#A2D9C5')
    }
 }
 if(platform_distibution_count.length==0){
@@ -197,13 +197,13 @@ for(const i in hostval){
     if(hostval.online !==0){
   Host_status_data.push("online")    
   Host_status_data_count.push(hostval[i])
-  backgrund_colour.push('green')
+  backgrund_colour.push('#96E6C9')
 }
   }else{
     if(hostval.offline !==0){
     Host_status_data.push("offline")    
     Host_status_data_count.push(hostval[i])
-    backgrund_colour.push("#dc3912")
+    backgrund_colour.push("#FF8080")
   }
   }
 }
@@ -261,7 +261,13 @@ var myChart1 = new Chart('bar-chart-top_5_alerted_hosts', {
       labels:top_5hosts,
       datasets: [{
           data: top_5hosts_count,
-          backgroundColor:  "#36c" ,
+          backgroundColor: [
+            "#2A6D7C",
+            "#A2D9C5",
+            "#F79750",
+            "#794F5D",
+            "#6EB8EC"
+        ],
           barPercentage: 0.5,
       }]
   },
@@ -326,7 +332,13 @@ var myChart1 = new Chart('bar-chart-top_5_alerted_categries', {
       labels:top_5_categories,
       datasets: [{
           data: top_5_categories_count,
-          backgroundColor:  "#36c" ,
+          backgroundColor: [
+            "#2A6D7C",
+            "#A2D9C5",
+            "#F79750",
+            "#794F5D",
+            "#6EB8EC"
+        ],
           barPercentage: 0.5,
       }]
   },
@@ -391,7 +403,13 @@ var myChart1 = new Chart('bar-chart-top_5_alerted_rules', {
       labels:top_5_rules,
       datasets: [{
           data: top_5_rules_count,
-          backgroundColor:  "#36c" ,
+          backgroundColor: [
+            "#2A6D7C",
+            "#A2D9C5",
+            "#F79750",
+            "#794F5D",
+            "#6EB8EC"
+        ],
           barPercentage: 0.5,
       }]
   },

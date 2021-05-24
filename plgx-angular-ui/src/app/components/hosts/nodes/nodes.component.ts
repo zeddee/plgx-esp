@@ -266,7 +266,13 @@ export class NodesComponent implements AfterViewInit, OnInit, OnDestroy {
             labels:rule_name,
             datasets: [{
                 data: rule_count,
-                backgroundColor:  "#36c" ,
+                backgroundColor: [
+                  "#2A6D7C",
+                  "#A2D9C5",
+                  "#F79750",
+                  "#794F5D",
+                  "#6EB8EC"
+              ],
                 barPercentage: 0.5,
             }]
         },

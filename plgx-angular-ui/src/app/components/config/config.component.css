@@ -73,13 +73,13 @@ font-family: Poppins;
   color:#48465b;
 }
 .link:active, .nav-pills .nav-item .nav-link.active, .nav-pills .nav-item .nav-link.active:hover {
-  background-color: #184ba1;
-  color: #ffffff;
+  background-color: #eef1ff !important;
+  color: #184ba1;
   font-size: 16px;
 }
 .active {
-  background-color:  #184ba1;
-  color: #ffffff;
+  background-color: #eef1ff !important;
+  color: #184ba1;
   }
 
 /* 
@@ -92,16 +92,6 @@ font-family: Poppins;
 :host ::ng-deep json-editor > div,
 :host ::ng-deep json-editor jsoneditor-outer {
   height: 500px;
-}
-
-/* :host ::ng-deep .jsoneditor-menu{
-  background-color: #000000bd;
-  border: 1px solid black;
-} */
-
-:host ::ng-deep .jsoneditor .jsoneditor-menu{
-  background-color: #000000bd;
-  border: 1px solid black;
 }
 
 :host ::ng-deep .jsoneditor-contextmenu .jsoneditor-menu{
