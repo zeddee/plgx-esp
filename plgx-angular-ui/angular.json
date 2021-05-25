@@ -58,7 +58,8 @@
               "src/css/datatable.css",
               "src/assets/vendors/custom/datatables/datatables.bundle.css",
               "node_modules/ngx-toastr/toastr.css",
-              "src/css/custom.css"
+              "src/css/Custom.css"
+
             ],
             "scripts": [
               "node_modules/jquery/dist/jquery.min.js",

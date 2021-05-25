@@ -48,7 +48,6 @@
   padding: .75rem;
   vertical-align: top;
   border-top: 1px solid #ebedf2;
-  font-family: Poppins;
 }
 
 .nav-background {
@@ -57,7 +56,6 @@
 
 .kt-portlet__head-title{
   font-size: 14px;
-font-family: Poppins;
 -moz-osx-font-smoothing: grayscale;
 }
 .table th{

@@ -3,6 +3,7 @@ import {CommonapiService} from './_services/commonapi.service';
 import { first } from 'rxjs/operators';
 import { Chart } from 'chart.js';
 import 'chartjs-plugin-labels';
+import { CommonVariableService } from '../dashboard/_services/commonvariable.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -47,8 +48,10 @@ export class DashboardComponent implements OnInit {
   route: string;
   currentURL='';
   purge_duration:any;
+  ProjectName=this.commonvariable.APP_NAME
   constructor(
-    private commonapi: CommonapiService
+    private commonapi: CommonapiService,
+    private commonvariable: CommonVariableService,
   ) {
    }
 

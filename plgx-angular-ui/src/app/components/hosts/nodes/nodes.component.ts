@@ -105,6 +105,7 @@ export class NodesComponent implements AfterViewInit, OnInit, OnDestroy {
     queries_removetags_val:any;
   dtOptions: any = {};
   dtTrigger: Subject<any> = new Subject();
+  ProjectName=this.commonvariable.APP_NAME
   constructor(
     private _Activatedroute: ActivatedRoute,
     private commonapi: CommonapiService,

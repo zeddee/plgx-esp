@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class CommonVariableService {
-  APP_NAME="PolyLogyx"
+  APP_NAME="EclecticIQ"
   Version="CE 2.1.2"
   version_in_readme_content="2.1.2"
   Windows_plgx_cpt_exe={'version':"v1.0.40.5","MD5_checksum":"7f1d5a8ff24f95d9073839a09d0630f2"}
