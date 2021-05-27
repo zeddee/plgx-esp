@@ -13,6 +13,7 @@ export class ReadmeComponent implements OnInit {
   cpt_down:any;
   route: string;
   currentURL='';
+  ProjectName=this.commonvariable.APP_NAME
   Version=this.commonvariable.version_in_readme_content
   Windows_plgx_cpt_exe=this.commonvariable.Windows_plgx_cpt_exe
   Linux_plgx_cpt=this.commonvariable.Linux_plgx_cpt
