@@ -51,10 +51,6 @@ export class AdminAsideComponent implements OnInit {
             this.titleService.setTitle(this.commonvariable.APP_NAME+"-"+"Dashboard");
             this.MenuName = 'Dashboard';
         }
-        else if(page_name == "openc2" || this.MenuName == "Openc2"){
-            this.titleService.setTitle(this.commonvariable.APP_NAME+"-"+"Response Action" );
-            this.MenuName = 'Action';
-        }
         else if(page_name == "live-queries"){
            this.MenuName = 'live-queries';
         }
