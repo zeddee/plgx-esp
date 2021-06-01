@@ -63,17 +63,13 @@
 }
 .nav-pills .nav-item .nav-link {
  
-  padding: .75rem 1.25rem;
-  transition: all .3s;
-  font-size: 1rem;
-  border-radius: .25rem;
-  font-weight: 400;
-  color:#48465b;
+  margin: 0 0 0 0px !important;
+  font-size: 15px !important
 }
 .link:active, .nav-pills .nav-item .nav-link.active, .nav-pills .nav-item .nav-link.active:hover {
   background-color: #eef1ff !important;
   color: #184ba1;
-  font-size: 16px;
+  font-size: 15px;
 }
 .active {
   background-color: #eef1ff !important;

@@ -110,7 +110,7 @@
     font-size: large;
     margin-right: 10px;
     padding: 5px;
-    color: #518c24;
+    color: #52B2A8;
     background-color: #f4f4f8;
     border-color: transparent;
   }
@@ -127,11 +127,11 @@
     font-weight: 500;
   }
   .live-qry ul li:hover a {
-    color: #518c24;
+    color: #52B2A8;
   }
   .live-qry ul li:hover i {
     color: #fff;
-    background-color: #518c24;
+    background-color: #52B2A8;
     -webkit-border-radius: 50%;
     -moz-border-radius: 50%;
     border-radius: 50%;
