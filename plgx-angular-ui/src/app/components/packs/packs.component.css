@@ -1,11 +1,6 @@
 
 /* @import url("../../../css/pack.css");
 @import url("../../../public/css/common.css"); */
-.btn-success.active{
-   color: #fff !important;
-   background-color: #518c24 !important;
-   border-color: #518c24 !important;
- }
 
 .active {
    background-color: #f7f8fa;
