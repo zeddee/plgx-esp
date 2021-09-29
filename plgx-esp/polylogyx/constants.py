@@ -276,13 +276,13 @@ class PolyLogyxConstants:
     DEFAULT_OPTIONS = {
         "custom_plgx_EnableLogging": "true",
         "custom_plgx_EnableSSL": "true",
-        "custom_plgx_LogFileName": "C:\\Program Files\\plgx_osquery\\plgx-agent.log",
+        "custom_plgx_LogFileName": "C:\\Program Files\\plgx_osquery\\plgx-win-extension.log",
         "custom_plgx_LogLevel": "3",
         "custom_plgx_LogModeQuiet": "0",
         "custom_plgx_EnableWatcher": "true",
         "custom_plgx_MemoryLimit": "150",
         "schedule_splay_percent": 10,
-        "custom_plgx_LogFileNameLinux":"/tmp/plgx-agent.log",
+        "custom_plgx_LogFileNameLinux": "/tmp/plgx-agent.log",
     }
 
 
