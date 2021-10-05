@@ -269,7 +269,7 @@ class Config(object):
     # https://docs.python.org/dev/library/logging.handlers.html#watchedfilehandler
     # for more information.
     # Alternatively, you can set filename to '-' to log to stdout.
-    POLYLOGYX_LOGGING_FILENAME = '/var/log/plgxsrv.log'
+    POLYLOGYX_LOGGING_FILENAME = '-'
     POLYLOGYX_LOGGING_FORMAT = '%(asctime)s--%(levelname).1s--%(thread)d--%(funcName)s--%(message)s'
     POLYLOGYX_LOGGING_LEVEL = 'INFO'
 

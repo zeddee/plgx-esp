@@ -5,7 +5,8 @@ from binascii import b2a_hex
 
 
 SERVER_URL = ""
-TO_CAPTURE_COLUMNS=["md5","sha1","sha256","domain_name","remote_address","url"]
+TO_CAPTURE_COLUMNS = ["md5"]
+IOC_COLUMNS = ["md5", "sha1", "sha256", "domain_name", "remote_address", "url"]
 DEFAULT_PLATFORMS=['windows','linux','darwin','freebsd']
 clients = {}
 websockets = {}
