@@ -6,6 +6,8 @@ import datetime as dt
 import glob
 from os.path import abspath, dirname, join
 
+from flasgger import Swagger
+
 from flask import json, current_app
 from flask_migrate import MigrateCommand
 from flask_script import Command, Manager, Server, Shell
@@ -22,6 +24,8 @@ import sys
 
 app = create_app(config=CurrentConfig)
 app.wsgi_app = ProxyFix(app.wsgi_app)
+
+swagger = Swagger(app)
 
 
 def _make_context():
